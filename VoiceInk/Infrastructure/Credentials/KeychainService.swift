@@ -23,7 +23,7 @@ final class KeychainService {
         case unavailable(OSStatus)
     }
 
-    private let logger = Logger(subsystem: "com.prakashjoshipax.voiceink", category: "KeychainService")
+    private let logger = Logger(subsystem: "io.forit.dictate", category: "KeychainService")
     // ForIT Dictate is a Developer ID build with no provisioning profile, so it has no keychain access group and
     // cannot use the data-protection keychain or iCloud Keychain: its items live in the login keychain, on this Mac.
     #if LOCAL_BUILD

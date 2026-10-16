@@ -4,7 +4,7 @@ import os
 
 @MainActor
 final class TranscriptionDelivery {
-    private let logger = Logger(subsystem: "com.prakashjoshipax.voiceink", category: "TranscriptionDelivery")
+    private let logger = Logger(subsystem: "io.forit.dictate", category: "TranscriptionDelivery")
 
     struct Request {
         let transcription: Transcription

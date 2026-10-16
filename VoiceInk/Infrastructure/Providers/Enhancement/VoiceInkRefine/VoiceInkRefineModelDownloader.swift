@@ -317,7 +317,7 @@ final class VoiceInkRefineModelDownloader: @unchecked Sendable {
 
         var request = URLRequest(url: url)
         request.timeoutInterval = 24 * 60 * 60
-        request.setValue("VoiceInk", forHTTPHeaderField: "User-Agent")
+        request.setValue("ForIT-Dictate", forHTTPHeaderField: "User-Agent")
 
         var resumeOffset: Int64 = 0
         let validator = (
@@ -408,7 +408,7 @@ final class VoiceInkRefineModelDownloader: @unchecked Sendable {
         configuration.waitsForConnectivity = true
 
         let delegateQueue = OperationQueue()
-        delegateQueue.name = "com.prakashjoshipax.voiceink.refine-download"
+        delegateQueue.name = "io.forit.dictate.refine-download"
         delegateQueue.qualityOfService = .utility
         delegateQueue.maxConcurrentOperationCount = 1
 
@@ -724,7 +724,7 @@ final class VoiceInkRefineModelDownloader: @unchecked Sendable {
             completionHandler: @escaping (URLRequest?) -> Void
         ) {
             var redirectedRequest = request
-            redirectedRequest.setValue("VoiceInk", forHTTPHeaderField: "User-Agent")
+            redirectedRequest.setValue("ForIT-Dictate", forHTTPHeaderField: "User-Agent")
             if let rangeHeader {
                 redirectedRequest.setValue(rangeHeader, forHTTPHeaderField: "Range")
             }

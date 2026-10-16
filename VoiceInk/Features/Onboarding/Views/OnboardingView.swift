@@ -77,9 +77,10 @@ struct OnboardingView: View {
                         onVerificationChanged: coordinator.flow.refreshTranscriptionSetupVerification,
                         onBack: coordinator.flow.goToMicrophoneStep,
                         onContinue: {
-                            coordinator.flow.goToAPIStep(
+                            coordinator.flow.continueFromModelStep(
                                 isTranscriptionSetupReady: isTranscriptionSetupReady,
-                                aiService: aiService
+                                aiService: aiService,
+                                enhancementService: enhancementService
                             )
                         }
                     )

@@ -10,7 +10,7 @@ struct AudioInputChannel: Identifiable, Equatable, Sendable {
 
 /// Audio device configuration queries (does NOT modify system default device)
 class AudioDeviceConfiguration {
-    private static let logger = Logger(subsystem: "com.prakashjoshipax.voiceink", category: "AudioDeviceConfiguration")
+    private static let logger = Logger(subsystem: "io.forit.dictate", category: "AudioDeviceConfiguration")
 
     /// Count all input buffers, matching AUHAL's flattened input-channel numbering.
     static func inputChannels(deviceID: AudioDeviceID) -> [AudioInputChannel] {

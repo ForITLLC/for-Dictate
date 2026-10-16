@@ -191,7 +191,7 @@ struct ModeConfigFormView: View {
         Section("Transcription") {
             if warmupSnapshot.usableTranscriptionModels.isEmpty {
                 Text(
-                    "No transcription models available. Please connect to a cloud service or download a local model in the AI Models tab."
+                    "No transcription models available. Download a local model in the AI Models tab."
                 )
                 .foregroundColor(.secondary)
             } else {

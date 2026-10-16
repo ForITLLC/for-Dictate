@@ -37,6 +37,25 @@ final class OnboardingFlowController {
         coordinator.storedStage = OnboardingStage.api.rawValue
     }
 
+    /// Continue from the model step. With no API-key provider approved (ForITProviderPolicy) the API step
+    /// is skipped and only the local starter modes are installed.
+    func continueFromModelStep(
+        isTranscriptionSetupReady: Bool,
+        aiService: AIService,
+        enhancementService: AIEnhancementService
+    ) {
+        guard coordinator.isAPISetupOffered else {
+            coordinator.isSelectedAPIProviderVerified = false
+            goToExperienceStep(
+                isTranscriptionSetupReady: isTranscriptionSetupReady,
+                enhancementService: enhancementService
+            )
+            return
+        }
+
+        goToAPIStep(isTranscriptionSetupReady: isTranscriptionSetupReady, aiService: aiService)
+    }
+
     func goBackToModelStep() {
         guard coordinator.requiredPermissionsGranted else {
             goToPermissionsStep()
@@ -328,9 +347,11 @@ final class OnboardingFlowController {
     }
 
     func refreshAPIVerification() {
-        coordinator.isSelectedAPIProviderVerified = APIKeyManager.shared.hasAPIKey(
-            forProvider: coordinator.selectedOnboardingProvider.rawValue
-        )
+        coordinator.isSelectedAPIProviderVerified =
+            coordinator.isAPISetupOffered
+            && APIKeyManager.shared.hasAPIKey(
+                forProvider: coordinator.selectedOnboardingProvider.rawValue
+            )
 
         if coordinator.isSelectedAPIProviderVerified {
             coordinator.hasSkippedAPISetup = false
@@ -351,6 +372,7 @@ final class OnboardingFlowController {
     }
 
     func selectOnboardingTranscriptionSetup(_ kind: OnboardingTranscriptionSetupKind) {
+        guard kind == .local || coordinator.isCloudTranscriptionSetupOffered else { return }
         coordinator.storedTranscriptionSetupKind = kind.rawValue
         ensureDefaultOnboardingTranscriptionProvider()
         refreshTranscriptionSetupVerification()
@@ -389,7 +411,7 @@ final class OnboardingFlowController {
         let defaultProvider: AIProvider =
             coordinator.onboardingProviderOptions.contains(.groq)
             ? .groq
-            : coordinator.onboardingProviderOptions.first ?? .groq
+            : coordinator.onboardingProviderOptions.first ?? ForITProviderPolicy.fallbackEnhancementProvider
         coordinator.storedOnboardingAIProvider = defaultProvider.rawValue
     }
 

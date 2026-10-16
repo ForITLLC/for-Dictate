@@ -32,7 +32,8 @@ extension CloudProvider {
 }
 
 enum CloudProviderRegistry {
-    static let allProviders: [any CloudProvider] = [
+    /// Every cloud provider the code knows. Only `allProviders` (filtered by ForITProviderPolicy) is exposed.
+    private static let allKnownProviders: [any CloudProvider] = [
         GroqProvider(),
         ElevenLabsProvider(),
         DeepgramProvider(),
@@ -46,6 +47,12 @@ enum CloudProviderRegistry {
         OpenRouterProvider(),
     ]
 
+    /// Cloud providers approved by ForITProviderPolicy. Hidden providers are unknown to the rest of the app.
+    static let allProviders: [any CloudProvider] = allKnownProviders.filter {
+        ForITProviderPolicy.allowsTranscription($0.modelProvider)
+    }
+
+    /// Returns nil for a hidden provider, so saved selections that name one resolve as unavailable.
     static func provider(for modelProvider: ModelProvider) -> (any CloudProvider)? {
         allProviders.first { $0.modelProvider == modelProvider }
     }

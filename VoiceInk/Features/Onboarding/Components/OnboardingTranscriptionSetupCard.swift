@@ -44,7 +44,10 @@ struct OnboardingTranscriptionSetupCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            setupSwitcher
+            // No approved cloud provider (ForITProviderPolicy): Local is the only choice, so no switcher.
+            if !providerOptions.isEmpty {
+                setupSwitcher
+            }
 
             switch setupKind {
             case .local:
@@ -409,7 +412,7 @@ struct OnboardingTranscriptionSetupCard: View {
                     guard APIKeyManager.shared.saveAPIKey(key, forProvider: providerKey) else {
                         verificationSucceeded = false
                         verificationMessage = String(
-                            localized: "The key worked, but VoiceInk could not save it securely.")
+                            localized: "The key worked, but ForIT Dictate could not save it securely.")
                         verificationDetailMessage = nil
                         onVerificationChanged()
                         return

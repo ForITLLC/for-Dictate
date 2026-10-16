@@ -4,7 +4,10 @@ enum TranscriptionModelRegistry {
 
     static var models: [any TranscriptionModel] {
         let cloudModels: [any TranscriptionModel] = CloudProviderRegistry.allProviders.flatMap { $0.models }
-        return predefinedModels + cloudModels + CustomCloudModelManager.shared.customModels
+        // Custom models are user-defined cloud endpoints; ForITProviderPolicy hides them.
+        let customModels: [CustomCloudModel] =
+            ForITProviderPolicy.allowsCustomCloudEndpoints ? CustomCloudModelManager.shared.customModels : []
+        return predefinedModels + cloudModels + customModels
     }
 
     static func model(forSelectionKey key: String, in models: [any TranscriptionModel]) -> (any TranscriptionModel)? {

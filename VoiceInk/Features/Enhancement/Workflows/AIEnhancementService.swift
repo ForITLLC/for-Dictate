@@ -14,7 +14,7 @@ struct AIEnhancementResult: Sendable {
 
 @MainActor
 class AIEnhancementService: ObservableObject {
-    private let logger = Logger(subsystem: "com.prakashjoshipax.voiceink", category: "AIEnhancementService")
+    private let logger = Logger(subsystem: "io.forit.dictate", category: "AIEnhancementService")
 
     @Published var customPrompts: [CustomPrompt] {
         didSet {
@@ -77,7 +77,9 @@ class AIEnhancementService: ObservableObject {
     }
 
     func isConfigured(for configuration: EnhancementRuntimeConfiguration) -> Bool {
-        guard let provider = configuration.provider else { return false }
+        guard let provider = configuration.provider,
+            ForITProviderPolicy.allowsEnhancement(provider)
+        else { return false }
 
         if provider == .voiceInkRefine {
             return aiService.voiceInkRefineService.isAvailableInModes

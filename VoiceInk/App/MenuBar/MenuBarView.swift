@@ -34,7 +34,7 @@ struct MenuBarView: View {
 
             Divider()
 
-            Button("Quit VoiceInk") {
+            Button("Quit ForIT Dictate") {
                 NSApplication.shared.terminate(nil)
             }
         }
@@ -154,7 +154,7 @@ struct MenuBarView: View {
             }
             .keyboardShortcut(",", modifiers: .command)
 
-            Button("Quit VoiceInk") {
+            Button("Quit ForIT Dictate") {
                 NSApplication.shared.terminate(nil)
             }
         }

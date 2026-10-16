@@ -11,7 +11,7 @@ class TranscriptionModelManager: ObservableObject {
     private weak var fluidAudioModelManager: FluidAudioModelManager?
     private let transcribeCppModelManager = TranscribeCppModelManager.shared
 
-    private let logger = Logger(subsystem: "com.prakashjoshipax.voiceink", category: "TranscriptionModelManager")
+    private let logger = Logger(subsystem: "io.forit.dictate", category: "TranscriptionModelManager")
 
     init(whisperModelManager: WhisperModelManager, fluidAudioModelManager: FluidAudioModelManager) {
         self.whisperModelManager = whisperModelManager
@@ -45,6 +45,7 @@ class TranscriptionModelManager: ObservableObject {
 
     var usableModels: [any TranscriptionModel] {
         allAvailableModels.filter { model in
+            guard ForITProviderPolicy.allowsTranscription(model.provider) else { return false }
             switch model.provider {
             case .whisper:
                 return whisperModelManager?.availableModels.contains { $0.name == model.name } ?? false
@@ -80,7 +81,8 @@ class TranscriptionModelManager: ObservableObject {
         if let savedModelName = UserDefaults.standard.string(forKey: "CurrentTranscriptionModel"),
             let savedModel = TranscriptionModelRegistry.model(forSelectionKey: savedModelName, in: allAvailableModels)
         {
-            guard isAvailableOnCurrentOS(savedModel) else {
+            // A saved cloud or custom model that ForITProviderPolicy hides counts as no selection.
+            guard isAvailableOnCurrentOS(savedModel), ForITProviderPolicy.allowsTranscription(savedModel.provider) else {
                 UserDefaults.standard.removeObject(forKey: "CurrentTranscriptionModel")
                 currentTranscriptionModel = nil
                 return
@@ -94,6 +96,11 @@ class TranscriptionModelManager: ObservableObject {
     // MARK: - Set default model
 
     func setDefaultTranscriptionModel(_ model: any TranscriptionModel) {
+        guard ForITProviderPolicy.allowsTranscription(model.provider) else {
+            logger.notice("Refused hidden transcription provider \(model.provider.rawValue, privacy: .public)")
+            return
+        }
+
         guard isAvailableOnCurrentOS(model) else {
             NotificationManager.shared.showNotification(
                 title: String(format: String(localized: "%@ requires macOS 26 or later"), model.displayName),

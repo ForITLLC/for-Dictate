@@ -9,8 +9,8 @@
 ## Local Build
 
 ```bash
-git clone https://github.com/Beingpax/VoiceInk.git
-cd VoiceInk
+git clone https://github.com/ForITLLC/for-Dictate.git
+cd for-Dictate
 make local
 open ~/Downloads/VoiceInk.app
 ```
@@ -31,7 +31,7 @@ Force ad-hoc signing:
 make local LOCAL_CODESIGN_IDENTITY=-
 ```
 
-Local builds do not include iCloud dictionary sync or automatic updates. Ad-hoc builds may require macOS permissions again after rebuilding.
+ForIT Dictate has no iCloud sync or automatic updates in any build. Ad-hoc builds may require macOS permissions again after rebuilding.
 
 ## Other Commands
 
@@ -57,4 +57,8 @@ Select the `VoiceInk` scheme. Run builds `VoiceInk Dev.app`; Archive uses Releas
 - Run `make check` to verify the required tools.
 - Run `make whisper` if the framework is missing.
 - If several Apple Development identities exist, set `LOCAL_CODESIGN_IDENTITY` explicitly.
-- For additional help, open a [GitHub issue](https://github.com/Beingpax/VoiceInk/issues).
+- For help with ForIT Dictate, ask in ForIT's internal support channels.
+
+## ForIT release build
+
+The signed, notarized ForIT Dictate DMG is built by `scripts/forit-release.sh` on ForIT's Mac mini; see the README.

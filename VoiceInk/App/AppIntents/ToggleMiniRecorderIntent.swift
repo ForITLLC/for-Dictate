@@ -3,8 +3,8 @@ import AppKit
 import Foundation
 
 struct ToggleMiniRecorderIntent: AppIntent {
-    static var title: LocalizedStringResource = "Toggle VoiceInk Recorder"
-    static var description = IntentDescription("Start or stop the VoiceInk recorder for voice transcription.")
+    static var title: LocalizedStringResource = "Toggle ForIT Dictate Recorder"
+    static var description = IntentDescription("Start or stop the ForIT Dictate recorder for voice transcription.")
 
     static var openAppWhenRun: Bool = false
 
@@ -12,7 +12,7 @@ struct ToggleMiniRecorderIntent: AppIntent {
     func perform() async throws -> some IntentResult & ProvidesDialog {
         NotificationCenter.default.post(name: .toggleRecorderPanel, object: nil)
 
-        let dialog: IntentDialog = "VoiceInk recorder toggled"
+        let dialog: IntentDialog = "ForIT Dictate recorder toggled"
         return .result(dialog: dialog)
     }
 }
@@ -24,9 +24,9 @@ enum IntentError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .appNotAvailable:
-            return String(localized: "VoiceInk app is not available")
+            return String(localized: "ForIT Dictate app is not available")
         case .serviceNotAvailable:
-            return String(localized: "VoiceInk recording service is not available")
+            return String(localized: "ForIT Dictate recording service is not available")
         }
     }
 }
