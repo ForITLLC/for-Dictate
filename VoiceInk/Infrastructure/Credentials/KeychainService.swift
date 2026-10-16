@@ -2,7 +2,7 @@ import Foundation
 import Security
 import os
 
-/// Stores production credentials in the Data Protection Keychain and local-build credentials in a separate, non-syncing login Keychain namespace.
+/// Stores credentials in the login Keychain on this Mac, with local builds in a separate service namespace.
 final class KeychainService {
     static let shared = KeychainService()
 
@@ -24,12 +24,14 @@ final class KeychainService {
     }
 
     private let logger = Logger(subsystem: "com.prakashjoshipax.voiceink", category: "KeychainService")
+    // ForIT Dictate is a Developer ID build with no provisioning profile, so it has no keychain access group and
+    // cannot use the data-protection keychain or iCloud Keychain: its items live in the login keychain, on this Mac.
     #if LOCAL_BUILD
-        private let service = "com.prakashjoshipax.VoiceInk.Local"
+        private let service = "io.forit.dictate.local"
         private let defaults = UserDefaults.standard
         private let legacyLocalPrefix = "LocalKeychain_"
     #else
-        private let service = "com.prakashjoshipax.VoiceInk"
+        private let service = "io.forit.dictate"
     #endif
 
     private init() {}
@@ -213,29 +215,15 @@ final class KeychainService {
 
     /// Creates a base Keychain query.
     private func baseQuery(forKey key: String, syncable: Bool) -> [String: Any] {
-        var query: [String: Any] = [
+        [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: key,
         ]
-
-        #if !LOCAL_BUILD
-            query[kSecUseDataProtectionKeychain as String] = true
-
-            if syncable {
-                query[kSecAttrSynchronizable as String] = kCFBooleanTrue
-            }
-        #endif
-
-        return query
     }
 
     private func applyAccessibility(_ accessibility: Accessibility?, to attributes: inout [String: Any]) {
-        #if !LOCAL_BUILD
-            if let accessibility {
-                attributes[kSecAttrAccessible as String] = accessibility.value
-            }
-        #endif
+        // Accessibility classes apply only to the data-protection keychain, which ForIT Dictate does not use.
     }
 
     // Removes the old local UserDefaults copy after secure storage succeeds or the credential is deleted.

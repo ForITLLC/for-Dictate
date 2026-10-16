@@ -234,18 +234,12 @@ struct VoiceInkApp: App {
         )
 
         let dictionarySchema = Schema([VocabularyWord.self, WordReplacement.self])
-        // Dev shares the local stores but must never connect to CloudKit.
-        #if DEBUG || LOCAL_BUILD
-            let dictionaryCloudKit: ModelConfiguration.CloudKitDatabase = .none
-        #else
-            let dictionaryCloudKit: ModelConfiguration.CloudKitDatabase = .private(
-                "iCloud.com.prakashjoshipax.VoiceInk")
-        #endif
+        // ForIT Dictate keeps the dictionary on this Mac: a Developer ID build has no iCloud container.
         let dictionaryConfig = ModelConfiguration(
             "dictionary",
             schema: dictionarySchema,
             url: dictionaryStoreURL,
-            cloudKitDatabase: dictionaryCloudKit
+            cloudKitDatabase: .none
         )
 
         let statsSchema = Schema([SessionMetric.self])

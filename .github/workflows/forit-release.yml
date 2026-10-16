@@ -1,0 +1,100 @@
+# ForIT Dictate release: a Developer ID signed, notarized DMG for Ben and ForIT staff.
+#
+# Runs only in ForIT's private build mirror (ForITLLC/for-Dictate-build), whose Mac mini runner and signing
+# secrets never touch the public repository. The mirror carries the same commits as the public fork, and the
+# first step refuses any commit that is not public: GPLv3 requires the source of every build we ship.
+# workflow_dispatch only, so nothing here runs on a push or a pull request.
+name: forit-release
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: forit-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    if: github.repository == 'ForITLLC/for-Dictate-build'
+    runs-on: [self-hosted, macOS, mini]
+    timeout-minutes: 180  # a notarization can sit in Apple's in-depth check for over an hour
+    env:
+      NOTARY_KEY_ID: 78ND83SSBB
+      NOTARY_ISSUER: b21bbf92-e667-43f9-b358-29908a814489
+      # SHA-1 of "Developer ID Application: ForIT Limited Liability Company (UUSSWWML2A)"
+      FORIT_CODESIGN_IDENTITY: 13D7D4184E25220518CA4EE7E0C49730B6608BC8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # the build number is the commit count
+
+      - name: Source is public
+        run: |
+          code=$(curl -sS -o /dev/null -w '%{http_code}' \
+            "https://api.github.com/repos/ForITLLC/for-Dictate/commits/$GITHUB_SHA")
+          [ "$code" = 200 ] || { echo "$GITHUB_SHA is not in public ForITLLC/for-Dictate (HTTP $code); push it there first"; exit 1; }
+          echo "public source: https://github.com/ForITLLC/for-Dictate/commit/$GITHUB_SHA"
+
+      - name: Signing keychain and keys
+        env:
+          DEVELOPER_ID_CERT_BASE64: ${{ secrets.DEVELOPER_ID_CERT_BASE64 }}
+          DEVELOPER_ID_KEY_BASE64: ${{ secrets.DEVELOPER_ID_KEY_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          ASC_KEY_BASE64: ${{ secrets.ASC_KEY_BASE64 }}
+        run: |
+          umask 077
+          KC=$RUNNER_TEMP/forit-dictate-signing.keychain-db
+          security delete-keychain "$KC" 2>/dev/null || true
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KC"
+          security set-keychain-settings -lut 7200 "$KC"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KC"
+          echo -n "$DEVELOPER_ID_CERT_BASE64" | base64 -D > "$RUNNER_TEMP/devid.cer"
+          echo -n "$DEVELOPER_ID_KEY_BASE64" | base64 -D > "$RUNNER_TEMP/devid.key"
+          security import "$RUNNER_TEMP/devid.cer" -k "$KC" -A
+          security import "$RUNNER_TEMP/devid.key" -k "$KC" -x -T /usr/bin/codesign
+          rm -f "$RUNNER_TEMP/devid.cer" "$RUNNER_TEMP/devid.key"
+          # Developer ID certificates chain to the G2 intermediate.
+          curl -fsSL -o "$RUNNER_TEMP/DeveloperIDG2CA.cer" https://www.apple.com/certificateauthority/DeveloperIDG2CA.cer
+          security import "$RUNNER_TEMP/DeveloperIDG2CA.cer" -k "$KC" || true
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KC" >/dev/null
+          # codesign is always given --keychain; the search list only lets it build the certificate chain.
+          security list-keychains -d user -s "$KC" $(security list-keychains -d user | tr -d '"' | grep -v "$KC")
+          security find-identity -v -p codesigning "$KC" | grep -q "$FORIT_CODESIGN_IDENTITY" \
+            || { echo "Developer ID identity did not import"; exit 1; }
+          echo -n "$ASC_KEY_BASE64" | base64 -D > "$RUNNER_TEMP/notary.p8"
+          { echo "FORIT_CODESIGN_KEYCHAIN=$KC"; echo "NOTARY_KEY=$RUNNER_TEMP/notary.p8"; } >> "$GITHUB_ENV"
+
+      - name: Build, sign, notarize, staple
+        run: scripts/forit-release.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: forit-dictate-mac-${{ github.run_number }}
+          path: |
+            build/forit-release/*.dmg
+            build/forit-release/*.sha256
+            build/forit-release/notary-*.json
+            build/forit-release/SOURCE.txt
+            build/forit-release/codesign.txt
+            build/forit-release/entitlements.plist
+            build/forit-release/spctl-*.txt
+          retention-days: 90
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: forit-dictate-build-log-${{ github.run_number }}
+          path: build/forit-release/xcodebuild.log
+          retention-days: 14
+
+      - name: Clean up
+        if: always()
+        run: |
+          KC=$RUNNER_TEMP/forit-dictate-signing.keychain-db
+          security list-keychains -d user -s $(security list-keychains -d user | tr -d '"' | grep -v "$KC")
+          security delete-keychain "$KC" 2>/dev/null || true
+          rm -f "$RUNNER_TEMP/notary.p8" "$RUNNER_TEMP/devid.cer" "$RUNNER_TEMP/devid.key" "$RUNNER_TEMP/DeveloperIDG2CA.cer"
+          rm -rf build/forit-dd
