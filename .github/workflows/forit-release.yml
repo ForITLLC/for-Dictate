@@ -33,7 +33,7 @@ jobs:
 
       - name: Source is public
         run: |
-          code=$(curl -sS -o /dev/null -w '%{http_code}' \
+          code=$(curl -sS --retry 3 -o /dev/null -w '%{http_code}' \
             "https://api.github.com/repos/ForITLLC/for-Dictate/commits/$GITHUB_SHA")
           [ "$code" = 200 ] || { echo "$GITHUB_SHA is not in public ForITLLC/for-Dictate (HTTP $code); push it there first"; exit 1; }
           echo "public source: https://github.com/ForITLLC/for-Dictate/commit/$GITHUB_SHA"
