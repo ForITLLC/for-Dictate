@@ -5,7 +5,6 @@ import SwiftUI
 @MainActor
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
-    @EnvironmentObject private var updaterViewModel: UpdaterViewModel
     @EnvironmentObject private var menuBarManager: MenuBarManager
     @EnvironmentObject private var recordingShortcutManager: RecordingShortcutManager
     @EnvironmentObject private var recorderUIManager: RecorderUIManager
@@ -15,7 +14,6 @@ struct SettingsView: View {
     @ObservedObject private var mediaController = MediaController.shared
     @ObservedObject private var playbackController = PlaybackController.shared
     @AppStorage(OnboardingSettings.completedV2Key) private var hasCompletedOnboardingV2 = true
-    @AppStorage("enableAnnouncements") private var enableAnnouncements = true
     @AppStorage("restoreClipboardAfterPaste") private var restoreClipboardAfterPaste = true
     @AppStorage("clipboardRestoreDelay") private var clipboardRestoreDelay = 2.0
     @AppStorage(PasteMethod.userDefaultsKey) private var pasteMethodRawValue = PasteMethod.standard.rawValue
@@ -241,31 +239,8 @@ struct SettingsView: View {
                 )
                 .disabled(launchAtLoginManager.isUpdating)
 
-                Toggle(
-                    "Automatically Check for Updates",
-                    isOn: Binding(
-                        get: { updaterViewModel.checksForUpdatesWhenDashboardAppears },
-                        set: { updaterViewModel.setChecksForUpdatesWhenDashboardAppears($0) }
-                    ))
-
-                Toggle("Show Announcements", isOn: $enableAnnouncements)
-                    .onChange(of: enableAnnouncements) { _, newValue in
-                        if newValue {
-                            AnnouncementsService.shared.start()
-                        } else {
-                            AnnouncementsService.shared.stop()
-                        }
-                    }
-
-                HStack {
-                    Button("Check for Updates") {
-                        updaterViewModel.checkForUpdates()
-                    }
-                    .disabled(!updaterViewModel.canCheckForUpdates)
-
-                    Button("Reset Onboarding") {
-                        showResetOnboardingAlert = true
-                    }
+                Button("Reset Onboarding") {
+                    showResetOnboardingAlert = true
                 }
             }
 

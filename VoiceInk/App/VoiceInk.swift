@@ -17,14 +17,12 @@ struct VoiceInkApp: App {
     @StateObject private var transcriptionModelManager: TranscriptionModelManager
     @StateObject private var recorderUIManager: RecorderUIManager
     @StateObject private var recordingShortcutManager: RecordingShortcutManager
-    @StateObject private var updaterViewModel: UpdaterViewModel
     @StateObject private var menuBarManager: MenuBarManager
     @StateObject private var mainWindowNavigation = MainWindowNavigation.shared
     @StateObject private var aiService = AIService()
     @StateObject private var enhancementService: AIEnhancementService
     @StateObject private var activeWindowService = ActiveWindowService.shared
     @AppStorage(OnboardingSettings.completedV2Key) private var hasCompletedOnboardingV2 = false
-    @AppStorage("enableAnnouncements") private var enableAnnouncements = true
     @State private var showMenuBarIcon = true
     @State private var didShowLaunchReminders = false
 
@@ -97,12 +95,6 @@ struct VoiceInkApp: App {
         let aiService = AIService()
         _aiService = StateObject(wrappedValue: aiService)
         aiService.refreshOllamaAvailabilityInBackground()
-        Task { @MainActor in
-            await aiService.fetchOpenRouterModelsIfNeededForMigration()
-        }
-
-        let updaterViewModel = UpdaterViewModel()
-        _updaterViewModel = StateObject(wrappedValue: updaterViewModel)
 
         let enhancementService = AIEnhancementService(aiService: aiService, modelContext: resolvedContainer.mainContext)
         _enhancementService = StateObject(wrappedValue: enhancementService)
@@ -303,33 +295,13 @@ struct VoiceInkApp: App {
                         .environmentObject(transcriptionModelManager)
                         .environmentObject(recorderUIManager)
                         .environmentObject(recordingShortcutManager)
-                        .environmentObject(updaterViewModel)
                         .environmentObject(menuBarManager)
                         .environmentObject(mainWindowNavigation)
                         .environmentObject(aiService)
                         .environmentObject(enhancementService)
                         .modelContainer(container)
-                        .lazyChangeLogPresenter { isPresenting in
-                            if isPresenting {
-                                if enableAnnouncements {
-                                    AnnouncementsService.shared.stop()
-                                }
-                            } else {
-                                if enableAnnouncements {
-                                    AnnouncementsService.shared.start()
-                                }
-                                showLaunchRemindersIfNeeded()
-                            }
-                        }
                         .onAppear {
-                            if !ChangeLogManager.needsPresentation() {
-                                if enableAnnouncements {
-                                    AnnouncementsService.shared.start()
-                                }
-                                showLaunchRemindersIfNeeded()
-                            }
-
-                            GitHubStarPromptCoordinator.shared.scheduleIfNeeded(modelContainer: container)
+                            showLaunchRemindersIfNeeded()
 
                             // Run due audio-only cleanup and schedule future checks when transcript cleanup is not managing retention.
                             if !UserDefaults.standard.bool(forKey: CleanupSettingsKeys.isTranscriptionCleanupEnabled)
@@ -360,7 +332,6 @@ struct VoiceInkApp: App {
                             }
                         )
                         .onDisappear {
-                            AnnouncementsService.shared.stop()
                             whisperModelManager.unloadModel()
 
                             // Stop the automatic audio cleanup process
@@ -386,10 +357,6 @@ struct VoiceInkApp: App {
         .windowResizability(.contentSize)
         .commands {
             CommandGroup(replacing: .newItem) {}
-
-            CommandGroup(after: .appInfo) {
-                CheckForUpdatesView(updaterViewModel: updaterViewModel)
-            }
         }
 
         MenuBarExtra(isInserted: $showMenuBarIcon) {
@@ -402,7 +369,6 @@ struct VoiceInkApp: App {
                 .environmentObject(recordingShortcutManager)
                 .environmentObject(menuBarManager)
                 .environmentObject(mainWindowNavigation)
-                .environmentObject(updaterViewModel)
                 .environmentObject(aiService)
                 .environmentObject(enhancementService)
         } label: {

@@ -35,9 +35,7 @@ struct DashboardContent: View {
     @State private var isInsightsViewPresented = false
     @State private var selectedInsightPeriod: DashboardInsightPeriod = .allTime
     @State private var isAccessibilityEnabled = AXIsProcessTrusted()
-    @EnvironmentObject private var updaterViewModel: UpdaterViewModel
     @ObservedObject private var modeManager = ModeManager.shared
-    @ObservedObject private var starPrompt = GitHubStarPromptCoordinator.shared
     @State private var isSystemInfoCopied = false
     @State private var isEditingDisplayName = false
     @State private var displayNameDraft = ""
@@ -105,7 +103,6 @@ struct DashboardContent: View {
         }
         .onAppear {
             refreshAccessibilityStatus()
-            updaterViewModel.checkForUpdatesIfDue()
             if shouldAutomaticallyPresentAutoLearnFailure {
                 scheduleAutoLearnFailurePresentation()
             }
@@ -606,57 +603,8 @@ struct DashboardContent: View {
         )
     }
 
-    @ViewBuilder
-    private var footerStarButtonLabel: some View {
-        if starPrompt.openFailed {
-            footerActionLabel(icon: "exclamationmark.triangle.fill", title: "Couldn't open — try again", color: .orange)
-        } else {
-            switch starPrompt.completionState {
-            case .starred:
-                footerActionLabel(icon: "checkmark", title: "Starred — thank you!", color: AppTheme.Sidebar.license)
-            case .opened:
-                footerActionLabel(icon: "arrow.up.right", title: "GitHub opened", color: AppTheme.Sidebar.fallback)
-            case .none:
-                footerActionLabel(icon: "star", title: "Star on GitHub", color: AppTheme.Sidebar.fallback)
-            }
-        }
-    }
-
     private var footerActionsView: some View {
         HStack(alignment: .center, spacing: 12) {
-            if starPrompt.showsFooterStarButton {
-                Button(action: { starPrompt.star() }) {
-                    footerStarButtonLabel
-                }
-                .buttonStyle(.plain)
-                .fixedSize(horizontal: true, vertical: true)
-                .disabled(starPrompt.isStarring || starPrompt.completionState != .none)
-                .animation(.easeInOut(duration: 0.15), value: starPrompt.openFailed)
-            }
-
-            if let availableUpdate = updaterViewModel.availableUpdate {
-                Button(action: updaterViewModel.checkForUpdates) {
-                    footerActionLabel(
-                        icon: "arrow.down.circle.fill",
-                        title: "Update Available",
-                        color: AppTheme.Status.infoStrong
-                    )
-                }
-                .buttonStyle(.plain)
-                .fixedSize(horizontal: true, vertical: true)
-                .disabled(!updaterViewModel.canCheckForUpdates)
-                .help(
-                    String(
-                        format: String(localized: "Open the VoiceInk %@ update"),
-                        availableUpdate.displayVersion
-                    )
-                )
-                .accessibilityLabel("Update Available")
-                .accessibilityValue(Text(verbatim: availableUpdate.displayVersion))
-                .accessibilityHint("Opens the update window")
-                .transition(.move(edge: .trailing).combined(with: .opacity))
-            }
-
             Button(action: copySystemInfo) {
                 footerActionLabel(
                     icon: isSystemInfoCopied ? "checkmark" : "doc.on.doc",
@@ -668,7 +616,6 @@ struct DashboardContent: View {
             .fixedSize(horizontal: true, vertical: true)
             .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSystemInfoCopied)
         }
-        .animation(.easeOut(duration: 0.2), value: updaterViewModel.availableUpdate)
     }
 
     @ViewBuilder
