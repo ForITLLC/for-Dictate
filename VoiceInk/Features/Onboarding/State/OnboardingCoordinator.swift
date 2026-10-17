@@ -2,9 +2,6 @@ import SwiftUI
 
 @MainActor
 final class OnboardingCoordinator: ObservableObject {
-    let licenseViewModel = LicenseViewModel.shared
-    @Published var licenseKeyDraft = ""
-
     @Published var storedStage: String {
         didSet {
             defaults.set(storedStage, forKey: OnboardingStorageKeys.stage)
@@ -94,13 +91,16 @@ final class OnboardingCoordinator: ObservableObject {
     }
 
     var stage: OnboardingStage {
-        #if LOCAL_BUILD
-            if storedStage == OnboardingStage.license.rawValue {
-                return .trust
-            }
-        #endif
+        // The license stage was removed; resume anyone saved there on the final stage.
+        if storedStage == "license" {
+            return .trust
+        }
 
         if let stage = OnboardingStage(rawValue: storedStage) {
+            // ForITProviderPolicy approves no API-key provider: the API step is not shown, so its slot is the model step.
+            if stage == .api && !isAPISetupOffered {
+                return .model
+            }
             return stage
         }
 
@@ -133,22 +133,19 @@ final class OnboardingCoordinator: ObservableObject {
         }
 
         if stage == .trust {
-            return OnboardingStage.baseStepCount + activeExperienceSteps.count + contextAwarenessStepCount + 1
-        }
-
-        if stage == .license {
-            return OnboardingStage.baseStepCount + activeExperienceSteps.count + contextAwarenessStepCount + 2
+            return baseStepCount + activeExperienceSteps.count + contextAwarenessStepCount + 1
         }
 
         return stage.stepNumber
     }
 
     var totalStepCount: Int {
-        #if LOCAL_BUILD
-            OnboardingStage.baseStepCount + activeExperienceSteps.count + contextAwarenessStepCount + 1
-        #else
-            OnboardingStage.baseStepCount + activeExperienceSteps.count + contextAwarenessStepCount + 2
-        #endif
+        baseStepCount + activeExperienceSteps.count + contextAwarenessStepCount + 1
+    }
+
+    /// Setup steps before the experience steps; one fewer when the API step is skipped.
+    private var baseStepCount: Int {
+        OnboardingStage.baseStepCount - (isAPISetupOffered ? 0 : 1)
     }
 
     var experienceStep: OnboardingExperienceStep {
@@ -245,6 +242,7 @@ final class OnboardingCoordinator: ObservableObject {
 
         let supportedProviders = AIProvider.allCases.filter { provider in
             provider.supportsEnhancement && provider.requiresAPIKey && provider != .custom
+                && ForITProviderPolicy.allowsEnhancement(provider)
         }
 
         return supportedProviders.sorted { first, second in
@@ -259,8 +257,19 @@ final class OnboardingCoordinator: ObservableObject {
         }
     }
 
+    /// False while ForITProviderPolicy approves no API-key enhancement provider; the API step is then skipped.
+    var isAPISetupOffered: Bool {
+        !onboardingProviderOptions.isEmpty
+    }
+
+    /// False while ForITProviderPolicy approves no cloud transcription provider; only Local is offered.
+    var isCloudTranscriptionSetupOffered: Bool {
+        !onboardingTranscriptionProviderOptions.isEmpty
+    }
+
     var transcriptionSetupKind: OnboardingTranscriptionSetupKind {
-        OnboardingTranscriptionSetupKind(rawValue: storedTranscriptionSetupKind) ?? .local
+        guard isCloudTranscriptionSetupOffered else { return .local }
+        return OnboardingTranscriptionSetupKind(rawValue: storedTranscriptionSetupKind) ?? .local
     }
 
     var onboardingTranscriptionProviderOptions: [any CloudProvider] {
@@ -318,7 +327,8 @@ final class OnboardingCoordinator: ObservableObject {
     }
 
     var activeExperienceSteps: [OnboardingExperienceStep] {
-        if hasSkippedAPISetup && !isSelectedAPIProviderVerified {
+        // Without a verified provider only the local starter modes (Dictation) are offered.
+        if (hasSkippedAPISetup || !isAPISetupOffered) && !isSelectedAPIProviderVerified {
             return OnboardingExperienceCatalog.steps.filter { !$0.requiresVerifiedAPIProvider }
         }
 
@@ -341,15 +351,15 @@ final class OnboardingCoordinator: ObservableObject {
 
     private var contextAwarenessStepNumber: Int {
         guard let insertionIndex = contextAwarenessInsertionIndices.first else {
-            return OnboardingStage.baseStepCount + activeExperienceSteps.count + 1
+            return baseStepCount + activeExperienceSteps.count + 1
         }
 
-        return OnboardingStage.baseStepCount + insertionIndex + 1
+        return baseStepCount + insertionIndex + 1
     }
 
     private func experienceStepNumber(for index: Int) -> Int {
         let priorContextScreens = contextAwarenessInsertionIndices.filter { $0 <= index }.count
-        return OnboardingStage.baseStepCount + index + priorContextScreens + 1
+        return baseStepCount + index + priorContextScreens + 1
     }
 
     var selectedOnboardingProvider: AIProvider {
@@ -363,7 +373,7 @@ final class OnboardingCoordinator: ObservableObject {
             return .groq
         }
 
-        return onboardingProviderOptions.first ?? .groq
+        return onboardingProviderOptions.first ?? ForITProviderPolicy.fallbackEnhancementProvider
     }
 
     var requiredTranscriptionModel: FluidAudioModel? {
@@ -390,7 +400,7 @@ final class OnboardingCoordinator: ObservableObject {
     func selectedOnboardingProviderBinding(aiService: AIService) -> Binding<AIProvider> {
         Binding(
             get: { [weak self] in
-                self?.selectedOnboardingProvider ?? .groq
+                self?.selectedOnboardingProvider ?? ForITProviderPolicy.fallbackEnhancementProvider
             },
             set: { [weak self] provider in
                 self?.flow.selectOnboardingProvider(provider, aiService: aiService)
@@ -415,7 +425,7 @@ final class OnboardingCoordinator: ObservableObject {
 
     func isReadyForExperience(isTranscriptionSetupReady: Bool) -> Bool {
         requiredPermissionsGranted && hasSelectedOnboardingMicrophone && isTranscriptionSetupReady
-            && (isSelectedAPIProviderVerified || hasSkippedAPISetup)
+            && (isSelectedAPIProviderVerified || hasSkippedAPISetup || !isAPISetupOffered)
     }
 
     func isCurrentExperienceReady(isTranscriptionSetupReady: Bool) -> Bool {

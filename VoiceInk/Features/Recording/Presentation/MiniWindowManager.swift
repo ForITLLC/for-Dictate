@@ -8,7 +8,7 @@ class MiniWindowManager {
     private var panel: MiniRecorderPanel?
 
     private let makeView: () -> AnyView
-    private let logger = Logger(subsystem: "com.prakashjoshipax.voiceink", category: "MiniWindowManager")
+    private let logger = Logger(subsystem: "io.forit.dictate", category: "MiniWindowManager")
 
     init(
         engine: VoiceInkEngine,

@@ -9,6 +9,22 @@ enum ModelFilter: String, CaseIterable, Identifiable {
 
     var id: String { self.rawValue }
 
+    /// Tabs ForITProviderPolicy leaves something to show in. Local is always shown.
+    static var visibleCases: [ModelFilter] {
+        allCases.filter { $0.isVisible }
+    }
+
+    var isVisible: Bool {
+        switch self {
+        case .local:
+            return true
+        case .cloud:
+            return ForITProviderPolicy.hasApprovedCloudProviders
+        case .custom:
+            return ForITProviderPolicy.allowsCustomCloudEndpoints
+        }
+    }
+
     var title: LocalizedStringKey {
         switch self {
         case .local:
@@ -167,9 +183,12 @@ struct ModelManagementView: View {
 
     private var availableModelsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            modelFilterPicker
+            // With only the Local tab left there is nothing to pick between.
+            if ModelFilter.visibleCases.count > 1 {
+                modelFilterPicker
+            }
 
-            switch selectedFilter {
+            switch selectedFilter.isVisible ? selectedFilter : .local {
             case .local:
                 localModelsSection
             case .cloud:
@@ -209,7 +228,7 @@ struct ModelManagementView: View {
 
     private var modelFilterPicker: some View {
         HStack(spacing: 12) {
-            ForEach(ModelFilter.allCases, id: \.self) { filter in
+            ForEach(ModelFilter.visibleCases, id: \.self) { filter in
                 Button(action: {
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
                         selectedFilter = filter
@@ -306,7 +325,7 @@ struct ModelManagementView: View {
             .buttonStyle(.plain)
 
             InfoTip(
-                "Add a custom fine-tuned whisper model to use with VoiceInk. Select the downloaded .bin file.",
+                "Add a custom fine-tuned whisper model to use with ForIT Dictate. Select the downloaded .bin file.",
                 learnMoreURL: "https://tryvoiceink.com/docs/custom-local-whisper-models"
             )
             .help("Read more about custom local models")
@@ -325,24 +344,26 @@ struct ModelManagementView: View {
 
             Spacer()
 
-            Button(action: {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
-                    selectedFilter = .cloud
+            if ModelFilter.cloud.isVisible {
+                Button(action: {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                        selectedFilter = .cloud
+                    }
+                }) {
+                    HStack(spacing: 4) {
+                        Text("Use Cloud")
+                            .font(.system(size: 12, weight: .semibold))
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 10, weight: .bold))
+                    }
+                    .foregroundColor(AppTheme.Status.warningStrong)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(AppTheme.Status.warningStrong.opacity(0.12))
+                    .cornerRadius(6)
                 }
-            }) {
-                HStack(spacing: 4) {
-                    Text("Use Cloud")
-                        .font(.system(size: 12, weight: .semibold))
-                    Image(systemName: "arrow.right")
-                        .font(.system(size: 10, weight: .bold))
-                }
-                .foregroundColor(AppTheme.Status.warningStrong)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(AppTheme.Status.warningStrong.opacity(0.12))
-                .cornerRadius(6)
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)

@@ -263,6 +263,11 @@ class AIService: ObservableObject {
                 return false
             }
 
+            // Hidden providers are never connected, even with a saved key (this also covers .custom).
+            guard ForITProviderPolicy.allowsEnhancement(provider) else {
+                return false
+            }
+
             if provider == .custom {
                 return CustomAIProviderManager.shared.hasConfiguredModels
             } else if provider == .voiceInkRefine {
@@ -347,11 +352,13 @@ class AIService: ObservableObject {
         }
 
         if let savedProvider = userDefaults.string(forKey: "selectedAIProvider"),
-            let provider = AIProvider(rawValue: savedProvider)
+            let provider = AIProvider(rawValue: savedProvider),
+            ForITProviderPolicy.allowsEnhancement(provider)
         {
             self.selectedProvider = provider
         } else {
-            self.selectedProvider = .gemini
+            // No saved provider, or one ForITProviderPolicy hides: use the local fallback.
+            self.selectedProvider = ForITProviderPolicy.fallbackEnhancementProvider
         }
 
         if selectedProvider.requiresAPIKey {

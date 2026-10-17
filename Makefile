@@ -6,7 +6,7 @@ LOCAL_DERIVED_DATA := $(CURDIR)/.local-build
 LOCAL_CODESIGN_IDENTITY ?=
 RUN_APP_NAME ?= VoiceInk
 
-.PHONY: all clean whisper setup build local check healthcheck help dev run release release-setup
+.PHONY: all clean whisper setup build local check healthcheck help dev run
 
 # Default target
 all: check build
@@ -119,18 +119,6 @@ run:
 		fi; \
 	fi
 
-# Build a signed, notarized DMG and matching local Sparkle Appcast.
-release: whisper
-	@if [ -n "$(NOTES)" ]; then \
-		./scripts/release.sh --notes "$(NOTES)" $(RELEASE_ARGS); \
-	else \
-		./scripts/release.sh $(RELEASE_ARGS); \
-	fi
-
-# Store Apple's notarization credentials securely in Keychain.
-release-setup:
-	@./scripts/setup-release-notarization.sh
-
 # Cleanup
 clean:
 	@echo "Cleaning build artifacts..."
@@ -148,8 +136,6 @@ help:
 	@echo "    LOCAL_CODESIGN_IDENTITY=<SHA or name> overrides automatic Apple Development detection"
 	@echo "  run                Launch the built VoiceInk app"
 	@echo "  dev                Build and run the app (for development)"
-	@echo "  release            Build DMG and Appcast using release-notes/<version>.html"
-	@echo "  release-setup      Store notarization credentials in Keychain"
 	@echo "  all                Run full build process (default)"
 	@echo "  clean              Remove build artifacts"
 	@echo "  help               Show this help message"

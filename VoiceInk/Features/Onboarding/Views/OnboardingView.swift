@@ -77,9 +77,10 @@ struct OnboardingView: View {
                         onVerificationChanged: coordinator.flow.refreshTranscriptionSetupVerification,
                         onBack: coordinator.flow.goToMicrophoneStep,
                         onContinue: {
-                            coordinator.flow.goToAPIStep(
+                            coordinator.flow.continueFromModelStep(
                                 isTranscriptionSetupReady: isTranscriptionSetupReady,
-                                aiService: aiService
+                                aiService: aiService,
+                                enhancementService: enhancementService
                             )
                         }
                     )
@@ -168,41 +169,6 @@ struct OnboardingView: View {
                             )
                         },
                         onContinue: {
-                            #if LOCAL_BUILD
-                                coordinator.flow.completeOnboarding(
-                                    isTranscriptionSetupReady: isTranscriptionSetupReady
-                                ) {
-                                    hasCompletedOnboardingV2 = true
-                                }
-                            #else
-                                coordinator.flow.goToLicenseStep(
-                                    isTranscriptionSetupReady: isTranscriptionSetupReady
-                                )
-                            #endif
-                        }
-                    )
-                    .transition(.opacity)
-                case .license:
-                    OnboardingLicenseScreen(
-                        licenseViewModel: coordinator.licenseViewModel,
-                        licenseKeyDraft: $coordinator.licenseKeyDraft,
-                        onBack: {
-                            coordinator.flow.goToPreviousLicenseStep(
-                                isTranscriptionSetupReady: isTranscriptionSetupReady
-                            )
-                        },
-                        onPurchase: {
-                            coordinator.licenseViewModel.openPurchaseLink()
-                        },
-                        onStartTrial: {
-                            coordinator.flow.startLicenseTrial(
-                                isTranscriptionSetupReady: isTranscriptionSetupReady
-                            ) {
-                                hasCompletedOnboardingV2 = true
-                            }
-                        },
-                        onActivate: coordinator.flow.activateLicense,
-                        onFinish: {
                             coordinator.flow.completeOnboarding(
                                 isTranscriptionSetupReady: isTranscriptionSetupReady
                             ) {
@@ -299,7 +265,7 @@ struct OnboardingView: View {
         switch coordinator.stage {
         case .permissions, .microphone, .model, .api:
             return false
-        case .experience, .contextAwareness, .trust, .license:
+        case .experience, .contextAwareness, .trust:
             return true
         }
     }

@@ -56,6 +56,10 @@ class CloudTranscriptionService: TranscriptionService {
         let timeout = CloudTranscriptionSettings.timeout
 
         do {
+            guard ForITProviderPolicy.allowsTranscription(model.provider) else {
+                throw CloudTranscriptionError.unsupportedProvider
+            }
+
             if model.provider == .custom {
                 guard let customModel = model as? CustomCloudModel else {
                     throw CloudTranscriptionError.unsupportedProvider

@@ -30,7 +30,8 @@ class OllamaService: ObservableObject {
     }
 
     private var baseURLValue: URL? {
-        URL(string: baseURL)
+        guard let url = URL(string: baseURL), ForITProviderPolicy.allowsOllamaServer(url) else { return nil }
+        return url
     }
 
     @MainActor

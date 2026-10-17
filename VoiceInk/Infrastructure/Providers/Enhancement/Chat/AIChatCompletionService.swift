@@ -15,6 +15,11 @@ extension AIService {
         localUserPrompt: String? = nil,
         timeout: TimeInterval = 30
     ) async throws -> AIChatCompletionResult {
+        // Every AI text request passes here: a provider ForITProviderPolicy hides never receives dictated text.
+        guard ForITProviderPolicy.allowsEnhancement(provider) else {
+            throw EnhancementError.notConfigured
+        }
+
         let resolvedModel = modelName?.isEmpty == false ? modelName! : selectedModel(for: provider)
 
         let result: String
@@ -53,7 +58,7 @@ extension AIService {
                 provider: policy.provider,
                 includeRouterMetadata: true,
                 appReferer: URL(string: "https://tryvoiceink.com"),
-                appTitle: "VoiceInk",
+                appTitle: "ForIT Dictate",
                 timeout: timeout
             )
             guard !OpenRouterRequestPolicy.outputWasTruncated(finishReason: completion.finishReason) else {

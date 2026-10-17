@@ -16,7 +16,8 @@ struct CloudProviderManagementView: View {
             .cerebras,
         ]
 
-        var descriptors = enhancementProviders.map { aiProvider in
+        // ForITProviderPolicy hides unapproved providers; CloudProviderRegistry.allProviders is already filtered.
+        var descriptors = enhancementProviders.filter { ForITProviderPolicy.allowsEnhancement($0) }.map { aiProvider in
             ProviderDescriptor(
                 displayName: aiProvider.rawValue,
                 providerKey: aiProvider.rawValue,
@@ -55,19 +56,27 @@ struct CloudProviderManagementView: View {
     }
 
     var body: some View {
+        let descriptors = providerDescriptors
+
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
                 Text("Cloud Providers")
                     .font(.system(size: 15, weight: .semibold))
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text("Cloud providers process audio and text under their own privacy policies.")
+                if descriptors.isEmpty {
+                    Text(ForITProviderPolicy.cloudProvidersOffNote)
                         .foregroundStyle(.secondary)
-                    Link("Learn more", destination: URL(string: "https://tryvoiceink.com/privacy")!)
+                        .font(.caption)
+                } else {
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text("Cloud providers process audio and text under their own privacy policies.")
+                            .foregroundStyle(.secondary)
+                        Link("Learn more", destination: URL(string: "https://tryvoiceink.com/privacy")!)
+                    }
+                    .font(.caption)
                 }
-                .font(.caption)
             }
 
-            ForEach(providerDescriptors) { descriptor in
+            ForEach(descriptors) { descriptor in
                 ProviderListRow(
                     descriptor: descriptor,
                     isSelected: selectedProviderID == descriptor.id,

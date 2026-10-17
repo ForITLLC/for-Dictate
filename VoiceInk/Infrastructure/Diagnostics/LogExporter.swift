@@ -4,8 +4,8 @@ import OSLog
 final class LogExporter {
     static let shared = LogExporter()
 
-    private let logger = Logger(subsystem: "com.prakashjoshipax.voiceink", category: "LogExporter")
-    private let subsystem = "com.prakashjoshipax.voiceink"
+    private let logger = Logger(subsystem: "io.forit.dictate", category: "LogExporter")
+    private let subsystem = "io.forit.dictate"
     private let exportWindow: TimeInterval = 30 * 60
 
     private init() {
@@ -37,7 +37,7 @@ final class LogExporter {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
 
-        logLines.append("=== VoiceInk Diagnostic Logs ===")
+        logLines.append("=== ForIT Dictate Diagnostic Logs ===")
         logLines.append("Export Date: \(dateFormatter.string(from: exportDate))")
         logLines.append("Subsystem: \(subsystem)")
         logLines.append("Log Window: Last 30 minutes")
@@ -67,7 +67,7 @@ final class LogExporter {
         }
 
         if logCount == 0 {
-            logLines.append("No VoiceInk logs found in the last 30 minutes.")
+            logLines.append("No ForIT Dictate logs found in the last 30 minutes.")
         }
 
         return logLines

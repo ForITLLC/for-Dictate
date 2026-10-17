@@ -4,7 +4,7 @@ import os
 
 @MainActor
 final class TranscriptionDelivery {
-    private let logger = Logger(subsystem: "com.prakashjoshipax.voiceink", category: "TranscriptionDelivery")
+    private let logger = Logger(subsystem: "io.forit.dictate", category: "TranscriptionDelivery")
 
     struct Request {
         let transcription: Transcription
@@ -99,7 +99,7 @@ final class TranscriptionDelivery {
             return
         }
 
-        let commandText = deliverableText(from: text)
+        let commandText = text
         let finishAndSendKey: FinishAndSendKey = item.sendAfterPaste ? FinishAndSendSettings.selectedKey : .none
         SoundManager.shared.playStopSound()
         await actions.dismiss()
@@ -165,7 +165,7 @@ final class TranscriptionDelivery {
     }
 
     private func paste(_ text: String, sendKey: FinishAndSendKey, actions: Actions) async {
-        let textToPaste = deliverableText(from: text)
+        let textToPaste = text
         let appendSpace = UserDefaults.standard.bool(forKey: "AppendTrailingSpace")
         let pastedText = textToPaste + (appendSpace ? " " : "")
         actions.setState(.idle)
@@ -185,17 +185,5 @@ final class TranscriptionDelivery {
                 CursorPaster.performSendKey(sendKey)
             }
         }
-    }
-
-    private func deliverableText(from text: String) -> String {
-        var textToDeliver = text
-        if let restrictionMessage = LicenseViewModel.shared.usageRestrictionMessage {
-            textToDeliver = """
-                \(restrictionMessage)
-                \n\(textToDeliver)
-                """
-        }
-
-        return textToDeliver
     }
 }

@@ -37,6 +37,25 @@ final class OnboardingFlowController {
         coordinator.storedStage = OnboardingStage.api.rawValue
     }
 
+    /// Continue from the model step. With no API-key provider approved (ForITProviderPolicy) the API step
+    /// is skipped and only the local starter modes are installed.
+    func continueFromModelStep(
+        isTranscriptionSetupReady: Bool,
+        aiService: AIService,
+        enhancementService: AIEnhancementService
+    ) {
+        guard coordinator.isAPISetupOffered else {
+            coordinator.isSelectedAPIProviderVerified = false
+            goToExperienceStep(
+                isTranscriptionSetupReady: isTranscriptionSetupReady,
+                enhancementService: enhancementService
+            )
+            return
+        }
+
+        goToAPIStep(isTranscriptionSetupReady: isTranscriptionSetupReady, aiService: aiService)
+    }
+
     func goBackToModelStep() {
         guard coordinator.requiredPermissionsGranted else {
             goToPermissionsStep()
@@ -53,11 +72,6 @@ final class OnboardingFlowController {
         guard coordinator.isReadyForExperience(isTranscriptionSetupReady: isTranscriptionSetupReady) else { return }
         coordinator.storedStage = OnboardingStage.experience.rawValue
         moveToExperienceStep(0, enhancementService: enhancementService)
-    }
-
-    func goToLicenseStep(isTranscriptionSetupReady: Bool) {
-        guard coordinator.isReadyForExperience(isTranscriptionSetupReady: isTranscriptionSetupReady) else { return }
-        coordinator.storedStage = OnboardingStage.license.rawValue
     }
 
     func goToContextAwarenessStep(isTranscriptionSetupReady: Bool) {
@@ -177,15 +191,6 @@ final class OnboardingFlowController {
         refreshExperienceModeState(enhancementService: enhancementService)
     }
 
-    func goToPreviousLicenseStep(isTranscriptionSetupReady: Bool) {
-        guard coordinator.isReadyForExperience(isTranscriptionSetupReady: isTranscriptionSetupReady) else {
-            coordinator.storedStage = OnboardingStage.api.rawValue
-            return
-        }
-
-        coordinator.storedStage = OnboardingStage.trust.rawValue
-    }
-
     func advanceExperienceStep(
         isTranscriptionSetupReady: Bool,
         enhancementService: AIEnhancementService
@@ -230,26 +235,6 @@ final class OnboardingFlowController {
         }
     }
 
-    func startLicenseTrial(
-        isTranscriptionSetupReady: Bool,
-        onComplete: () -> Void
-    ) {
-        guard coordinator.licenseViewModel.startTrial() else { return }
-        completeOnboarding(
-            isTranscriptionSetupReady: isTranscriptionSetupReady,
-            onComplete: onComplete
-        )
-    }
-
-    func activateLicense(_ licenseKey: String) {
-        Task { @MainActor in
-            await coordinator.licenseViewModel.validateLicense(licenseKey)
-            if coordinator.licenseViewModel.hasVerifiedLicense {
-                coordinator.licenseKeyDraft = ""
-            }
-        }
-    }
-
     func reconcileStage(
         isTranscriptionSetupReady: Bool,
         enhancementService: AIEnhancementService
@@ -271,8 +256,7 @@ final class OnboardingFlowController {
             goToFirstIncompleteSetupStep(isTranscriptionSetupReady: isTranscriptionSetupReady)
         }
 
-        if (coordinator.stage == .experience || coordinator.stage == .contextAwareness || coordinator.stage == .trust
-            || coordinator.stage == .license)
+        if (coordinator.stage == .experience || coordinator.stage == .contextAwareness || coordinator.stage == .trust)
             && !coordinator.isReadyForExperience(isTranscriptionSetupReady: isTranscriptionSetupReady)
         {
             goToFirstIncompleteSetupStep(isTranscriptionSetupReady: isTranscriptionSetupReady)
@@ -342,11 +326,7 @@ final class OnboardingFlowController {
         isTranscriptionSetupReady: Bool,
         onComplete: () -> Void
     ) {
-        #if LOCAL_BUILD
-            let isFinalStage = coordinator.stage == .license || coordinator.stage == .trust
-        #else
-            let isFinalStage = coordinator.stage == .license
-        #endif
+        let isFinalStage = coordinator.stage == .trust
 
         guard
             isFinalStage || coordinator.isCurrentExperienceReady(isTranscriptionSetupReady: isTranscriptionSetupReady)
@@ -367,9 +347,11 @@ final class OnboardingFlowController {
     }
 
     func refreshAPIVerification() {
-        coordinator.isSelectedAPIProviderVerified = APIKeyManager.shared.hasAPIKey(
-            forProvider: coordinator.selectedOnboardingProvider.rawValue
-        )
+        coordinator.isSelectedAPIProviderVerified =
+            coordinator.isAPISetupOffered
+            && APIKeyManager.shared.hasAPIKey(
+                forProvider: coordinator.selectedOnboardingProvider.rawValue
+            )
 
         if coordinator.isSelectedAPIProviderVerified {
             coordinator.hasSkippedAPISetup = false
@@ -390,6 +372,7 @@ final class OnboardingFlowController {
     }
 
     func selectOnboardingTranscriptionSetup(_ kind: OnboardingTranscriptionSetupKind) {
+        guard kind == .local || coordinator.isCloudTranscriptionSetupOffered else { return }
         coordinator.storedTranscriptionSetupKind = kind.rawValue
         ensureDefaultOnboardingTranscriptionProvider()
         refreshTranscriptionSetupVerification()
@@ -428,7 +411,7 @@ final class OnboardingFlowController {
         let defaultProvider: AIProvider =
             coordinator.onboardingProviderOptions.contains(.groq)
             ? .groq
-            : coordinator.onboardingProviderOptions.first ?? .groq
+            : coordinator.onboardingProviderOptions.first ?? ForITProviderPolicy.fallbackEnhancementProvider
         coordinator.storedOnboardingAIProvider = defaultProvider.rawValue
     }
 
