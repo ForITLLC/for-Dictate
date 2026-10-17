@@ -72,15 +72,73 @@ mkdir -p "$OUT"
 # --- whisper.cpp ---
 scripts/forit-whisper.sh
 
+# --- xcodebuild with a deadline. ---
+# xcodebuild_within <minutes> <log> <args...> runs "$FORIT_XCODEBUILD" <args> into <log>. The clock runs only
+# while Xcode's xcodebuild itself runs, not while the slot wrapper waits for a slot. Past the deadline it
+# prints the process tree and any keychain prompt securityd raised (read-only, never an attach), stops the
+# tree and returns 124, so a hung build fails the job instead of sitting until the workflow timeout.
+descendants() {
+  local p kids
+  for p in "$@"; do
+    echo "$p"
+    kids=$(pgrep -P "$p" || true)
+    [[ -z $kids ]] || descendants $kids
+  done
+}
+xcodebuild_within() {
+  local minutes=$1 logf=$2 pid pids ran=0; shift 2
+  "$FORIT_XCODEBUILD" "$@" >"$logf" 2>&1 &
+  pid=$!
+  while kill -0 "$pid" 2>/dev/null; do
+    sleep 10
+    pids=$(descendants "$pid" | paste -sd, -)
+    if ps -o command= -p "$pids" 2>/dev/null | grep -E '/Contents/Developer/usr/bin/xcodebuild( |$)' >/dev/null; then
+      ran=$((ran + 10))
+    fi
+    if (( ran >= minutes * 60 )); then
+      echo "xcodebuild ran past its $minutes-minute deadline. Its processes:"
+      ps -o pid,ppid,etime,stat,command -p "$pids" 2>/dev/null | cut -c1-240 || true
+      echo "Keychain prompts securityd raised in that time:"
+      /usr/bin/log show --last "$((minutes + 30))m" --style compact \
+        --predicate 'process == "securityd" AND eventMessage CONTAINS "displaying keychain prompt"' 2>/dev/null \
+        | cut -c1-240 | tail -5 || true
+      pids=$(descendants "$pid")
+      kill -TERM $pids 2>/dev/null || true
+      sleep 10
+      kill -KILL $pids 2>/dev/null || true
+      wait "$pid" 2>/dev/null || true
+      return 124
+    fi
+  done
+  wait "$pid"
+}
+
+# Package lookups read credentials from netrc only. With the default keychain provider, xcodebuild reads the
+# login keychain's github.com password while it fetches the packages' binary artifacts; that item trusts only
+# git's credential helper, so macOS asks for access on the Mini's locked console, nobody answers, and the
+# build waits until the job times out (runs 38953215094 and 39005809560). There is no ~/.netrc on the runner,
+# so the public packages and artifacts download without credentials.
+PKG_ARGS=(
+  -project VoiceInk.xcodeproj
+  -scheme VoiceInk
+  -derivedDataPath "$DERIVED"
+  -onlyUsePackageVersionsFromResolvedFile
+  -packageAuthorizationProvider netrc
+)
+
+log "Resolving Swift packages"
+rc=0
+xcodebuild_within 20 "$OUT/resolve.log" -resolvePackageDependencies "${PKG_ARGS[@]}" || rc=$?
+grep -E '^(build-slot |error:|.*: error:)' "$OUT/resolve.log" || true
+(( rc == 0 )) || fail "package resolution failed ($rc; see resolve.log)"
+
 # --- Build, unsigned: signing happens below, inside-out, with the job keychain named explicitly. ---
 log "Building $APP_NAME $VERSION ($BUILD) from $COMMIT"
-"$FORIT_XCODEBUILD" build \
-  -project VoiceInk.xcodeproj \
-  -scheme VoiceInk \
+rc=0
+xcodebuild_within 90 "$OUT/xcodebuild.log" build \
+  "${PKG_ARGS[@]}" \
   -configuration Release \
   -destination 'generic/platform=macOS' \
-  -derivedDataPath "$DERIVED" \
-  -onlyUsePackageVersionsFromResolvedFile \
   -skipPackagePluginValidation \
   -skipMacroValidation \
   CODE_SIGNING_ALLOWED=NO \
@@ -88,8 +146,9 @@ log "Building $APP_NAME $VERSION ($BUILD) from $COMMIT"
   CODE_SIGN_IDENTITY= \
   DEVELOPMENT_TEAM="$TEAM_ID" \
   MARKETING_VERSION="$VERSION" \
-  CURRENT_PROJECT_VERSION="$BUILD" \
-  | tee "$OUT/xcodebuild.log" | grep -E '^(\*\* |error:|.*: error:|warning: .*deprecated)' || true
+  CURRENT_PROJECT_VERSION="$BUILD" || rc=$?
+grep -E '^(build-slot |\*\* |error:|.*: error:|warning: .*deprecated)' "$OUT/xcodebuild.log" || true
+(( rc != 124 )) || fail "xcodebuild ran past its deadline (see above and xcodebuild.log)"
 grep -q '\*\* BUILD SUCCEEDED \*\*' "$OUT/xcodebuild.log" || fail "xcodebuild did not succeed (see xcodebuild.log)"
 
 BUILT_APP="$DERIVED/Build/Products/Release/VoiceInk.app"

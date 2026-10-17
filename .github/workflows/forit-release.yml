@@ -87,7 +87,7 @@ jobs:
         if: failure()
         with:
           name: forit-dictate-build-log-${{ github.run_number }}
-          path: build/forit-release/xcodebuild.log
+          path: build/forit-release/*.log
           retention-days: 14
 
       - name: Clean up
