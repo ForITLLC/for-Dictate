@@ -244,7 +244,7 @@ struct DictionaryImportPreviewSheet: View {
             .disabled(!hasImportableEntries || summary == nil || isImporting)
         }
         .padding(.horizontal, 20)
-        .frame(height: QuickPanelMetrics.footerHeight)
+        .frame(minHeight: QuickPanelMetrics.footerHeight)
     }
 
     private var importModeHelp: LocalizedStringKey {

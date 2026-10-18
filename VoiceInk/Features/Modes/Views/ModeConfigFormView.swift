@@ -700,14 +700,14 @@ struct ModeConfigFormView: View {
 
             Spacer()
 
-            AppActionButton("Save Changes", kind: .primary, minWidth: 100) {
+            AppActionButton("Save Changes", kind: .primary) {
                 onSave()
             }
             .disabled(!draft.canSave)
             .keyboardShortcut(.return, modifiers: .command)
         }
         .padding(.horizontal, 20)
-        .frame(height: QuickPanelMetrics.footerHeight)
+        .frame(minHeight: QuickPanelMetrics.footerHeight)
     }
 
     private func availableLanguages(for model: any TranscriptionModel) -> [String: String] {

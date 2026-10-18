@@ -209,7 +209,7 @@ struct PromptEditorView: View {
 
             Spacer()
 
-            AppActionButton(saveButtonTitle, kind: .primary, minWidth: 108) {
+            AppActionButton(saveButtonTitle, kind: .primary) {
                 if let savedPrompt = save() {
                     onSave(savedPrompt)
                 }
@@ -220,7 +220,7 @@ struct PromptEditorView: View {
             .help("Save this prompt and select it.")
         }
         .padding(.horizontal, 20)
-        .frame(height: QuickPanelMetrics.footerHeight)
+        .frame(minHeight: QuickPanelMetrics.footerHeight)
     }
 
     private func deletePrompt() {

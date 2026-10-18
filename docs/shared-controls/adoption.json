@@ -1,0 +1,51 @@
+{
+  "schema": "forit.dictate.shared-controls-adoption.v1",
+  "task": "6A908F35-88E6-4266-A043-35CE95BEF60F",
+  "state": "PARTIAL_SOURCE_MIGRATION_NOT_ADMITTED",
+  "baseline": "0fef1a4b073ab5cc95ab7d0bb6e04786ffe0cf3c",
+  "platform": "macOS",
+  "deploymentTarget": "15.0",
+  "common": {
+    "repository": "https://github.com/ForITLLC/for-iCommon.git",
+    "product": "ForITCommon",
+    "exactVersion": "0.30.4",
+    "revision": "e47547a6e6c9e66588ffc14dea663f9e68c6bdd4",
+    "annotatedTagObject": "353e23909fc5b77073b2b193fa14e856e4c92d16",
+    "publicationReceiptSHA256": "1f0b65bb212abae0d06a22fa8a7b5877138b23fe256dfe40684b521ca75e4785",
+    "acceptedEndSHA256": "6c1a1e8380d2960ac9a5a31d96a0b27948aaa93492634f1c8bdb0490caa0c002",
+    "publishedAPISourceSHA256": "72dff1233d198b0bfa4cb6841a5fe4da1e86584067cba7a2179b72565da0c45a",
+    "publicationPR": "https://github.com/ForITLLC/for-iCommon/pull/130",
+    "adoptedRoles": ["forITPrimary", "forITSecondary"],
+    "candidateRolesAdopted": false,
+    "consumerResolvedOrCompiled": false,
+    "lockEntry": "prospective exact published pin; native resolver/hash readback pending"
+  },
+  "migratedComponents": [
+    {"path": "VoiceInk/DesignSystem/Components/AppControls.swift", "component": "AppActionButton", "scope": "ordinary primary and secondary branches; existing destructive branch remains pending"},
+    {"path": "VoiceInk/Features/Onboarding/Components/OnboardingSections.swift", "component": "OnboardingBottomBar", "scope": "primary and companion actions; callbacks and enabled state retained"},
+    {"path": "VoiceInk/Features/Modes/Components/ModeViewComponents.swift", "component": "VoiceInkButton", "scope": "primary empty-state action; callback and disabled state retained"}
+  ],
+  "blockedRoles": [
+    "tested published destructive role preserving semantic palette and confirmation",
+    "general icon/text/choice/content-row/removable-chip roles and shared spacing/density",
+    "recorder compact control layout and nonoverlapping minimum targets",
+    "custom editable-field focus/error/disabled semantics and proportional activity cells"
+  ],
+  "guard": {
+    "shippingTargetMemberships": 356,
+    "uniqueProjectOwnedSwiftSources": 355,
+    "projectOwnedInputsVerified": true,
+    "generatedAndLinkedCompileClosureProven": false,
+    "productionAdapterAdmitted": false,
+    "sourcePolicyPassed": false,
+    "blockers": ["PBX synchronized source/phase adapter", "XPC shipping product coverage", "generated asset-symbol ordering/inputs", "linked SwiftPM and external-module closure", "trusted tool/report provisioning and sandbox execution"]
+  },
+  "nativeEvidence": {
+    "consumerBuild": false,
+    "screenshots": 0,
+    "interactionOrAXPass": false,
+    "realWidgetTargets": 0,
+    "plan": "device-evidence-plan.json"
+  },
+  "mergeOrReleaseAllowed": false
+}

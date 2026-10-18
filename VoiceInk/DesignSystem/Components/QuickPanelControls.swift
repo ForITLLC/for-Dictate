@@ -21,6 +21,7 @@ struct QuickPanelScaffold<Content: View, Header: View, Footer: View>: View {
     private let header: Header
     private let footer: Footer?
     private let footerHeight: CGFloat
+    @State private var measuredFooterEdgeHeight: CGFloat = 0
 
     init(
         footerHeight: CGFloat = QuickPanelMetrics.footerHeight,
@@ -37,6 +38,9 @@ struct QuickPanelScaffold<Content: View, Header: View, Footer: View>: View {
     var body: some View {
         ZStack {
             content
+                // Existing callers already reserve the normal footer. Reserve
+                // only its additional height when shared action labels wrap.
+                .padding(.bottom, max(0, measuredFooterEdgeHeight - footerHeight - QuickPanelMetrics.fadeLength))
 
             VStack(spacing: 0) {
                 QuickPanelScrollEdge(edge: .top) {
@@ -49,10 +53,16 @@ struct QuickPanelScaffold<Content: View, Header: View, Footer: View>: View {
                     QuickPanelScrollEdge(edge: .bottom, contentHeight: footerHeight) {
                         footer
                     }
+                    .background {
+                        GeometryReader { proxy in
+                            Color.clear.preference(key: QuickPanelFooterHeightKey.self, value: proxy.size.height)
+                        }
+                    }
                 }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .onPreferenceChange(QuickPanelFooterHeightKey.self) { measuredFooterEdgeHeight = $0 }
     }
 }
 
@@ -68,6 +78,14 @@ extension QuickPanelScaffold where Footer == EmptyView {
     }
 }
 
+private struct QuickPanelFooterHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat { 0 }
+
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
+
 struct QuickPanelScrollEdge<Content: View>: View {
     let edge: QuickPanelEdge
     var contentHeight: CGFloat? = nil
@@ -80,8 +98,23 @@ struct QuickPanelScrollEdge<Content: View>: View {
         return height + QuickPanelMetrics.fadeLength
     }
 
+    @ViewBuilder
     var body: some View {
-        ZStack(alignment: edge == .top ? .top : .bottom) {
+        if edge == .bottom {
+            content()
+                .padding(.vertical, QuickPanelMetrics.fadeLength / 2)
+                .frame(minHeight: edgeHeight, alignment: .bottom)
+                .background { materialBackground }
+        } else {
+            content()
+                .padding(.top, 8)
+                .frame(height: edgeHeight, alignment: .top)
+                .background { materialBackground }
+        }
+    }
+
+    private var materialBackground: some View {
+        ZStack {
             VisualEffectView(material: .hudWindow, blendingMode: .withinWindow)
                 .mask(edgeMask)
                 .allowsHitTesting(false)
@@ -91,10 +124,7 @@ struct QuickPanelScrollEdge<Content: View>: View {
                 .mask(emphasisMask)
                 .allowsHitTesting(false)
 
-            content()
-                .padding(edge == .top ? .top : .bottom, 8)
         }
-        .frame(height: edgeHeight)
     }
 
     private var edgeMask: some View {

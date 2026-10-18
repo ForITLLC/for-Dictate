@@ -1,0 +1,90 @@
+{
+  "schema": "forit.dictate.shared-controls-verification.v1",
+  "verifiedUTC": "2026-10-18T18:20:18.056515+00:00",
+  "scope": "SOURCE_PREPARATION_ONLY",
+  "baseline": "0fef1a4b073ab5cc95ab7d0bb6e04786ffe0cf3c",
+  "offlineWiringCheck": {
+    "schema": "forit.dictate.guard-preparation-check.v1",
+    "state": "PASS_PREPARATION_ONLY",
+    "projectSHA256": "ee70b73a7b2122a311cca6123b8fbcada27b28ecbf73b633bfdb5197118597bd",
+    "targets": {
+      "VoiceInk": {
+        "platform": "macOS",
+        "projectOwnedSourceAndInterfaceInputs": 352,
+        "projectOwnedSwiftCompileInputs": 352,
+        "synchronizedRoots": [
+          "VoiceInk"
+        ],
+        "productType": "com.apple.product-type.application",
+        "configurations": [
+          "Debug",
+          "Release"
+        ],
+        "generatedAssetSymbolsEnabled": true,
+        "packageProducts": [
+          "ForITCommon",
+          "MediaRemoteAdapter",
+          "Atomics",
+          "Zip",
+          "TranscribeCpp",
+          "SelectedTextKit",
+          "MarkdownUI",
+          "FluidAudio",
+          "LLMkit"
+        ]
+      },
+      "VoiceInkRefineXPC": {
+        "platform": "macOS",
+        "projectOwnedSourceAndInterfaceInputs": 4,
+        "projectOwnedSwiftCompileInputs": 4,
+        "synchronizedRoots": [
+          "VoiceInkRefineXPC"
+        ],
+        "productType": "com.apple.product-type.xpc-service",
+        "configurations": [
+          "Debug",
+          "Release"
+        ],
+        "generatedAssetSymbolsEnabled": true,
+        "packageProducts": [
+          "MLXLLM",
+          "MLXLMCommon",
+          "MLXHuggingFace",
+          "HuggingFace",
+          "Tokenizers"
+        ]
+      }
+    },
+    "fullBuildCompileInputsProven": false,
+    "productionGuardAdmitted": false,
+    "nativeBuildOrRenderProof": false
+  },
+  "mutationTests": {
+    "command": "python3 -B -m unittest discover -s forit/control-guard -p test_*.py",
+    "passed": 30,
+    "failed": 0,
+    "purpose": "PBX membership, phase/config pairing, source omissions and sandbox mutations; not production BR-3 or rendering"
+  },
+  "independentSourceReview": {
+    "artifact": "source-review.json",
+    "snapshotFilesChecked": 11,
+    "mismatches": []
+  },
+  "independentGuardReview": {
+    "result": "no remaining blocking source-preparation findings",
+    "verifierSHA256": "d534d7003bf04dcd00d9325e788ea35159a5404c2185ac26dd4a4ce94ede38dd",
+    "testsSHA256": "0d712a71de068e0947af2328269ae367a646f0fed4c45fe43182bf8b22efae90"
+  },
+  "inventory": {
+    "baselineControlAndInteractionSites": 388,
+    "nativeHostSites": 15,
+    "shapeSites": 324,
+    "actualMacCases": 33,
+    "plannedCaseVariantPairs": 132
+  },
+  "sourcePolicyPassed": false,
+  "dependencyResolutionPerformed": false,
+  "nativeBuildOrTestPerformed": false,
+  "screenshotsProduced": 0,
+  "mergeOrReleaseAllowed": false
+}
