@@ -1,3 +1,4 @@
+import ForITCommon
 import SwiftUI
 
 struct OnboardingBackground: View {
@@ -83,21 +84,14 @@ struct OnboardingBottomBar: View {
     let onLeading: (() -> Void)?
     let onPrimary: () -> Void
 
-    private enum Metrics {
-        static let controlButtonWidth: CGFloat = 132
-        static let buttonHeight: CGFloat = 42
-        static let primaryButtonHorizontalPadding: CGFloat = 20
-    }
-
     @ViewBuilder
     var body: some View {
         switch placement {
         case .split:
-            HStack(spacing: 0) {
+            HStack {
                 leadingSlot
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                Spacer(minLength: 0)
                 primaryButton
-                    .frame(maxWidth: .infinity, alignment: .trailing)
             }
         case .centered:
             HStack(spacing: 0) {
@@ -113,34 +107,16 @@ struct OnboardingBottomBar: View {
         if let leadingTitle, let onLeading {
             Button(action: onLeading) {
                 Text(LocalizedStringKey(leadingTitle))
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(AppTheme.Action.secondaryForeground)
-                    .frame(width: Metrics.controlButtonWidth, height: Metrics.buttonHeight)
-                    .background(AppMaterialCardBackground(cornerRadius: AppTheme.Radius.control))
             }
-            .buttonStyle(.plain)
-        } else {
-            AppTheme.Surface.clear
-                .frame(width: Metrics.controlButtonWidth, height: Metrics.buttonHeight)
-                .accessibilityHidden(true)
+            .buttonStyle(.forITSecondary)
         }
     }
 
     private var primaryButton: some View {
         Button(action: onPrimary) {
             Text(LocalizedStringKey(primaryTitle))
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(
-                    isPrimaryEnabled ? AppTheme.Action.primaryForeground : AppTheme.Action.disabledForeground
-                )
-                .padding(.horizontal, Metrics.primaryButtonHorizontalPadding)
-                .frame(minWidth: Metrics.controlButtonWidth, minHeight: Metrics.buttonHeight)
-                .background(
-                    RoundedRectangle(cornerRadius: AppTheme.Radius.control, style: .continuous)
-                        .fill(isPrimaryEnabled ? AppTheme.Action.primaryFill : AppTheme.Action.disabledFill)
-                )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.forITPrimary)
         .disabled(!isPrimaryEnabled)
     }
 }

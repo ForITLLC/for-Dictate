@@ -1,4 +1,5 @@
 import Foundation
+import ForITCommon
 import SwiftUI
 
 struct AppIconButton: View {
@@ -54,6 +55,7 @@ enum AppActionButtonKind: Equatable {
 struct AppActionButton: View {
     let title: LocalizedStringKey
     var kind: AppActionButtonKind = .secondary
+    // Only the existing destructive variant still uses local width/chrome.
     var minWidth: CGFloat?
     let action: () -> Void
 
@@ -69,57 +71,45 @@ struct AppActionButton: View {
         self.action = action
     }
 
+    @ViewBuilder
     var body: some View {
-        Button(role: kind == .destructive ? .destructive : nil, action: action) {
-            Text(title)
-                .frame(minWidth: minWidth)
+        switch kind {
+        case .primary:
+            Button(action: action) { Text(title) }
+                .buttonStyle(.forITPrimary)
+        case .secondary:
+            Button(action: action) { Text(title) }
+                .buttonStyle(.forITSecondary)
+        case .destructive:
+            // Common 0.30.4 does not render ButtonRole. Keep this existing path
+            // until the shared destructive role is tested and published.
+            Button(role: .destructive, action: action) {
+                Text(title)
+                    .frame(minWidth: minWidth)
+            }
+            .buttonStyle(LegacyDestructiveActionButtonStyle())
         }
-        .buttonStyle(AppActionButtonStyle(kind: kind))
     }
 }
 
-private struct AppActionButtonStyle: ButtonStyle {
-    let kind: AppActionButtonKind
+private struct LegacyDestructiveActionButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(foregroundColor)
+            .foregroundStyle(AppTheme.Action.destructiveForeground)
             .padding(.horizontal, 14)
             .frame(height: 32)
-            .background(backgroundColor)
+            .background(AppTheme.Action.destructiveFill)
             .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
             .overlay {
                 RoundedRectangle(cornerRadius: 9, style: .continuous)
-                    .strokeBorder(borderColor, lineWidth: 1)
+                    .strokeBorder(Color.white.opacity(0.14), lineWidth: 1)
             }
             .opacity(isEnabled ? (configuration.isPressed ? 0.78 : 1) : 0.45)
     }
 
-    private var foregroundColor: Color {
-        switch kind {
-        case .secondary: AppTheme.Action.secondaryForeground
-        case .primary: AppTheme.Action.primaryForeground
-        case .destructive: AppTheme.Action.destructiveForeground
-        }
-    }
-
-    private var backgroundColor: Color {
-        switch kind {
-        case .secondary: AppTheme.Surface.control
-        case .primary: AppTheme.Action.primaryFill
-        case .destructive: AppTheme.Action.destructiveFill
-        }
-    }
-
-    private var borderColor: Color {
-        switch kind {
-        case .secondary: AppTheme.Border.control
-        case .primary: AppTheme.Accent.border
-        case .destructive: Color.white.opacity(0.14)
-        }
-    }
 }
 
 struct AppPanelHeader: View {

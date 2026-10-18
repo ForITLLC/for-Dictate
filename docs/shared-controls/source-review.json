@@ -1,0 +1,114 @@
+{
+  "schema": "forit.dictate.independent-source-review.v1",
+  "baseline": "0fef1a4b073ab5cc95ab7d0bb6e04786ffe0cf3c",
+  "status": "NO_REMAINING_SOURCE_LOGIC_BLOCKER_FOUND_NATIVE_PENDING",
+  "scope": "Independent read-only review of root migration/dependency diff and subsequent adaptive footer change; no source edits by reviewer.",
+  "reviewedFiles": [
+    {
+      "path": "VoiceInk/DesignSystem/Components/AppControls.swift",
+      "sha256": "5289b9d00f545e6ee2501531b9453ec6d01eae39fd398ae33750c6903fa7ed71"
+    },
+    {
+      "path": "VoiceInk/Features/Onboarding/Components/OnboardingSections.swift",
+      "sha256": "640c2c63e81a153b4d738861c2473789a24eb7f7ed1828048c60665f30e7df16"
+    },
+    {
+      "path": "VoiceInk/Features/Modes/Components/ModeViewComponents.swift",
+      "sha256": "b2cd893900df4fc2c0a5b31d43c27289aefc3610c813e09d30596a475e3642ba"
+    },
+    {
+      "path": "VoiceInk/Features/Enhancement/Views/PromptEditorView.swift",
+      "sha256": "7daebfd29698c43f64e471eeb36af4923977bc864c8e02658fa64062b667cae8"
+    },
+    {
+      "path": "VoiceInk/Features/Modes/Views/ModeConfigFormView.swift",
+      "sha256": "72b5e41fe4dc90893965cc0c6e654839fb904bd99c67ab6993fd72867e8bcbe4"
+    },
+    {
+      "path": "VoiceInk/Features/Dictionary/Views/AutoLearnReviewPanel.swift",
+      "sha256": "3ab315f7018c49bebaa3d0f249e9eb4f834f1680f4d591c062be78123b5b04a8"
+    },
+    {
+      "path": "VoiceInk/Features/Dictionary/Views/DictionaryImportPreviewSheet.swift",
+      "sha256": "9b3a77dce10ca4f05cd1caa8dd6cac46ee7506c30ab5af757d8b8e3fcc878ee8"
+    },
+    {
+      "path": "VoiceInk/Features/ModelLibrary/Views/CustomProviderManagementView.swift",
+      "sha256": "8432d5506016770e8de6d27179ad0d66e2e22e2b91e78091a7c76aa95755e924"
+    },
+    {
+      "path": "VoiceInk/DesignSystem/Components/QuickPanelControls.swift",
+      "sha256": "9dadf6c0a7198c0e3f5f93ad9bd71aaa6bd799adb85434bde3c8d5d4f386a395"
+    },
+    {
+      "path": "VoiceInk.xcodeproj/project.pbxproj",
+      "sha256": "ee70b73a7b2122a311cca6123b8fbcada27b28ecbf73b633bfdb5197118597bd"
+    },
+    {
+      "path": "VoiceInk.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved",
+      "sha256": "216169175ed64e92124a6beb68b4813a5bfffccaf3fa7c32d765ad20c2763fe0"
+    }
+  ],
+  "publishedDependency": {
+    "repository": "ForITLLC/for-iCommon",
+    "version": "0.30.4",
+    "revision": "e47547a6e6c9e66588ffc14dea663f9e68c6bdd4",
+    "evidence": "/home/runner/handoffs/for-iCommon/profile-control-target-0304-20261018/PUBLISHED.json",
+    "publishedEvidenceSHA256": "1f0b65bb212abae0d06a22fa8a7b5877138b23fe256dfe40684b521ca75e4785",
+    "actualAPISource": "Exact e475 Sources/ForITCommon/Brand/ForITBrandUI.swift:358-392,415-483; public forITPrimary/forITSecondary page API; source read from immutable git object.",
+    "compatibility": "Exact Package.swift declares macOS14 and Swift language v5; app requires Mac15. Both page styles use shared44minimum/default shape; navy mismatch not introduced by page usage.",
+    "certificationQualification": "Published receipt has narrow toolbar proof and open panel visual debt; it is not Dictate whole-app visual certification.",
+    "thirdPartyPins": "All existing lockfile pins unchanged; exactly one for-icommon pin added. Prospective source lock edit, no actual SwiftPM resolution or compiler."
+  },
+  "checks": [
+    {
+      "check": "AppActionButton ordinary roles",
+      "result": "Primary and secondary use actual published page styles; local minWidth removed on their branches. Destructive explicit role, callbacks and legacy style remain intact."
+    },
+    {
+      "check": "OnboardingBottomBar",
+      "result": "onLeading/onPrimary and LocalizedStringKey labels retained; primary disabled predicate unchanged. Fixed42height and local colors/background removed. Split/centered routing preserved."
+    },
+    {
+      "check": "VoiceInkButton",
+      "result": "Action/title and disabled predicate preserved; full-width layout retained, no fixed/min-height label override; local shape/fill removed."
+    },
+    {
+      "check": "Prompt/mode save call sites",
+      "result": "Only obsolete primary minWidth arguments removed; save/delete/cancel callbacks, help and keyboard shortcuts retained."
+    },
+    {
+      "check": "Footer sizing finding",
+      "result": "Original five fixed48consumer frames and fixed64edge could constrain AX5/long labels. Root changed five frames to minHeight and bottom edge to intrinsic content+16padding/min64. Material is background and does not determine layout."
+    },
+    {
+      "check": "Content clearance",
+      "result": "Scaffold measures bottom edge with PreferenceKey; applies max(0,measured-legacy64) extra bottom reservation. Existing normal insets retained; header remains fixed. Native geometry/animation/focus still unproved."
+    },
+    {
+      "check": "Exact dependency linkage",
+      "result": "PBX exactVersion0.30.4 and ForITCommon product linked only to app importing it; service protocol does not import Common. Existing lock pins equal baseline; prospective pin exact e475; no duplicate PBX object IDs."
+    }
+  ],
+  "findings": [
+    {
+      "id": "footer-fixed-height",
+      "severity": "material_layout_risk",
+      "status": "SOURCE_FIX_REVIEWED_NATIVE_VALIDATION_PENDING",
+      "evidence": [
+        "VoiceInk/DesignSystem/Components/QuickPanelControls.swift:41",
+        "VoiceInk/DesignSystem/Components/QuickPanelControls.swift:53",
+        "VoiceInk/DesignSystem/Components/QuickPanelControls.swift:103"
+      ],
+      "requiredProof": "Five dedicated actual-app footer cases in device-evidence-plan.json cover AX5/long labels, actual hit bounds, footer growth/shrink and final scroll-content visibility."
+    }
+  ],
+  "limits": [
+    "No Swift parsing/typecheck/compiler/SDK/native run; source review cannot establish buildability or runtime layout.",
+    "No SwiftPM resolver executed; source lockfile is prospective.",
+    "Compact/icon/choice/recorder/destructive canonical roles remain migration gaps; legacy geometry remains.",
+    "Published0.30.4 lacks candidate shared-control guard; release gating/guard correctness belongs separate guard-owner review. No guard PASS inferred from this review.",
+    "No Mini/device/build/upload/schedule/remote effects."
+  ],
+  "nativeRuns": 0
+}

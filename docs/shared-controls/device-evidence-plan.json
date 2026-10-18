@@ -1,0 +1,1476 @@
+{
+  "schema": "forit.dictate.device-evidence-plan.v1",
+  "task": "6A908F35",
+  "sourceBaseline": "0fef1a4b073ab5cc95ab7d0bb6e04786ffe0cf3c",
+  "status": "PLAN_ONLY_PENDING_FRESH_NATIVE_ADMISSION",
+  "executedCases": 0,
+  "capturesProduced": 0,
+  "AXRuns": 0,
+  "interactionRuns": 0,
+  "authority": {
+    "nativeCustodian": "term_82c6de35-132b-4181-9a96-ce0f798bed9a",
+    "gate": "Fresh explicit native admission required for exact proposed source/dependency/fixture manifest. This document grants no native/Mini/build/slot/schedule/upload access and reuses no prior GO."
+  },
+  "appHost": {
+    "target": "VoiceInk",
+    "platform": "Mac native",
+    "minimumOS": "15.0",
+    "sourceWindow": "VoiceInk/App/VoiceInk.swift:282",
+    "minimumWindow": "950x750; width fixed by AppWindowLayout",
+    "windowEvidence": "VoiceInk/App/Windows/WindowManager.swift:5",
+    "device": "Owner-approved non-Ben Mac only, future admission; no device activity performed."
+  },
+  "fixtureRequirements": {
+    "implementedByThisAudit": false,
+    "runnableScreenshotHarness": false,
+    "need": "Approved DEBUG-only fixture seam in the real app routes, temporary preferences and SwiftData store, deterministic fake names/text/statistics/audio/model/permission states, intercept download/provider/recording/clipboard/external-open/delete effects. No source transcript content or real credentials. Retain production view types/semantics.",
+    "reachability": "Source compiled helpers/previews may not be reachable through production navigation. Each route must prove runtime reachability; otherwise mark unused/gated and never fabricate a screenshot.",
+    "textSizeAX5": "AX5 is the requested largest-accessibility fixture condition. macOS has no iOS Settings Dynamic Type slider. After admission, prove actual-host SwiftUI dynamicTypeSize(.accessibility5) fixture and record macOS accessibility text/display settings; flag controls using fixed fonts/sizes that do not respond. Do not label an ordinary scaled screenshot AX5.",
+    "disabledAndDestructive": "Every applicable case includes real disabled/busy or destructive confirmation state; synthetic fixture cannot bypass production conditional logic. No destructive action against user data.",
+    "footerGrowth": "Add exact five affected consumer footer expansion cases. Prove measured footer growth, dynamic content clearance and last-row visibility in actual app after layout changes; no fixed-height screenshot surrogate."
+  },
+  "variantMatrix": [
+    {
+      "appearance": "light",
+      "textSize": "default"
+    },
+    {
+      "appearance": "light",
+      "textSize": "AX5"
+    },
+    {
+      "appearance": "dark",
+      "textSize": "default"
+    },
+    {
+      "appearance": "dark",
+      "textSize": "AX5"
+    }
+  ],
+  "caseDefinitions": 33,
+  "plannedCaseVariantPairs": 132,
+  "sourceSiteAssignments": 388,
+  "sourcePrimitiveSites": 349,
+  "cases": [
+    {
+      "id": "mac-main-navigation",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Main window sidebar and traffic-light/title line",
+      "route": "Launch completed onboarding then visit all eight ViewType destinations",
+      "sourcePatterns": [
+        "App/Navigation/AppSidebar.swift"
+      ],
+      "states": [
+        "selected and unselected destinations",
+        "minimum950x750 window"
+      ],
+      "interactions": [
+        "Keyboard focus and activation changes destination",
+        "ForIT menu/title alignment assessed against governing spec; baseline has local sidebar/settings route"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C017"
+      ],
+      "nativeHostSourceIds": []
+    },
+    {
+      "id": "mac-dashboard",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Dashboard period and insight controls",
+      "route": "Main sidebar Dashboard; open model usage/performance panels",
+      "sourcePatterns": [
+        "Features/Dashboard/"
+      ],
+      "states": [
+        "empty synthetic statistics",
+        "seeded fake statistics",
+        "selected period",
+        "reminder panels",
+        "display-name field editing"
+      ],
+      "interactions": [
+        "Period choice changes selection",
+        "Model panel open/close",
+        "Edit display name in place",
+        "Confirm heatmap activity colors are content, not button chrome"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C059",
+        "C060",
+        "C061",
+        "C062",
+        "C063",
+        "C064",
+        "C065",
+        "C066",
+        "C067",
+        "C068",
+        "C069",
+        "C070",
+        "C071",
+        "C072",
+        "C073",
+        "C074",
+        "C075",
+        "C076",
+        "C077"
+      ],
+      "nativeHostSourceIds": []
+    },
+    {
+      "id": "mac-modes-form",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Modes list, form and prompt configuration",
+      "route": "Main sidebar Modes; open mode editor",
+      "sourcePatterns": [
+        "Features/Modes/Views/ModeConfigFormView.swift",
+        "Features/Modes/Views/ModePopover.swift",
+        "Features/Modes/Views/ModeSettingsQuickSwitchTip.swift",
+        "Features/Modes/Views/ModeSettingsPanelView.swift",
+        "Features/Modes/Components/ModeViewComponents.swift",
+        "Features/Modes/State/"
+      ],
+      "states": [
+        "default and custom synthetic mode",
+        "enabled and disabled",
+        "edit panel",
+        "reorder panel",
+        "destructive confirmation"
+      ],
+      "interactions": [
+        "Selected row and switch state update",
+        "Cancel leaves fake fixture unchanged",
+        "Delete stays behind confirmation; undo gap tracked"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C257",
+        "C258",
+        "C259",
+        "C260",
+        "C261",
+        "C262",
+        "C263",
+        "C264",
+        "C265",
+        "C266",
+        "C267",
+        "C272",
+        "C273",
+        "C274",
+        "C275",
+        "C276",
+        "C277",
+        "C278",
+        "C279",
+        "C280",
+        "C281",
+        "C282",
+        "C283",
+        "C284",
+        "C285",
+        "C286",
+        "C287",
+        "C288",
+        "C289",
+        "C290",
+        "C291",
+        "C292",
+        "C293",
+        "C294",
+        "C295",
+        "C296",
+        "C297",
+        "C298",
+        "C305",
+        "C306",
+        "C307"
+      ],
+      "nativeHostSourceIds": []
+    },
+    {
+      "id": "mac-modes-triggers-icons",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Mode trigger/icon/emoji controls",
+      "route": "Open mode editor trigger group editor and icon picker",
+      "sourcePatterns": [
+        "Features/Modes/Views/Trigger",
+        "Features/Modes/Views/ModeIconPickerView.swift",
+        "Features/Modes/Components/Trigger"
+      ],
+      "states": [
+        "selected and unselected choices",
+        "long fake app/domain names",
+        "empty search",
+        "remove trigger"
+      ],
+      "interactions": [
+        "Keyboard choose/search",
+        "Edit/remove callbacks identify expected fake trigger",
+        "Dropdowns retain native semantics"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C268",
+        "C269",
+        "C270",
+        "C271",
+        "C299",
+        "C300",
+        "C301",
+        "C302",
+        "C303",
+        "C304",
+        "C308",
+        "C309",
+        "C310",
+        "C311",
+        "C312",
+        "C313",
+        "C314",
+        "C315"
+      ],
+      "nativeHostSourceIds": []
+    },
+    {
+      "id": "mac-model-catalog",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Local/cloud model cards and model selection",
+      "route": "Main sidebar AI Models; inspect actual supported provider/local cards",
+      "sourcePatterns": [
+        "Features/ModelLibrary/Components/",
+        "Features/ModelLibrary/Views/ModelManagementView.swift",
+        "Features/ModelLibrary/Views/ProviderCloudManagementView.swift",
+        "Features/ModelLibrary/Views/ProviderLocalManagementView.swift"
+      ],
+      "states": [
+        "selected model",
+        "available/download/progress/error synthetic state",
+        "disabled while busy",
+        "delete menu confirmation"
+      ],
+      "interactions": [
+        "Select item",
+        "Open model menu",
+        "Cancel deletion",
+        "Intercept download rather than making model/network request"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C168",
+        "C169",
+        "C170",
+        "C171",
+        "C172",
+        "C173",
+        "C174",
+        "C175",
+        "C176",
+        "C177",
+        "C178",
+        "C179",
+        "C180",
+        "C181",
+        "C182",
+        "C183",
+        "C184",
+        "C185",
+        "C186",
+        "C187",
+        "C188",
+        "C189",
+        "C190",
+        "C191",
+        "C192",
+        "C193",
+        "C194",
+        "C195",
+        "C196",
+        "C197",
+        "C224",
+        "C225",
+        "C226",
+        "C240",
+        "C241",
+        "C249",
+        "C250",
+        "C251",
+        "C252",
+        "C253",
+        "C254",
+        "C255",
+        "C256",
+        "C387",
+        "C388"
+      ],
+      "nativeHostSourceIds": [
+        "H009"
+      ]
+    },
+    {
+      "id": "mac-model-settings",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Model advanced options and language settings",
+      "route": "Open model settings panel",
+      "sourcePatterns": [
+        "Features/ModelLibrary/Views/ModelSettingsPanel.swift"
+      ],
+      "states": [
+        "language selected",
+        "advanced disclosure",
+        "toggle on/off",
+        "disabled model option"
+      ],
+      "interactions": [
+        "Changing picker updates fake binding",
+        "Text editor remains editable",
+        "Keyboard focus and labels"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C227",
+        "C228",
+        "C229",
+        "C230",
+        "C231",
+        "C232",
+        "C233",
+        "C234",
+        "C235",
+        "C236",
+        "C237",
+        "C238",
+        "C239"
+      ],
+      "nativeHostSourceIds": []
+    },
+    {
+      "id": "mac-provider-details",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Provider details/API key controls",
+      "route": "Open actual provider detail panel",
+      "sourcePatterns": [
+        "Features/ModelLibrary/Views/ProviderDetailPanel.swift"
+      ],
+      "states": [
+        "unconfigured synthetic key",
+        "configured masked fake key",
+        "verification in flight",
+        "verification success/failure",
+        "remove key confirmation"
+      ],
+      "interactions": [
+        "Secure field AX exposes no secret",
+        "No external verification request in fixture",
+        "Remove opens confirmation",
+        "Open link URL intercepted and checked"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C242",
+        "C243",
+        "C244",
+        "C245",
+        "C246",
+        "C247",
+        "C248"
+      ],
+      "nativeHostSourceIds": []
+    },
+    {
+      "id": "mac-custom-provider",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Custom provider/model editor",
+      "route": "Open custom provider management/editor",
+      "sourcePatterns": [
+        "Features/ModelLibrary/Views/APIKeyManagementView.swift",
+        "Features/ModelLibrary/Views/CustomProviderManagementView.swift"
+      ],
+      "states": [
+        "new/edit fake provider",
+        "custom model option",
+        "masked key",
+        "disabled validation",
+        "destructive confirmation"
+      ],
+      "interactions": [
+        "Bindings update fixture only",
+        "Menu option selected",
+        "Secure text remains protected",
+        "Confirm destructive label/role"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C198",
+        "C199",
+        "C200",
+        "C201",
+        "C202",
+        "C203",
+        "C204",
+        "C205",
+        "C206",
+        "C207",
+        "C208",
+        "C209",
+        "C210",
+        "C211",
+        "C212",
+        "C213",
+        "C214",
+        "C215",
+        "C216",
+        "C217",
+        "C218",
+        "C219",
+        "C220",
+        "C221",
+        "C222",
+        "C223"
+      ],
+      "nativeHostSourceIds": []
+    },
+    {
+      "id": "mac-dictionary-main",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Vocabulary/replacements/auto-learn panels",
+      "route": "Main sidebar Dictionary; open vocabulary/replacement/settings/review/import",
+      "sourcePatterns": [
+        "Features/Dictionary/"
+      ],
+      "states": [
+        "empty/seeded fake vocabulary",
+        "search no results",
+        "editable replacement",
+        "review selection",
+        "import preview",
+        "disabled add",
+        "remove confirmation if present"
+      ],
+      "interactions": [
+        "Type in fields",
+        "Edit replacement in place",
+        "Picker and checkbox update binding",
+        "Remove semantics/confirmation assessed against spec"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C078",
+        "C079",
+        "C080",
+        "C081",
+        "C082",
+        "C083",
+        "C084",
+        "C085",
+        "C086",
+        "C087",
+        "C088",
+        "C089",
+        "C090",
+        "C091",
+        "C092",
+        "C093",
+        "C094",
+        "C095",
+        "C096",
+        "C097",
+        "C098",
+        "C099",
+        "C100",
+        "C101",
+        "C102",
+        "C103",
+        "C104",
+        "C105",
+        "C106",
+        "C107",
+        "C108",
+        "C109",
+        "C110",
+        "C111",
+        "C112",
+        "C113",
+        "C382",
+        "C383",
+        "C384",
+        "C385",
+        "C386"
+      ],
+      "nativeHostSourceIds": [
+        "H004",
+        "H005"
+      ]
+    },
+    {
+      "id": "mac-audio-import",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Audio file queue and file actions",
+      "route": "Main sidebar Transcribe; seed harmless fake queue rows",
+      "sourcePatterns": [
+        "Features/AudioImport/"
+      ],
+      "states": [
+        "empty queue",
+        "queued/progress/failure/completed fake item",
+        "disabled batch controls",
+        "expanded original/enhanced tab"
+      ],
+      "interactions": [
+        "Choose-files opens system panel",
+        "Cancel system panel",
+        "Expand row and choose tab",
+        "Copy/save operate on fake text only"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C033",
+        "C034",
+        "C035",
+        "C036",
+        "C037",
+        "C038",
+        "C039",
+        "C040",
+        "C041",
+        "C042"
+      ],
+      "nativeHostSourceIds": [
+        "H002"
+      ]
+    },
+    {
+      "id": "mac-audio-settings",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Audio device/channel/quality/sound controls",
+      "route": "Main sidebar Audio; fake multichannel input fixture",
+      "sourcePatterns": [
+        "Features/AudioSettings/"
+      ],
+      "states": [
+        "automatic input",
+        "external multi-channel input",
+        "unavailable saved channel",
+        "recording active disabled picker",
+        "sound picker"
+      ],
+      "interactions": [
+        "Channel choice updates fixture",
+        "Disabled picker cannot change while recording",
+        "Sound panel cancel returns unchanged"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C043",
+        "C044",
+        "C045",
+        "C046",
+        "C047",
+        "C048",
+        "C049",
+        "C050",
+        "C051",
+        "C052",
+        "C053",
+        "C054",
+        "C055",
+        "C056",
+        "C057",
+        "C058"
+      ],
+      "nativeHostSourceIds": [
+        "H003"
+      ]
+    },
+    {
+      "id": "mac-history-main",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "History list, search, selection and bulk actions",
+      "route": "Main sidebar History; seed fake local rows",
+      "sourcePatterns": [
+        "Features/History/Views/HistoryView.swift",
+        "Features/History/Views/QuickHistoryView.swift",
+        "Features/History/Components/HistoryComponents.swift",
+        "Features/History/Components/TranscriptionListItem.swift",
+        "Features/History/Export/"
+      ],
+      "states": [
+        "empty",
+        "search no result",
+        "selected/unselected rows",
+        "all selected",
+        "paginated load more",
+        "destructive confirmation"
+      ],
+      "interactions": [
+        "Single-select vs double-click paste distinct",
+        "Checkbox AX role/state",
+        "Delete requires confirmation",
+        "Undo baseline gap must stay RED until implemented"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C141",
+        "C142",
+        "C143",
+        "C144",
+        "C145",
+        "C146",
+        "C152",
+        "C153",
+        "C154",
+        "C165",
+        "C166"
+      ],
+      "nativeHostSourceIds": [
+        "H008"
+      ]
+    },
+    {
+      "id": "mac-history-detail",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "History detail retry/model/prompt/copy/save controls",
+      "route": "Open fake transcription detail from History/Quick History",
+      "sourcePatterns": [
+        "Features/History/Views/TranscriptionDetailView.swift",
+        "Features/History/Components/HistoryDetailActionBar.swift",
+        "Features/History/Components/SaveIconButton.swift"
+      ],
+      "states": [
+        "default and overridden prompt",
+        "busy disabled retry",
+        "copy success",
+        "Save TXT/MD menu",
+        "missing audio"
+      ],
+      "interactions": [
+        "Mode/prompt choice updates fixture",
+        "Busy actions reject activation",
+        "Save opens real native panel and cancel",
+        "Check help/AX action names"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C147",
+        "C148",
+        "C149",
+        "C150",
+        "C151",
+        "C167"
+      ],
+      "nativeHostSourceIds": [
+        "H007"
+      ]
+    },
+    {
+      "id": "mac-history-audio",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "History audio play/seek/speed controls",
+      "route": "Open fake history item with bundled deterministic silent test audio",
+      "sourcePatterns": [
+        "Features/History/Components/AudioPlayerView.swift",
+        "Features/History/Components/HistoryAudioPlayer.swift"
+      ],
+      "states": [
+        "stopped/playing/paused",
+        "loading disabled",
+        "seek position",
+        "speed menu"
+      ],
+      "interactions": [
+        "Keyboard play/pause",
+        "Seek drag value moves in fixture",
+        "Speed selection",
+        "Waveform status/data colors preserved"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C135",
+        "C136",
+        "C137",
+        "C138",
+        "C139",
+        "C140"
+      ],
+      "nativeHostSourceIds": []
+    },
+    {
+      "id": "mac-history-settings",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "History retention/export/cleanup settings",
+      "route": "Open History settings panel",
+      "sourcePatterns": [
+        "Features/History/Views/HistorySettingsPanel.swift"
+      ],
+      "states": [
+        "toggles both states",
+        "picker options",
+        "cleanup confirmation",
+        "disabled work state"
+      ],
+      "interactions": [
+        "No real history deletion",
+        "Binding changes apply only temporary store",
+        "Native destructive semantics"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C155",
+        "C156",
+        "C157",
+        "C158",
+        "C159",
+        "C160",
+        "C161",
+        "C162",
+        "C163",
+        "C164"
+      ],
+      "nativeHostSourceIds": []
+    },
+    {
+      "id": "mac-settings",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Settings shortcuts, language, appearance and reset",
+      "route": "Main sidebar Settings",
+      "sourcePatterns": [
+        "Features/Settings/Views/SettingsView.swift",
+        "Features/Shortcuts/"
+      ],
+      "states": [
+        "primary/secondary shortcuts",
+        "capture keyboard mode",
+        "language restart prompt",
+        "appearance choice",
+        "onboarding reset confirmation",
+        "disabled import state"
+      ],
+      "interactions": [
+        "Record harmless shortcut in isolated temp preferences",
+        "Escape cancels capture",
+        "Appearance updates app",
+        "Restore fixture preferences after test"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C361",
+        "C362",
+        "C363",
+        "C364",
+        "C365",
+        "C366",
+        "C367",
+        "C368",
+        "C369",
+        "C370",
+        "C371",
+        "C372",
+        "C373",
+        "C374",
+        "C375",
+        "C376",
+        "C377",
+        "C378",
+        "C379",
+        "C380",
+        "C381"
+      ],
+      "nativeHostSourceIds": []
+    },
+    {
+      "id": "mac-backup-diagnostics",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Import/export native accessory controls and diagnostics",
+      "route": "Settings import/export and diagnostics",
+      "sourcePatterns": [
+        "Features/Settings/Backup/",
+        "Features/Settings/Views/DiagnosticsSettingsView.swift"
+      ],
+      "states": [
+        "all vs individual radio choices",
+        "selected categories",
+        "import confirmation",
+        "error alert",
+        "export sheet"
+      ],
+      "interactions": [
+        "Native radio/check AX roles",
+        "Import/Cancel focus order",
+        "No real user file read or persistence mutation",
+        "Safe temp diagnostics export only"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C350",
+        "C351",
+        "C352",
+        "C353",
+        "C354",
+        "C355",
+        "C356",
+        "C357",
+        "C358",
+        "C359",
+        "C360"
+      ],
+      "nativeHostSourceIds": [
+        "H011",
+        "H012",
+        "H013",
+        "H014",
+        "H015"
+      ]
+    },
+    {
+      "id": "mac-onboarding-bottom-actions",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Shared onboarding back/continue controls",
+      "route": "Fresh temporary preferences; real onboarding stages",
+      "sourcePatterns": [
+        "Features/Onboarding/Components/OnboardingSections.swift"
+      ],
+      "states": [
+        "back shown/absent",
+        "primary enabled/disabled",
+        "long localized label",
+        "split/centered placement"
+      ],
+      "interactions": [
+        "Back returns one stage",
+        "Disabled Continue inert",
+        "Key activation exact once",
+        "Shared style height change checked at950x750 and AX5"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C321",
+        "C322"
+      ],
+      "nativeHostSourceIds": []
+    },
+    {
+      "id": "mac-onboarding-permissions",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Permission/microphone setup controls",
+      "route": "Fresh temp onboarding permission/microphone stage",
+      "sourcePatterns": [
+        "Features/Onboarding/Components/PermissionStepRow.swift",
+        "Features/Onboarding/Views/OnboardingMicrophoneScreen.swift",
+        "Features/Onboarding/Views/OnboardingView.swift"
+      ],
+      "states": [
+        "granted/not granted fake permission state",
+        "complete/incomplete",
+        "disabled setup"
+      ],
+      "interactions": [
+        "Do not change system permissions",
+        "Button/row AX actions exist",
+        "Keyboard navigation",
+        "Microphone fixture prevents real recording"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C330",
+        "C331",
+        "C332",
+        "C339",
+        "C340",
+        "C341"
+      ],
+      "nativeHostSourceIds": []
+    },
+    {
+      "id": "mac-onboarding-models-api",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Onboarding provider/model/API verification choices",
+      "route": "Fresh temp onboarding model/API stage",
+      "sourcePatterns": [
+        "Features/Onboarding/Components/AIProviderVerificationCard.swift",
+        "Features/Onboarding/Components/OnboardingTranscriptionSetupCard.swift",
+        "Features/Onboarding/Components/TranscriptionModelDownloadCard.swift",
+        "Features/Onboarding/Views/OnboardingAPIScreen.swift"
+      ],
+      "states": [
+        "selected/unselected provider",
+        "fake model download states",
+        "verification busy/success/failure",
+        "key hidden/revealed",
+        "disabled verification"
+      ],
+      "interactions": [
+        "Provider choice exact state",
+        "Secure field AX secrecy",
+        "No network request",
+        "Legacy gated/unused helper explicitly marked unreachable if confirmed by native traversal"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C316",
+        "C317",
+        "C318",
+        "C319",
+        "C320",
+        "C323",
+        "C324",
+        "C325",
+        "C326",
+        "C327",
+        "C328",
+        "C329",
+        "C333",
+        "C334",
+        "C335",
+        "C336",
+        "C337",
+        "C338"
+      ],
+      "nativeHostSourceIds": []
+    },
+    {
+      "id": "mac-onboarding-experience",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Onboarding locked live dictation text input",
+      "route": "Fresh temp onboarding experience view with real LockedTextView",
+      "sourcePatterns": [
+        "Features/Onboarding/Components/OnboardingLockedTextEditor.swift"
+      ],
+      "states": [
+        "enabled and disabled locked editor",
+        "focus acquired/released",
+        "synthetic dictated content"
+      ],
+      "interactions": [
+        "Manual editing stays locked",
+        "Dictation fixture updates visible text",
+        "Selection and AX text behavior",
+        "No real microphone/provider"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [],
+      "nativeHostSourceIds": [
+        "H010"
+      ]
+    },
+    {
+      "id": "mac-recorder",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Floating recorder/assistant panel",
+      "route": "Actual recorder presentation via shortcut or AppIntent",
+      "sourcePatterns": [
+        "Features/Recording/"
+      ],
+      "states": [
+        "idle/recording/starting/transcribing/enhancing/busy synthetic states",
+        "selected mode",
+        "assistant open",
+        "disabled busy controls",
+        "close"
+      ],
+      "interactions": [
+        "Record/stop semantic name reflects state",
+        "Disabled processing action inert",
+        "Close dismisses actual panel",
+        "Drag changes actual panel position",
+        "No microphone/network calls in fixture"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C342",
+        "C343",
+        "C344",
+        "C345",
+        "C346",
+        "C347",
+        "C348",
+        "C349"
+      ],
+      "nativeHostSourceIds": []
+    },
+    {
+      "id": "mac-enhancement",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Prompt editor, enhancement model picker and filler chips",
+      "route": "Open prompt editor and enhancement configuration",
+      "sourcePatterns": [
+        "Features/Enhancement/"
+      ],
+      "states": [
+        "default/custom fake prompt",
+        "selected model",
+        "text editing",
+        "disabled save",
+        "delete confirmation",
+        "removable filler chip"
+      ],
+      "interactions": [
+        "In-place text edit",
+        "Selection binding",
+        "Delete opens native alert",
+        "Confirmation cancel leaves fixture unchanged"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C114",
+        "C115",
+        "C116",
+        "C117",
+        "C118",
+        "C119",
+        "C120",
+        "C121",
+        "C122",
+        "C123",
+        "C124",
+        "C125",
+        "C126",
+        "C127",
+        "C128",
+        "C129",
+        "C130",
+        "C131",
+        "C132",
+        "C133",
+        "C134"
+      ],
+      "nativeHostSourceIds": [
+        "H006"
+      ]
+    },
+    {
+      "id": "mac-menu-bar",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Native menu bar status menu",
+      "route": "Activate app MenuBarExtra actual menu",
+      "sourcePatterns": [
+        "App/MenuBar/"
+      ],
+      "states": [
+        "onboarding incomplete vs complete",
+        "selected mode/model",
+        "retry disabled",
+        "launch at login toggle"
+      ],
+      "interactions": [
+        "Native menu AX roles",
+        "Selection checkmarks",
+        "Keyboard escape closes menu",
+        "No quit or login-item modification in fixture"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C001",
+        "C002",
+        "C003",
+        "C004",
+        "C005",
+        "C006",
+        "C007",
+        "C008",
+        "C009",
+        "C010",
+        "C011",
+        "C012",
+        "C013",
+        "C014",
+        "C015",
+        "C016"
+      ],
+      "nativeHostSourceIds": []
+    },
+    {
+      "id": "mac-notifications",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Actual app notification panel",
+      "route": "Trigger synthetic in-app notification with harmless callbacks",
+      "sourcePatterns": [
+        "App/Notifications/"
+      ],
+      "states": [
+        "action present/absent",
+        "close",
+        "progress countdown",
+        "clickable notification"
+      ],
+      "interactions": [
+        "Close dismisses",
+        "Action fires exact fake callback",
+        "Timer/progress remains readable with reduced motion",
+        "No external side effect"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C018",
+        "C019",
+        "C020"
+      ],
+      "nativeHostSourceIds": []
+    },
+    {
+      "id": "mac-component-consumers",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Local reusable button/header/popover consumers",
+      "route": "Use actual import/replacement/provider/settings panels that instantiate local controls",
+      "sourcePatterns": [
+        "DesignSystem/"
+      ],
+      "states": [
+        "primary/secondary/destructive local wrappers",
+        "icon help",
+        "copy success",
+        "escape button",
+        "disclosure expanded",
+        "info-tip link"
+      ],
+      "interactions": [
+        "AX name/help for icon and gesture entry",
+        "Keyboard focus survives panel dismiss",
+        "Fake copy data only",
+        "Verify geometry through actual consumer routes; no isolated gallery claim"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C023",
+        "C024",
+        "C025",
+        "C026",
+        "C027",
+        "C028",
+        "C029",
+        "C030",
+        "C031",
+        "C032"
+      ],
+      "nativeHostSourceIds": []
+    },
+    {
+      "id": "mac-debug-only",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "DEBUG-only menu bar mode toggle",
+      "route": "DEBUG build only actual debug WindowGroup",
+      "sourcePatterns": [
+        "App/VoiceInk.swift"
+      ],
+      "states": [
+        "debug-only toggle"
+      ],
+      "interactions": [
+        "Excluded from Release visual claims",
+        "Changes temporary app fixture state only"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Capture the real app window/panel/menu with production view types and deterministic synthetic fixture state. No reconstructed component gallery or image renderer substitute.",
+      "controlSourceIds": [
+        "C021"
+      ],
+      "nativeHostSourceIds": []
+    },
+    {
+      "id": "mac-launch-alerts",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Storage warning native alert",
+      "route": "Actual app startup using isolated failing-persistence fixture",
+      "sourcePatterns": [],
+      "states": [
+        "persistent failure with safe in-memory fallback",
+        "OK button"
+      ],
+      "interactions": [
+        "Native alert AX role/name",
+        "OK dismisses exactly once",
+        "No access to real user store"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Real NSAlert from production launch path; deterministic temporary failing store only.",
+      "controlSourceIds": [
+        "C022"
+      ],
+      "nativeHostSourceIds": [
+        "H001"
+      ]
+    },
+    {
+      "id": "mac-footer-auto-learn-review",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Dictionary correction review footer",
+      "route": "Use real route from mac-dictionary-main; actual QuickPanelScaffold with deterministic fake state",
+      "sourcePatterns": [],
+      "layoutSourcePaths": [
+        "VoiceInk/Features/Dictionary/Views/AutoLearnReviewPanel.swift",
+        "VoiceInk/DesignSystem/Components/QuickPanelControls.swift"
+      ],
+      "states": [
+        "normal labels at default text size",
+        "long localized labels at AX5 causing genuine multi-line wrap",
+        "primary enabled/disabled",
+        "destructive option if present"
+      ],
+      "interactions": [
+        "Measure actual footer edge height and every button AX hit rectangle",
+        "At minimum panel/window size, verify wrapped button text and target remain inside visible panel",
+        "Scroll to final content row; prove it is visible and activatable above expanded footer",
+        "Verify content bottom reservation grows only by measured footer expansion and returns to baseline when text shrinks",
+        "Ensure focus remains on same action and keyboard callbacks fire once",
+        "Check background fade cannot intercept taps"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Actual production footer/scaffold and real app route; source-only adaptive layout proof is insufficient.",
+      "controlSourceIds": [],
+      "nativeHostSourceIds": [],
+      "baseCase": "mac-dictionary-main"
+    },
+    {
+      "id": "mac-footer-dictionary-import",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Dictionary import preview footer",
+      "route": "Use real route from mac-dictionary-main; actual QuickPanelScaffold with deterministic fake state",
+      "sourcePatterns": [],
+      "layoutSourcePaths": [
+        "VoiceInk/Features/Dictionary/Views/DictionaryImportPreviewSheet.swift",
+        "VoiceInk/DesignSystem/Components/QuickPanelControls.swift"
+      ],
+      "states": [
+        "normal labels at default text size",
+        "long localized labels at AX5 causing genuine multi-line wrap",
+        "primary enabled/disabled",
+        "destructive option if present"
+      ],
+      "interactions": [
+        "Measure actual footer edge height and every button AX hit rectangle",
+        "At minimum panel/window size, verify wrapped button text and target remain inside visible panel",
+        "Scroll to final content row; prove it is visible and activatable above expanded footer",
+        "Verify content bottom reservation grows only by measured footer expansion and returns to baseline when text shrinks",
+        "Ensure focus remains on same action and keyboard callbacks fire once",
+        "Check background fade cannot intercept taps"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Actual production footer/scaffold and real app route; source-only adaptive layout proof is insufficient.",
+      "controlSourceIds": [],
+      "nativeHostSourceIds": [],
+      "baseCase": "mac-dictionary-main"
+    },
+    {
+      "id": "mac-footer-prompt-editor",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Prompt editor footer",
+      "route": "Use real route from mac-enhancement; actual QuickPanelScaffold with deterministic fake state",
+      "sourcePatterns": [],
+      "layoutSourcePaths": [
+        "VoiceInk/Features/Enhancement/Views/PromptEditorView.swift",
+        "VoiceInk/DesignSystem/Components/QuickPanelControls.swift"
+      ],
+      "states": [
+        "normal labels at default text size",
+        "long localized labels at AX5 causing genuine multi-line wrap",
+        "primary enabled/disabled",
+        "destructive option if present"
+      ],
+      "interactions": [
+        "Measure actual footer edge height and every button AX hit rectangle",
+        "At minimum panel/window size, verify wrapped button text and target remain inside visible panel",
+        "Scroll to final content row; prove it is visible and activatable above expanded footer",
+        "Verify content bottom reservation grows only by measured footer expansion and returns to baseline when text shrinks",
+        "Ensure focus remains on same action and keyboard callbacks fire once",
+        "Check background fade cannot intercept taps"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Actual production footer/scaffold and real app route; source-only adaptive layout proof is insufficient.",
+      "controlSourceIds": [],
+      "nativeHostSourceIds": [],
+      "baseCase": "mac-enhancement"
+    },
+    {
+      "id": "mac-footer-custom-provider-editor",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Custom provider/model editor footer",
+      "route": "Use real route from mac-custom-provider; actual QuickPanelScaffold with deterministic fake state",
+      "sourcePatterns": [],
+      "layoutSourcePaths": [
+        "VoiceInk/Features/ModelLibrary/Views/CustomProviderManagementView.swift",
+        "VoiceInk/DesignSystem/Components/QuickPanelControls.swift"
+      ],
+      "states": [
+        "normal labels at default text size",
+        "long localized labels at AX5 causing genuine multi-line wrap",
+        "primary enabled/disabled",
+        "destructive option if present"
+      ],
+      "interactions": [
+        "Measure actual footer edge height and every button AX hit rectangle",
+        "At minimum panel/window size, verify wrapped button text and target remain inside visible panel",
+        "Scroll to final content row; prove it is visible and activatable above expanded footer",
+        "Verify content bottom reservation grows only by measured footer expansion and returns to baseline when text shrinks",
+        "Ensure focus remains on same action and keyboard callbacks fire once",
+        "Check background fade cannot intercept taps"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Actual production footer/scaffold and real app route; source-only adaptive layout proof is insufficient.",
+      "controlSourceIds": [],
+      "nativeHostSourceIds": [],
+      "baseCase": "mac-custom-provider"
+    },
+    {
+      "id": "mac-footer-mode-editor",
+      "platform": "Mac native",
+      "appTarget": "VoiceInk",
+      "surface": "Mode editor footer",
+      "route": "Use real route from mac-modes-form; actual QuickPanelScaffold with deterministic fake state",
+      "sourcePatterns": [],
+      "layoutSourcePaths": [
+        "VoiceInk/Features/Modes/Views/ModeConfigFormView.swift",
+        "VoiceInk/DesignSystem/Components/QuickPanelControls.swift"
+      ],
+      "states": [
+        "normal labels at default text size",
+        "long localized labels at AX5 causing genuine multi-line wrap",
+        "primary enabled/disabled",
+        "destructive option if present"
+      ],
+      "interactions": [
+        "Measure actual footer edge height and every button AX hit rectangle",
+        "At minimum panel/window size, verify wrapped button text and target remain inside visible panel",
+        "Scroll to final content row; prove it is visible and activatable above expanded footer",
+        "Verify content bottom reservation grows only by measured footer expansion and returns to baseline when text shrinks",
+        "Ensure focus remains on same action and keyboard callbacks fire once",
+        "Check background fade cannot intercept taps"
+      ],
+      "status": "PENDING_NATIVE_AUTHORITY_AND_FIXTURE_PREPARATION",
+      "actualAppRequirement": "Actual production footer/scaffold and real app route; source-only adaptive layout proof is insufficient.",
+      "controlSourceIds": [],
+      "nativeHostSourceIds": [],
+      "baseCase": "mac-modes-form"
+    }
+  ],
+  "requiredArtifacts": [
+    "before/after actual-app screenshots for each case/variant/state with source commit+dependency pin+fixture hash+macOS version+host recorded",
+    "AX hierarchy JSON: role/subrole/name/value/enabled/selected/focused/action list and global+window-relative bounds per control",
+    "Interaction receipt: exact source control ID, expected callback/binding, action count, focus traversal and disabled rejection",
+    "Geometry report: hit bounds, overlap/clipping, pair consistency and canonical manifest dimensions; reduced motion/increased contrast observations",
+    "Contact sheet linking full-resolution originals; no Gallery/ImageRenderer-only substitutes"
+  ],
+  "acceptance": [
+    "All reachable affected controls expose correct semantic role/name/state and keyboard action; gesture-only entries explicitly tested.",
+    "Light/dark/AX5 preserve readable text and fit; fixed fonts/frames must be reported as failures if clipped/unresponsive.",
+    "Primary/secondary action pairs use canonical geometry from adopted pinned dependency, with no inner fixed frame overriding height.",
+    "Disabled actions cannot fire, confirmations remain one step away, cancel unchanged and undo proven where required; baseline history undo remains known gap.",
+    "Menu/picker/field system-host behavior preserved; secure fields never expose fake secret through AX values.",
+    "No source-only check, launch attachment or fixture plan is reported as native/device conformance."
+  ],
+  "platformGaps": [
+    {
+      "platform": "Mac native",
+      "status": "configured",
+      "target": "VoiceInk",
+      "minimumOS": "15.0"
+    },
+    {
+      "platform": "iPhone",
+      "status": "product_gap_no_target",
+      "requirement": "Required by governing cross-platform goal; not excluded by existing Mac-only product."
+    },
+    {
+      "platform": "iPad",
+      "status": "product_gap_no_target",
+      "requirement": "Required by governing cross-platform goal; not excluded."
+    },
+    {
+      "platform": "Vision Pro",
+      "status": "product_gap_no_target",
+      "requirement": "Required by governing cross-platform goal; not excluded."
+    },
+    {
+      "platform": "Web",
+      "status": "no_existing_counterpart_found",
+      "requirement": "Goal applies where present; no web source/target in audited tree."
+    },
+    {
+      "platform": "Watch",
+      "status": "no_target_found"
+    },
+    {
+      "platform": "WidgetKit/Live Activity/Control extension",
+      "status": "no_target_or_import_found",
+      "screenshotApplicability": "No fictitious widget screenshot cases."
+    }
+  ],
+  "widgets": {
+    "targets": [],
+    "families": [],
+    "plannedScreenshots": 0,
+    "status": "NOT_PRESENT_IN_AUDITED_PROJECT",
+    "reason": "ActivityCalendarCard is dashboard data; no WidgetKit/ActivityKit/Control extension or Watch target. Tinted/clear/fullColor/accessory widget modes have no target to host. No screenshot fabricated."
+  },
+  "existingTests": {
+    "target": "VoiceInkUITests",
+    "sourceFiles": 2,
+    "existingBehavior": "Example launch, launch performance and generic launch screenshot attachment only; no control geometry/AX/disabled/destructive matrix assertions.",
+    "unitTests": "VoiceInkTests target declared but synchronized Tests/VoiceInkTests source root absent; zero source inputs.",
+    "evidence": [
+      "Tests/VoiceInkUITests/VoiceInkUITests.swift:29",
+      "Tests/VoiceInkUITests/VoiceInkUITestsLaunchTests.swift:22"
+    ],
+    "sourceCountAtBaseline": 2
+  },
+  "nativeHostSourceAssignments": 15,
+  "legacyAlertActionSites": 7
+}

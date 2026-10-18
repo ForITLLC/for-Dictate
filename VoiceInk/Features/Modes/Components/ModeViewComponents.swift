@@ -1,3 +1,4 @@
+import ForITCommon
 import SwiftUI
 
 struct VoiceInkButton: View {
@@ -8,16 +9,9 @@ struct VoiceInkButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.headline)
-                .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(isDisabled ? AppTheme.Accent.disabled : AppTheme.Accent.primary)
-                )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.forITPrimary)
         .disabled(isDisabled)
     }
 }

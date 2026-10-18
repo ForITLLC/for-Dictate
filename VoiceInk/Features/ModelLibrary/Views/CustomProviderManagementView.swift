@@ -799,7 +799,7 @@ private struct CustomModelEditorFooter: View {
                 .disabled(isPrimaryDisabled)
         }
         .padding(.horizontal, 20)
-        .frame(height: QuickPanelMetrics.footerHeight)
+        .frame(minHeight: QuickPanelMetrics.footerHeight)
     }
 }
 

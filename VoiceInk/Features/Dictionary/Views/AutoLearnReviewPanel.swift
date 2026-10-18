@@ -168,7 +168,7 @@ struct AutoLearnReviewPanel: View {
                 .help(firstValidationIssue ?? "Apply the selected corrections")
             }
             .padding(.horizontal, 20)
-            .frame(height: QuickPanelMetrics.footerHeight)
+            .frame(minHeight: QuickPanelMetrics.footerHeight)
         }
     }
 
