@@ -1,0 +1,124 @@
+{
+  "schema": "forit.dictate.canonical-mark.independent-source-review.v1",
+  "reviewedUTC": "2026-10-24T07:10:19.361739+00:00",
+  "baselineCommit": "0fef1a4b073ab5cc95ab7d0bb6e04786ffe0cf3c",
+  "publishedCommon": {
+    "version": "0.31.4",
+    "revision": "de99b5701b0287314b3e1d60ebbee495812ea16e",
+    "freshRemoteTagPeelVerified": true,
+    "APIQualification": "Immutable git object source read, not dirty Common checkout; public forITProfileMenu and ForITMark signatures confirmed."
+  },
+  "verdict": "NO_REMAINING_DEFINITE_SOURCE_LOGIC_BLOCKER_FOUND_NATIVE_PENDING",
+  "scope": "Read-only independent review of root Swift/dependency implementation; this JSON is the only reviewer-written repository artifact. Guard build phases are separately owned and not certified by this review.",
+  "sourceChecks": [
+    {
+      "check": "content_lifecycle_callbacks_unchanged",
+      "result": "PASS_SOURCE",
+      "evidence": "Production launch reminder, cleanup, pending-file routing and model-unload bodies match baseline after whitespace removal."
+    },
+    {
+      "check": "main_window_request_bridge_unchanged",
+      "result": "PASS_SOURCE",
+      "evidence": "Show-main notification bridge preserves activation, existing-window routing and cold-start preparation."
+    },
+    {
+      "check": "settings_environment_dependency_coverage",
+      "result": "PASS_SOURCE",
+      "evidence": "VoiceInk.swift:282-292 matches all five SettingsView environment objects and SwiftData context at SettingsView.swift:7-12."
+    },
+    {
+      "check": "settings_activation",
+      "result": "PASS_SOURCE",
+      "evidence": "Settings scene content onAppear activates regular user-facing presentation; unchanged MenuBarManager.swift:33-42 globally observes titled-window close for accessory restoration."
+    },
+    {
+      "check": "native_settings_scene_exists",
+      "result": "PASS_SOURCE",
+      "evidence": "VoiceInk.swift:375-377; exact Common ForITProfileMenu.swift:191-197 and ForITPanel.swift:67-72 open the native Settings scene."
+    },
+    {
+      "check": "tray_accessible_name_source_gap_resolved",
+      "result": "PASS_SOURCE",
+      "evidence": "VoiceInk.swift:392-398 places the unchanged decorative canonical mark inside a named semantic parent. Native status-item AX acceptance remains pending."
+    },
+    {
+      "check": "existing_lock_pins_preserved",
+      "result": "PASS_SOURCE",
+      "evidence": "All27 existing pins equal baseline; exactly one for-icommon pin added. Source lock declaration only; resolver not executed."
+    },
+    {
+      "check": "common_exact_version_revision",
+      "result": "PASS_SOURCE",
+      "evidence": "Fresh remote annotated tag peel verified de99b5701b0287314b3e1d60ebbee495812ea16e; immutable published source exports invoked APIs and declares Mac14/Swift languagev5 vs Dictate Mac15."
+    },
+    {
+      "check": "deleted_icon_helper_has_no_remaining_references",
+      "result": "PASS_SOURCE",
+      "evidence": "Unused local app-icon/glow helper deleted; no remaining shipping Swift references."
+    },
+    {
+      "check": "onboarding_uses_direct_shared_mark",
+      "result": "PASS_SOURCE",
+      "evidence": "Reachable TrustMap view uses canonical mark directly; local shield/app-icon wrapper gone. Existing diagram position is unchanged, not a topbar offset workaround."
+    }
+  ],
+  "resolvedFindings": [
+    {
+      "id": "tray-decorative-mark-accessible-name",
+      "status": "RESOLVED_IN_SOURCE",
+      "evidence": "VoiceInk/App/VoiceInk.swift:392-398",
+      "nativeQualification": "No actual status-item AX hierarchy or activation evidence produced."
+    }
+  ],
+  "reviewedFiles": [
+    {
+      "path": "VoiceInk/App/VoiceInk.swift",
+      "sha256": "11426d06d0d45e6c56ed51550ed17900d3740024d8a99eed53aa03601307bbec",
+      "lines": 497
+    },
+    {
+      "path": "VoiceInk/App/Windows/WindowManager.swift",
+      "sha256": "46ec0f435e9238581ad8287e30a25b072d23755b83de64713c04f4298480b87d",
+      "lines": 213
+    },
+    {
+      "path": "VoiceInk/Features/Onboarding/Views/OnboardingTrustScreen.swift",
+      "sha256": "3158bcbb7240a33ea6045ce18a91d5e41ecfb6bb49e191fd9a79799ba1c82a46",
+      "lines": 179
+    },
+    {
+      "path": "VoiceInk.xcodeproj/project.pbxproj",
+      "sha256": "a24f9cfdcc5976bfb4bbfa9a4f673c7cb6ac5182c54d777060190f1932b0abbb",
+      "lines": 1103
+    },
+    {
+      "path": "VoiceInk.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved",
+      "sha256": "c25198b04c2e894bec989f796b7e0f75cef1f40602fa5863ceb562b81d9e491a",
+      "lines": 255
+    },
+    {
+      "path": "VoiceInk/App/Components/AppIconView.swift",
+      "status": "deleted",
+      "baselineBlob": "e7a5ac873be231906658a49537c38b086571c260"
+    }
+  ],
+  "windowAssessment": "Root removes hidden-title/full-size-content configuration, retains normal titled-window toolbar ownership. Fixed950width/restoration/singleton/menu-only routing retained; actual title/mark/traffic-light alignment and min-content/frame fit remain unproved.",
+  "remainingProductGaps": [
+    "account:nil reflects no connected account service; no account/profile capability asserted.",
+    "Feedback service not configured; panel completeness under full governing goal not certified.",
+    "App-icon-family migration is separately owned; this source change does not certify app icon adoption.",
+    "iPhone/iPad/Vision targets absent product gaps; no Watch/widget/activity/web target assumed."
+  ],
+  "nativeAcceptancePending": [
+    "RealMac light/dark sharedmark and title/traffic-light same-row alignment at minimum/restored/taller window sizes.",
+    "Actual status-item AX name ForIT Dictate and identifier dictate.statusItem; mouse/keyboard menu activation and correct paint in both appearances.",
+    "Onboarding transition and reset, pending-file route, Settings appearance/close, menu-only accessory restoration, singleton reopen.",
+    "Settings window usable sizing and all controls/bindings with actual dependencies."
+  ],
+  "nativeRuns": 0,
+  "SDKBuilds": 0,
+  "SwiftPMResolutions": 0,
+  "AXRuns": 0,
+  "screenshots": 0,
+  "sourceDiffWhitespaceCheck": "PASS"
+}

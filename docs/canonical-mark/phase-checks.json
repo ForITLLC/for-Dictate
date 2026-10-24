@@ -1,0 +1,30 @@
+{
+  "baseline": {
+    "acceptedCanonicalPrecompilePhases": 1,
+    "expectedAccepted": true
+  },
+  "dependency-skip": {
+    "acceptedCanonicalPrecompilePhases": 0,
+    "expectedAccepted": false
+  },
+  "failure-mask": {
+    "acceptedCanonicalPrecompilePhases": 0,
+    "expectedAccepted": false
+  },
+  "post-sources": {
+    "acceptedCanonicalPrecompilePhases": 0,
+    "expectedAccepted": false
+  },
+  "custom-wrapper": {
+    "acceptedCanonicalPrecompilePhases": 0,
+    "expectedAccepted": false
+  },
+  "duplicate-flag": {
+    "acceptedCanonicalPrecompilePhases": 0,
+    "expectedAccepted": false
+  },
+  "deployment-only": {
+    "acceptedCanonicalPrecompilePhases": 0,
+    "expectedAccepted": false
+  }
+}

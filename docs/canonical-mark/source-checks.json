@@ -1,0 +1,31 @@
+{
+  "schema": "forit.dictate.canonical-mark.source-check.v1",
+  "observedUTC": "2026-10-24T07:08:26.430985+00:00",
+  "baseline": "0fef1a4b073ab5cc95ab7d0bb6e04786ffe0cf3c",
+  "common": {
+    "version": "0.31.4",
+    "revision": "de99b5701b0287314b3e1d60ebbee495812ea16e",
+    "tagObject": "c5100c0038f6480a83945b3348c7dc2777df5ee2",
+    "publicationReceiptSHA256": "c2c75bc07f7336be9f8d6c8248105fba7ec1705116734e7b02de1bafab653d15",
+    "qualification": "CommonCore910nativepasses/0fail, acceptedEND, no consumerproof",
+    "canonicalPNG": "c885ca50c30f5a4fcf55cb8f083d055831ed8878aff39b9fb782bd05a104edd8"
+  },
+  "unchangedExistingLockPins": 27,
+  "packageResolutionPerformed": false,
+  "lockEntry": "prospective exact published pin; staleoriginHash removed; resolver/hash validationpending",
+  "frozenPR2": "3127a2a9040a1d2e47d000fdda2896665a037533 remainsOPEN_DRAFT_UNMERGED",
+  "sourceChecklist": [
+    "oneNavigationStack aroundbothbranches",
+    "sharedforITProfileMenu/accountnil and navigationTitle",
+    "realSettingsscene with5requiredEnvironmentObjects+sameSwiftData",
+    "preserved MainWindowRequestBridge and tray callbacks",
+    "removedhiddenTitleBar/fullsizeexplicitconfiguration",
+    "canonicalinappmark noLocalshield/glow",
+    "unusedAppIconViewremoved/noactualcallers"
+  ],
+  "nativeRenderAXBuildProof": false,
+  "appIconAssetsChanged": false,
+  "feedbackConfigured": false,
+  "accountIdentityInvented": false,
+  "pushedRootResizeAlignmentProven": false
+}

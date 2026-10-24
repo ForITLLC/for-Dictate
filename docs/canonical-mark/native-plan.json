@@ -1,0 +1,64 @@
+{
+  "schema": "forit.dictate.canonical-mark.native-plan.v1",
+  "task": "6A908F35-88E6-4266-A043-35CE95BEF60F",
+  "state": "UNRUN_REQUIRES_FRESH_A0_ADMISSION",
+  "platform": "macOS15",
+  "common": "0.31.4/de99b5701b0287314b3e1d60ebbee495812ea16e",
+  "cases": [
+    {
+      "id": "main-root",
+      "acceptance": "Both onboarding and completed-app routes display one shared ForIT menu/title. Verify button and title on window-button row, no duplicate title or local offset.",
+      "status": "UNRUN"
+    },
+    {
+      "id": "window-restore-resize",
+      "acceptance": "Minimum950x750, saved taller frame, resize and repeated open/focus. Preserve singleton/main-window and menu-only activation without content beneath controls.",
+      "status": "UNRUN"
+    },
+    {
+      "id": "shared-panel",
+      "acceptance": "Open/close shared side panel, account:nil honest guest state, keyboard accessibility, real Settings destination. Missing feedback service remains explicit.",
+      "status": "UNRUN"
+    },
+    {
+      "id": "settings-scene",
+      "acceptance": "Open Settings via shared panel and standard Mac command, including menu-only start. All5environmentobjects and sameSwiftData container; activation regular while visible, accessory after lastwindow closes.",
+      "status": "UNRUN"
+    },
+    {
+      "id": "tray-mark",
+      "acceptance": "Actual system MenuBarExtra shows shared white/keylined mark on light/dark menu backgrounds, no invisible/clipped/image-substitution surrogate. Existing tray actions and MainWindowRequestBridge still work.",
+      "status": "UNRUN"
+    },
+    {
+      "id": "onboarding-mark",
+      "acceptance": "Reachable privacy/trust screen uses canonical ForITMark52 with no shield/app-icon wrapper; visual controls/text remain reachable.",
+      "status": "UNRUN"
+    },
+    {
+      "id": "product-icon",
+      "acceptance": "Existing product AppIcon remains a separate icon-family-owner gap; do not claim upstreammic/pen AppIcon assets were migrated by this PR.",
+      "status": "UNRUN"
+    },
+    {
+      "id": "navigation-push",
+      "acceptance": "Exercise actual root and any supported pushed detail state; one root menu, no duplicatedmenu; absence of runtimepushroute explicitlynotapplicable, notfabricated.",
+      "status": "UNRUN"
+    }
+  ],
+  "variants": [
+    "light/defaulttext",
+    "dark/defaulttext",
+    "light/largest-supported-accessibility-text",
+    "dark/largest-supported-accessibility-text"
+  ],
+  "capturesProduced": 0,
+  "nativeRuns": 0,
+  "constraints": [
+    "normalcurrentA0queue;AI firsteligibleconsumer",
+    "no Ben device takeover, oldGO, independentnativecontroller or source-policywaiver",
+    "deterministicprivacy-safe fixture; nevertranscript/audio/clipboard/usercredentials",
+    "CommonCore910nativepasses do notproveconsumerfit/ship",
+    "no actualASC/TestFlightversion/build/date/platform established; priorstaffDMG1.0.0(1834)Oct17 is separate"
+  ]
+}
