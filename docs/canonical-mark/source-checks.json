@@ -1,18 +1,18 @@
 {
   "schema": "forit.dictate.canonical-mark.source-check.v1",
-  "observedUTC": "2026-10-24T07:08:26.430985+00:00",
+  "observedUTC": "2026-10-24T10:45:45.895839+00:00",
   "baseline": "0fef1a4b073ab5cc95ab7d0bb6e04786ffe0cf3c",
   "common": {
-    "version": "0.31.4",
-    "revision": "de99b5701b0287314b3e1d60ebbee495812ea16e",
-    "tagObject": "c5100c0038f6480a83945b3348c7dc2777df5ee2",
-    "publicationReceiptSHA256": "c2c75bc07f7336be9f8d6c8248105fba7ec1705116734e7b02de1bafab653d15",
-    "qualification": "CommonCore910nativepasses/0fail, acceptedEND, no consumerproof",
+    "version": "0.31.6",
+    "revision": "46d3f5d53e230b29ec97e803381f32135a02d8ff",
+    "tagObject": "c8edca624b0208617633e5df0bd8292038d31b6d",
+    "publicationReceiptSHA256": "d5511d41b69d4e578ae717bdd073fbaa73c4497c2fa1728b9ef5c8425367494c",
+    "qualification": "published producer qualification only: 910 native tests, 1480 pure tests, 12 SDK probes and accepted END; no consumer proof",
     "canonicalPNG": "c885ca50c30f5a4fcf55cb8f083d055831ed8878aff39b9fb782bd05a104edd8"
   },
   "unchangedExistingLockPins": 27,
   "packageResolutionPerformed": false,
-  "lockEntry": "prospective exact published pin; staleoriginHash removed; resolver/hash validationpending",
+  "lockEntry": "Original canonical 27-pin committed lock restored byte-for-byte, including original originHash. It has no Common entry. Declaration and lock intentionally await genuine admitted SDK resolution; no current resolution/binding PASS.",
   "frozenPR2": "3127a2a9040a1d2e47d000fdda2896665a037533 remainsOPEN_DRAFT_UNMERGED",
   "sourceChecklist": [
     "oneNavigationStack aroundbothbranches",
@@ -27,5 +27,7 @@
   "appIconAssetsChanged": false,
   "feedbackConfigured": false,
   "accountIdentityInvented": false,
-  "pushedRootResizeAlignmentProven": false
+  "pushedRootResizeAlignmentProven": false,
+  "currentGuardStatus": "SOURCE_HOLD both targets: remote Common dependency has no matching canonical lock pin",
+  "historical0314Evidence": "independent-review.json, phase-checks.json, guard-wiring-verification.json and guard-diagnostics.json are observations of prior 90c1771/0.31.4, not current 0.31.6 reports."
 }

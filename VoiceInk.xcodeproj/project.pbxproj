@@ -470,7 +470,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "exec /usr/bin/python3 -I \"$FORIT_COMMON_ROOT/Scripts/control-guard/control_guard.py\" --inputs \"$SRCROOT/forit/control-guard/VoiceInk-macOS-inputs.json\" --report \"/Users/Shared/forit-build-artifacts/for-Dictate/control-guard/VoiceInk-macOS.json\" --common-revision de99b5701b0287314b3e1d60ebbee495812ea16e\n";
+			shellScript = "exec /usr/bin/python3 -I \"$FORIT_COMMON_ROOT/Scripts/control-guard/control_guard.py\" --inputs \"$SRCROOT/forit/control-guard/VoiceInk-macOS-inputs.json\" --report \"/Users/Shared/forit-build-artifacts/for-Dictate/control-guard/VoiceInk-macOS.json\" --common-revision 46d3f5d53e230b29ec97e803381f32135a02d8ff\n";
 		};
 		F01C6A908F35000000000002 /* Shared controls BR-3 */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -496,7 +496,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "exec /usr/bin/python3 -I \"$FORIT_COMMON_ROOT/Scripts/control-guard/control_guard.py\" --inputs \"$SRCROOT/forit/control-guard/VoiceInkRefineXPC-macOS-inputs.json\" --report \"/Users/Shared/forit-build-artifacts/for-Dictate/control-guard/VoiceInkRefineXPC-macOS.json\" --common-revision de99b5701b0287314b3e1d60ebbee495812ea16e\n";
+			shellScript = "exec /usr/bin/python3 -I \"$FORIT_COMMON_ROOT/Scripts/control-guard/control_guard.py\" --inputs \"$SRCROOT/forit/control-guard/VoiceInkRefineXPC-macOS-inputs.json\" --report \"/Users/Shared/forit-build-artifacts/for-Dictate/control-guard/VoiceInkRefineXPC-macOS.json\" --common-revision 46d3f5d53e230b29ec97e803381f32135a02d8ff\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -931,7 +931,7 @@
 			repositoryURL = "https://github.com/ForITLLC/for-iCommon.git";
 			requirement = {
 				kind = exactVersion;
-				version = 0.31.4;
+				version = 0.31.6;
 			};
 		};
 		E1342C1D2EB4844800CED8A2 /* XCRemoteSwiftPackageReference "swift-atomics" */ = {

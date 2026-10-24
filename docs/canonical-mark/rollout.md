@@ -11,9 +11,9 @@ checkout; no guard was bypassed or alternate source worker created.
 
 ## Source behavior
 
-Common is fixed to tested published **0.31.4**, commit
-`de99b5701b0287314b3e1d60ebbee495812ea16e`. Its publication receipt SHA256 is
-`c2c75bc07f7336be9f8d6c8248105fba7ec1705116734e7b02de1bafab653d15`.
+Common is fixed to tested published **0.31.6**, commit
+`46d3f5d53e230b29ec97e803381f32135a02d8ff`. Its publication receipt SHA256 is
+`d5511d41b69d4e578ae717bdd073fbaa73c4497c2fa1728b9ef5c8425367494c`.
 Common Core's 910 native tests and accepted END qualify that producer release;
 they do not certify Dictate, its tray label, or a TestFlight build.
 
@@ -46,19 +46,30 @@ owner if that separate asset rollout is needed. Provider logos, user-selected
 mode icons and instructional art remain domain content. No intentional tenant
 or white-label exception was found in this consumer.
 
-All 27 existing dependency pins remain unchanged. The added exact Common lock
-entry is prospective source preparation; no resolver or compiler was run. The
-stale requirements `originHash` is removed rather than inventing a new resolver
-hash. The admitted resolver must regenerate/verify the lock and exact dependency
-binding before native qualification. Future integration with frozen PR #2 must
-reconcile its earlier Common requirement and overlapping project/config files;
-this draft does not merge or rewrite that work.
+All 27 original dependency pins and the entire canonical committed lockfile,
+including its original requirements hash, are retained byte-for-byte. The earlier
+source-only handwritten Common entry is removed; it was never resolver evidence.
+The declaration selects 0.31.6, while the retained lock has no Common entry.
+Both target graphs now correctly HOLD on that missing binding. Only the genuine
+SDK resolver in the existing admitted A0 job may create the new canonical lock.
+No lock was deleted or copied from another app to manufacture agreement.
+
+The [maintained adoption recipe](https://github.com/ForITLLC/for-iCommon/blob/0.31.6/Scripts/control-guard/README.md#adoption-recipe-one-source-graph-real-resolution-then-reports)
+requires real resolution before external adoption staging or reports. Every
+recognized canonical Common lock must agree. No new resolver, generator/native
+job, arbitrary tool-policy pairing or guard waiver is introduced.
+
+Future integration with frozen PR #2 must reconcile its earlier Common
+requirement and overlapping project/config files. This draft does not merge or
+rewrite that work.
 
 ## Guard and platform scope
 
-Both shipping targets have explicit published-guard inputs, `forit-app.json`
-records and unconditional first precompile phases bound to the same Common
-revision. See `forit/control-guard/README.md` for exact tool findings, graph and
+Both shipping targets have source-prepared guard inputs, `forit-app.json`
+records and unconditional first precompile phases now bound to exact 0.31.6.
+Current graph evaluation is held until genuine resolution supplies the missing
+Common lock binding. Historical 0.31.4 analysis and phase reports in this folder
+are explicitly prior evidence, not 0.31.6 conformance. See `forit/control-guard/README.md` for exact tool findings, graph and
 sandbox/report requirements. PBX/XPC support is present in this published
 successor; the Oct 18 unsupported-adapter observation is historical.
 
@@ -99,3 +110,18 @@ resolution/compilation, actual native display/AX proof, distribution
 qualification and an admitted build remain open. Original finite watcher,
 Ben's model/permissions/field-check task and all frozen/native holds persist.
 Main owns the single consolidated report to Dispatch.
+
+## Producer handback 0.31.6
+
+The 0.31.6 update closes all-recognized-lock Common binding, with no rendering
+API change. Immutable comparison shows `Sources/`, `Package.swift` and
+`Scripts/brand-export.py` unchanged from the adopted 0.31.4 producer.
+The unpublished rendering-contract successor is not adopted.
+
+There is an additional generator limitation to resolve with the producer:
+exact 0.31.6 `br3_adoption.prepare_plan` rejects a graph containing
+`toolGeneratedAssetBindings` (lines 184–188). The same app source was previously
+observed with canonical Apple asset-symbol bindings. Consequently genuine SDK
+resolution is necessary, but does not by itself prove the generator can prepare
+this project. The owner needs reviewed support/handling through the maintained
+recipe. No asset generator, binding or lock may be omitted to obtain a plan.

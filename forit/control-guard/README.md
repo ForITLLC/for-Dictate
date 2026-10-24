@@ -1,3 +1,33 @@
+# Current source handback: Common 0.31.6
+
+Both exact package declaration and precompile/config revision now select published
+`0.31.6` / `46d3f5d53e230b29ec97e803381f32135a02d8ff`. No rendering API or
+unpublished rendering-contract successor is adopted.
+
+The canonical committed 27-pin lockfile is restored exactly; our provisional
+handwritten Common entry is removed. No SDK resolver was run. Both published
+target graph evaluations now HOLD: the remote Common dependency has no matching
+canonical lock pin. This is intentional source preparation, not a binding PASS.
+
+Follow the maintained 0.31.6 adoption recipe in the **existing admitted A0 job**:
+genuine SDK resolution first; retain every recognized genuine canonical lock;
+all Common bindings must agree; only then prepare the reviewed external adoption
+bundle/reports from the official frozen tool checkout. No copied/deleted locks,
+new native controller, arbitrary policy override or waiver is authorized.
+
+The generator has an additional relevant source limitation: exact 0.31.6
+`br3_adoption.py:184–188` rejects `toolGeneratedAssetBindings`. Prior inspection
+of this same authored source found Apple asset-symbol bindings. Resolution alone
+therefore does not prove generator readiness; maintained owner-reviewed handling
+is still required. Never omit those assets or pretend this source check is an
+actual resolver/build result.
+
+The following section retains **historical 0.31.4 / commit 90c1771 observations**.
+Its counts, tool-root errors, source-policy result and 2,009 unattested diagnostics
+are not current 0.31.6 reports or native evidence.
+
+---
+
 # Shared-control source guard
 
 Task `6A908F35`, source preparation on 2026-10-24. **The wiring is prepared;
