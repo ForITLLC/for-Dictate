@@ -3,7 +3,7 @@
   "task": "6A908F35-88E6-4266-A043-35CE95BEF60F",
   "state": "UNRUN_REQUIRES_FRESH_A0_ADMISSION",
   "platform": "macOS15",
-  "common": "0.31.6/46d3f5d53e230b29ec97e803381f32135a02d8ff",
+  "common": "0.31.7/927a394b803c7c425517e35b532d44037fc279d9",
   "cases": [
     {
       "id": "main-root",
@@ -58,7 +58,8 @@
     "normalcurrentA0queue;AI firsteligibleconsumer",
     "no Ben device takeover, oldGO, independentnativecontroller or source-policywaiver",
     "deterministicprivacy-safe fixture; nevertranscript/audio/clipboard/usercredentials",
-    "CommonCore910nativepasses do notproveconsumerfit/ship",
-    "no actualASC/TestFlightversion/build/date/platform established; priorstaffDMG1.0.0(1834)Oct17 is separate"
+    "CommonCore977nativepasses do notproveconsumerfit/ship",
+    "no actualASC/TestFlightversion/build/date/platform established; priorstaffDMG1.0.0(1834)Oct17 is separate",
+    "Producer reports AX5 Reply-editor/Send overlap149x16.5pt still open; shared functional tests do not establish pixel acceptance"
   ]
 }

@@ -1,13 +1,13 @@
 {
   "schema": "forit.dictate.canonical-mark.source-check.v1",
-  "observedUTC": "2026-10-24T10:45:45.895839+00:00",
+  "observedUTC": "2026-10-24T18:29:53.964590+00:00",
   "baseline": "0fef1a4b073ab5cc95ab7d0bb6e04786ffe0cf3c",
   "common": {
-    "version": "0.31.6",
-    "revision": "46d3f5d53e230b29ec97e803381f32135a02d8ff",
-    "tagObject": "c8edca624b0208617633e5df0bd8292038d31b6d",
-    "publicationReceiptSHA256": "d5511d41b69d4e578ae717bdd073fbaa73c4497c2fa1728b9ef5c8425367494c",
-    "qualification": "published producer qualification only: 910 native tests, 1480 pure tests, 12 SDK probes and accepted END; no consumer proof",
+    "version": "0.31.7",
+    "revision": "927a394b803c7c425517e35b532d44037fc279d9",
+    "tagObject": "f0880ddf36b6445399cae9653dfbd95f7a4a028c",
+    "publicationReceiptSHA256": "60b301c024f20b72c012fc6c3c10ffb5db33aec7707377f9eb01a492f7c7625b",
+    "qualification": "Published producer receipt: Core40116915193/1, 977 native, 2458 Python methods, 22 SDK probes and accepted END22c821a5. Not consumer/native/upload proof.",
     "canonicalPNG": "c885ca50c30f5a4fcf55cb8f083d055831ed8878aff39b9fb782bd05a104edd8"
   },
   "unchangedExistingLockPins": 27,
@@ -29,5 +29,15 @@
   "accountIdentityInvented": false,
   "pushedRootResizeAlignmentProven": false,
   "currentGuardStatus": "SOURCE_HOLD both targets: remote Common dependency has no matching canonical lock pin",
-  "historical0314Evidence": "independent-review.json, phase-checks.json, guard-wiring-verification.json and guard-diagnostics.json are observations of prior 90c1771/0.31.4, not current 0.31.6 reports."
+  "historical0314Evidence": "independent-review.json, phase-checks.json, guard-wiring-verification.json and guard-diagnostics.json are observations of prior 90c1771/0.31.4, not current 0.31.7 reports.",
+  "historical0316Evidence": "producer-0316-review.json records prior d3f0c750/0.31.6 review and then-unsupported asset handling, not current 0.31.7 evidence.",
+  "currentGeneratorStatus": "Published0.31.7 preserves maintained Apple asset bindings with exact input hashes and source-only classification; native identity/closure UNVERIFIED. No generator plan executed: genuine SDK resolution still absent.",
+  "knownProducerVisualFinding": "Producer relay msg_b61b932309d7 reports AX5 Reply-editor/Send overlap149x16.5pt; separate repair active, no whole-app pixel acceptance.",
+  "explicitFoundationImportsAdded": [
+    "VoiceInk/App/Lifecycle/AppDelegate.swift",
+    "VoiceInk/App/Windows/WindowManager.swift",
+    "VoiceInk/Features/History/Presentation/QuickHistoryController.swift",
+    "VoiceInk/Features/Onboarding/Components/OnboardingLockedTextEditor.swift"
+  ],
+  "foundationImportReason": "Each file subclasses NSObject; exact0.31.7 source guard and producer instruction require direct Foundation import rather than transitive AppKit/Cocoa/Combine. No runtime behavior change or compiler PASS claim."
 }

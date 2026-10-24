@@ -1,7 +1,7 @@
 {
   "name": "ForIT Dictate",
   "controlGuard": {
-    "commonRevision": "46d3f5d53e230b29ec97e803381f32135a02d8ff",
+    "commonRevision": "927a394b803c7c425517e35b532d44037fc279d9",
     "targets": {
       "VoiceInk": [
         {

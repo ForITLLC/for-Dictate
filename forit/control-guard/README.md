@@ -1,30 +1,32 @@
-# Current source handback: Common 0.31.6
+# Current source handback: Common 0.31.7
 
-Both exact package declaration and precompile/config revision now select published
-`0.31.6` / `46d3f5d53e230b29ec97e803381f32135a02d8ff`. No rendering API or
-unpublished rendering-contract successor is adopted.
+The package declaration, both mandatory precompile phases and configuration bind
+published `0.31.7` / `927a394b803c7c425517e35b532d44037fc279d9`.
+This producer includes shared profile/rendering changes; consumer compilation and
+native evidence must be refreshed. Unreleased PR143 is not adopted.
 
-The canonical committed 27-pin lockfile is restored exactly; our provisional
-handwritten Common entry is removed. No SDK resolver was run. Both published
-target graph evaluations now HOLD: the remote Common dependency has no matching
-canonical lock pin. This is intentional source preparation, not a binding PASS.
+The original canonical 27-pin lockfile remains byte-exact, including originHash,
+and has no Common pin. No SDK resolver ran. Both target graphs remain HOLD until
+genuine resolution supplies the matching canonical Common binding.
 
-Follow the maintained 0.31.6 adoption recipe in the **existing admitted A0 job**:
-genuine SDK resolution first; retain every recognized genuine canonical lock;
-all Common bindings must agree; only then prepare the reviewed external adoption
-bundle/reports from the official frozen tool checkout. No copied/deleted locks,
-new native controller, arbitrary policy override or waiver is authorized.
+Follow the maintained 0.31.7 adoption recipe in the **existing admitted A0 job**:
+genuine SDK resolution first; retain all recognized genuine locks and require all
+Common bindings agree; then reviewed external adoption staging and final reports.
+No new native job/controller, copied/deleted lock or policy override is authorized.
 
-The generator has an additional relevant source limitation: exact 0.31.6
-`br3_adoption.py:184–188` rejects `toolGeneratedAssetBindings`. Prior inspection
-of this same authored source found Apple asset-symbol bindings. Resolution alone
-therefore does not prove generator readiness; maintained owner-reviewed handling
-is still required. Never omit those assets or pretend this source check is an
-actual resolver/build result.
+The published generator now retains maintained Apple asset-symbol bindings and
+exact asset input hashes with source-policy classification. Native tool identity
+and compiler-input closure remain UNVERIFIED; unsupported/custom generated sources
+still refuse. The former 0.31.6 blanket asset-binding refusal is superseded, but no
+plan has been executed here with unresolved dependencies. Maintained trusted root,
+policy/release pairing, report custody and sandbox qualification remain required.
 
-The following section retains **historical 0.31.4 / commit 90c1771 observations**.
-Its counts, tool-root errors, source-policy result and 2,009 unattested diagnostics
-are not current 0.31.6 reports or native evidence.
+Producer reports an unresolved shared AX5 Reply-editor/Send overlap149x16.5pt.
+Functional producer PASS is not consumer or whole-app pixel acceptance.
+
+`producer-0316-review.json` is historical prior d3f0c750/0.31.6 evidence.
+The following section retains **historical 0.31.4 / commit 90c1771 observations**;
+its counts and reports are not current 0.31.7 or native evidence.
 
 ---
 

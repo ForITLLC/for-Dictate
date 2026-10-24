@@ -11,10 +11,10 @@ checkout; no guard was bypassed or alternate source worker created.
 
 ## Source behavior
 
-Common is fixed to tested published **0.31.6**, commit
-`46d3f5d53e230b29ec97e803381f32135a02d8ff`. Its publication receipt SHA256 is
-`d5511d41b69d4e578ae717bdd073fbaa73c4497c2fa1728b9ef5c8425367494c`.
-Common Core's 910 native tests and accepted END qualify that producer release;
+Common is fixed to tested published **0.31.7**, commit
+`927a394b803c7c425517e35b532d44037fc279d9`. Its publication receipt SHA256 is
+`60b301c024f20b72c012fc6c3c10ffb5db33aec7707377f9eb01a492f7c7625b`.
+Common Core's 977 native tests and accepted END qualify that producer release;
 they do not certify Dictate, its tray label, or a TestFlight build.
 
 One `NavigationStack`, title and published `forITProfileMenu` now surround both
@@ -49,12 +49,12 @@ or white-label exception was found in this consumer.
 All 27 original dependency pins and the entire canonical committed lockfile,
 including its original requirements hash, are retained byte-for-byte. The earlier
 source-only handwritten Common entry is removed; it was never resolver evidence.
-The declaration selects 0.31.6, while the retained lock has no Common entry.
+The declaration selects 0.31.7, while the retained lock has no Common entry.
 Both target graphs now correctly HOLD on that missing binding. Only the genuine
 SDK resolver in the existing admitted A0 job may create the new canonical lock.
 No lock was deleted or copied from another app to manufacture agreement.
 
-The [maintained adoption recipe](https://github.com/ForITLLC/for-iCommon/blob/0.31.6/Scripts/control-guard/README.md#adoption-recipe-one-source-graph-real-resolution-then-reports)
+The [maintained adoption recipe](https://github.com/ForITLLC/for-iCommon/blob/0.31.7/Scripts/control-guard/README.md#adoption-recipe-one-source-graph-real-resolution-then-reports)
 requires real resolution before external adoption staging or reports. Every
 recognized canonical Common lock must agree. No new resolver, generator/native
 job, arbitrary tool-policy pairing or guard waiver is introduced.
@@ -66,10 +66,10 @@ rewrite that work.
 ## Guard and platform scope
 
 Both shipping targets have source-prepared guard inputs, `forit-app.json`
-records and unconditional first precompile phases now bound to exact 0.31.6.
+records and unconditional first precompile phases now bound to exact 0.31.7.
 Current graph evaluation is held until genuine resolution supplies the missing
 Common lock binding. Historical 0.31.4 analysis and phase reports in this folder
-are explicitly prior evidence, not 0.31.6 conformance. See `forit/control-guard/README.md` for exact tool findings, graph and
+are explicitly prior evidence, not 0.31.7 conformance. See `forit/control-guard/README.md` for exact tool findings, graph and
 sandbox/report requirements. PBX/XPC support is present in this published
 successor; the Oct 18 unsupported-adapter observation is historical.
 
@@ -111,17 +111,28 @@ qualification and an admitted build remain open. Original finite watcher,
 Ben's model/permissions/field-check task and all frozen/native holds persist.
 Main owns the single consolidated report to Dispatch.
 
-## Producer handback 0.31.6
+## Producer handback 0.31.7
 
-The 0.31.6 update closes all-recognized-lock Common binding, with no rendering
-API change. Immutable comparison shows `Sources/`, `Package.swift` and
-`Scripts/brand-export.py` unchanged from the adopted 0.31.4 producer.
-The unpublished rendering-contract successor is not adopted.
+Published 0.31.7 changes the shared profile implementation and rendering contracts;
+prior no-rendering-delta statements apply only to historical 0.31.6. The current
+consumer still needs fresh compilation, interaction and visual qualification.
+`producer-0316-review.json` retains its historical prior-head observations.
 
-There is an additional generator limitation to resolve with the producer:
-exact 0.31.6 `br3_adoption.prepare_plan` rejects a graph containing
-`toolGeneratedAssetBindings` (lines 184–188). The same app source was previously
-observed with canonical Apple asset-symbol bindings. Consequently genuine SDK
-resolution is necessary, but does not by itself prove the generator can prepare
-this project. The owner needs reviewed support/handling through the maintained
-recipe. No asset generator, binding or lock may be omitted to obtain a plan.
+The maintained generator now preserves known Apple asset-symbol bindings with
+exact asset hashes and source-policy classification. It retains UNVERIFIED native
+tool identity and actual compiler closure, and still refuses unsupported/custom
+generated requirements. This removes the specific published 0.31.6 source refusal;
+no generator plan has been run here because genuine SDK resolution is absent.
+The existing admitted A0 job must resolve first and then use the maintained recipe
+for final inputs/reports. No asset or lock may be omitted to manufacture a plan.
+
+Producer status `msg_b61b932309d7` reports a late AX5 Reply-editor/Send overlap of
+149x16.5 points despite functional PASS. Its repair remains separate; this pin is
+not whole-app pixel acceptance. Unreleased PR143 and other candidates are excluded.
+Actual green upload run ID, app build number and upload UTC remain **UNKNOWN**.
+
+The producer explicitly requires a direct Foundation import in each NSObject
+subclass file. Four existing files lacked it: AppDelegate, WindowManager,
+QuickHistoryController and OnboardingLockedTextEditor. This update adds only that
+import in each file, including the nested editor Coordinator; it changes no
+callbacks or state logic and is not compiler execution proof.
