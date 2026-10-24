@@ -1,6 +1,7 @@
 import AppIntents
 import AppKit
 import FluidAudio
+import ForITCommon
 import OSLog
 import SwiftData
 import SwiftUI
@@ -278,79 +279,101 @@ struct VoiceInkApp: App {
         }
     }
 
+    private var dictateSettings: some View {
+        SettingsView()
+            .environmentObject(menuBarManager)
+            .environmentObject(recordingShortcutManager)
+            .environmentObject(recorderUIManager)
+            .environmentObject(transcriptionModelManager)
+            .environmentObject(enhancementService)
+            .modelContainer(container)
+            .onAppear {
+                menuBarManager.activateForPresentedWindow()
+            }
+    }
+
     var body: some Scene {
         Window("ForIT Dictate", id: AppWindowID.main) {
-            Group {
-                if hasCompletedOnboardingV2 {
-                    ContentView()
-                        .environmentObject(engine)
-                        .environmentObject(whisperModelManager)
-                        .environmentObject(fluidAudioModelManager)
-                        .environmentObject(transcriptionModelManager)
-                        .environmentObject(recorderUIManager)
-                        .environmentObject(recordingShortcutManager)
-                        .environmentObject(menuBarManager)
-                        .environmentObject(mainWindowNavigation)
-                        .environmentObject(aiService)
-                        .environmentObject(enhancementService)
-                        .modelContainer(container)
-                        .onAppear {
-                            showLaunchRemindersIfNeeded()
+            NavigationStack {
+                Group {
+                    if hasCompletedOnboardingV2 {
+                        ContentView()
+                            .environmentObject(engine)
+                            .environmentObject(whisperModelManager)
+                            .environmentObject(fluidAudioModelManager)
+                            .environmentObject(transcriptionModelManager)
+                            .environmentObject(recorderUIManager)
+                            .environmentObject(recordingShortcutManager)
+                            .environmentObject(menuBarManager)
+                            .environmentObject(mainWindowNavigation)
+                            .environmentObject(aiService)
+                            .environmentObject(enhancementService)
+                            .modelContainer(container)
+                            .onAppear {
+                                showLaunchRemindersIfNeeded()
 
-                            // Run due audio-only cleanup and schedule future checks when transcript cleanup is not managing retention.
-                            if !UserDefaults.standard.bool(forKey: CleanupSettingsKeys.isTranscriptionCleanupEnabled)
-                                && UserDefaults.standard.bool(forKey: CleanupSettingsKeys.isAudioCleanupEnabled)
-                            {
-                                Task {
-                                    await audioCleanupManager.runAutomaticCleanupIfNeeded(
-                                        modelContext: container.mainContext)
+                                // Run due audio-only cleanup and schedule future checks when transcript cleanup is not managing retention.
+                                if !UserDefaults.standard.bool(forKey: CleanupSettingsKeys.isTranscriptionCleanupEnabled)
+                                    && UserDefaults.standard.bool(forKey: CleanupSettingsKeys.isAudioCleanupEnabled)
+                                {
+                                    Task {
+                                        await audioCleanupManager.runAutomaticCleanupIfNeeded(
+                                            modelContext: container.mainContext)
+                                    }
+                                    audioCleanupManager.startAutomaticCleanup(modelContext: container.mainContext)
                                 }
-                                audioCleanupManager.startAutomaticCleanup(modelContext: container.mainContext)
-                            }
 
-                            // Process any pending open-file request now that the main ContentView is ready.
-                            if let pendingURL = appDelegate.pendingOpenFileURL {
-                                NotificationCenter.default.post(
-                                    name: .navigateToDestination, object: nil,
-                                    userInfo: ["destination": "Transcribe Audio"])
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                // Process any pending open-file request now that the main ContentView is ready.
+                                if let pendingURL = appDelegate.pendingOpenFileURL {
                                     NotificationCenter.default.post(
-                                        name: .openFileForTranscription, object: nil, userInfo: ["url": pendingURL])
+                                        name: .navigateToDestination, object: nil,
+                                        userInfo: ["destination": "Transcribe Audio"])
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                                        NotificationCenter.default.post(
+                                            name: .openFileForTranscription, object: nil, userInfo: ["url": pendingURL])
+                                    }
+                                    appDelegate.pendingOpenFileURL = nil
                                 }
-                                appDelegate.pendingOpenFileURL = nil
                             }
-                        }
-                        .background(
-                            WindowAccessor { window in
-                                WindowManager.shared.configureWindow(window)
-                            }
-                        )
-                        .onDisappear {
-                            whisperModelManager.unloadModel()
+                            .background(
+                                WindowAccessor { window in
+                                    WindowManager.shared.configureWindow(window)
+                                }
+                            )
+                            .onDisappear {
+                                whisperModelManager.unloadModel()
 
-                            // Stop the automatic audio cleanup process
-                            audioCleanupManager.stopAutomaticCleanup()
-                        }
-                } else {
-                    OnboardingView(hasCompletedOnboardingV2: $hasCompletedOnboardingV2)
-                        .environmentObject(fluidAudioModelManager)
-                        .environmentObject(transcriptionModelManager)
-                        .environmentObject(aiService)
-                        .environmentObject(enhancementService)
-                        .frame(width: AppWindowLayout.width)
-                        .frame(minHeight: AppWindowLayout.minimumHeight)
-                        .background(
-                            WindowAccessor { window in
-                                WindowManager.shared.configureWindow(window)
-                            })
+                                // Stop the automatic audio cleanup process
+                                audioCleanupManager.stopAutomaticCleanup()
+                            }
+                    } else {
+                        OnboardingView(hasCompletedOnboardingV2: $hasCompletedOnboardingV2)
+                            .environmentObject(fluidAudioModelManager)
+                            .environmentObject(transcriptionModelManager)
+                            .environmentObject(aiService)
+                            .environmentObject(enhancementService)
+                            .frame(width: AppWindowLayout.width)
+                            .frame(minHeight: AppWindowLayout.minimumHeight)
+                            .background(
+                                WindowAccessor { window in
+                                    WindowManager.shared.configureWindow(window)
+                                })
+                    }
+                }
+                .navigationTitle("ForIT Dictate")
+                .forITProfileMenu(account: nil) {
+                    dictateSettings
                 }
             }
         }
-        .windowStyle(.hiddenTitleBar)
         .defaultSize(width: AppWindowLayout.width, height: AppWindowLayout.minimumHeight)
         .windowResizability(.contentSize)
         .commands {
             CommandGroup(replacing: .newItem) {}
+        }
+
+        Settings {
+            dictateSettings
         }
 
         MenuBarExtra(isInserted: $showMenuBarIcon) {
@@ -366,15 +389,13 @@ struct VoiceInkApp: App {
                 .environmentObject(aiService)
                 .environmentObject(enhancementService)
         } label: {
-            let image: NSImage = {
-                let ratio = $0.size.height / $0.size.width
-                $0.size.height = 22
-                $0.size.width = 22 / ratio
-                return $0
-            }(NSImage(named: "menuBarIcon")!)
-
-            Image(nsImage: image)
-                .background(MainWindowRequestBridge(menuBarManager: menuBarManager))
+            HStack(spacing: 0) {
+                ForITMark(size: 18)
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("ForIT Dictate")
+            .accessibilityIdentifier("dictate.statusItem")
+            .background(MainWindowRequestBridge(menuBarManager: menuBarManager))
         }
         .menuBarExtraStyle(.menu)
 

@@ -1,0 +1,22 @@
+{
+  "name": "ForIT Dictate",
+  "controlGuard": {
+    "commonRevision": "927a394b803c7c425517e35b532d44037fc279d9",
+    "targets": {
+      "VoiceInk": [
+        {
+          "platform": "macOS",
+          "inputs": "forit/control-guard/VoiceInk-macOS-inputs.json",
+          "report": "/Users/Shared/forit-build-artifacts/for-Dictate/control-guard/VoiceInk-macOS.json"
+        }
+      ],
+      "VoiceInkRefineXPC": [
+        {
+          "platform": "macOS",
+          "inputs": "forit/control-guard/VoiceInkRefineXPC-macOS-inputs.json",
+          "report": "/Users/Shared/forit-build-artifacts/for-Dictate/control-guard/VoiceInkRefineXPC-macOS.json"
+        }
+      ]
+    }
+  }
+}
