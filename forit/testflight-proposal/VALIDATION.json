@@ -1,0 +1,22 @@
+{
+  "schema": "forit.dictate.testflight-proposal-source-validation.v1",
+  "base": "37848667ed2db61381a6fbdcb5d31c13e62eaae1",
+  "status": "OFFLINE_SOURCE_PROPOSAL_CHECKS_PASS_LIVE_UNRUN",
+  "regressionTests": 5,
+  "testsPassed": 5,
+  "preservedReleaseFilesByteExact": {
+    ".github/workflows/forit-release.yml": "87e3ee605ca41bfe45b1d5ca58c1102557123c792a08aa691290678082462aa0",
+    "scripts/forit-release.sh": "86cdc9247ea545c05656443002b177962a8e2922ba7c45034a1ffae7e0579b66",
+    "scripts/forit-whisper.sh": "f912465d6d396b90409ee11a06c51c6150cadd0b2507f0cf266d28b77dcff2c8",
+    "VoiceInk/VoiceInk.entitlements": "5c0f0b469cd2ab9045ab1a1210309bad3f22be34366799f612138cf1b7c01864",
+    "VoiceInk.xcodeproj/project.pbxproj": "0631cdbbfc7117cc10ac86df0fcd10e8c0347276e876bdf9086698d344eb10ec"
+  },
+  "generatedAssessmentMatches": true,
+  "pythonASTParsePassed": true,
+  "currentAppCodeProjectEntitlementsWorkflowUnchanged": true,
+  "genuineSameProductSDKLockSHA256": "95ecbe839244ef237df31a2f5395d865e850190c063051230b0283d888c75fb9",
+  "liveBuildUploadReady": false,
+  "noSecurityChangePerformed": true,
+  "noNewWorker": true,
+  "rootReviewOnlyNoIndependentAgentRequested": true
+}
