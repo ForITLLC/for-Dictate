@@ -1,3 +1,12 @@
+> 2026-10-26 update: handoff `msg_c8791b906915` and MAIN status
+> `msg_e133ccbba54e` supersede the 0.31.7 example with published **0.31.9**,
+> exact `352f567e839b8faf61b6df5840c5275b016addce`. Publication receipt SHA
+> `d262d84d4d504cd40f5f761dc070a44fb90491c433eec5e5e5e945ebce8e7c5a`;
+> fresh release/tag readback verified. The receipt says fresh Core followup was
+> not yet dispatched and preview2 remained UNRUN warning; no native PASS inferred.
+> Current 0.31.7 run40261340613 retains its exact source/custody until settlement;
+> only then dispatch the 0.31.9 transition. No duplicate release or old GO replay.
+
 > Current execution policy, 2026-10-26: Ben's ship-all handoff
 > `msg_3ba761ed1edf` supersedes earlier A0/slot-GO/sealed-recipe/AI-first waits
 > recorded below. The owning lane dispatches its maintained workflow directly.

@@ -1,3 +1,12 @@
+# Published 0.31.9 transition
+
+Current declaration/config/phase pin is `0.31.9` /
+`352f567e839b8faf61b6df5840c5275b016addce`, independently verified published.
+The app warning boundary below remains. Retain any active older-source job until
+normal settlement before dispatching this pin; no A0/GO/Core-END/recipe wait.
+Normal SDK resolution supplies the actual canonical lock; no handwritten pin.
+BR3/VS1 and preview2 UNRUN remain warnings, not invented PASS evidence.
+
 # Current app build boundary: 2026-10-26
 
 The current ship-all instruction makes BR-3 advisory at this app's two build

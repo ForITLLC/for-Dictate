@@ -1,13 +1,13 @@
 {
   "schema": "forit.dictate.canonical-mark.source-check.v1",
-  "observedUTC": "2026-10-26T02:48:21.639655+00:00",
+  "observedUTC": "2026-10-26T03:00:59.062312+00:00",
   "baseline": "0fef1a4b073ab5cc95ab7d0bb6e04786ffe0cf3c",
   "common": {
-    "version": "0.31.7",
-    "revision": "927a394b803c7c425517e35b532d44037fc279d9",
-    "tagObject": "f0880ddf36b6445399cae9653dfbd95f7a4a028c",
-    "publicationReceiptSHA256": "60b301c024f20b72c012fc6c3c10ffb5db33aec7707377f9eb01a492f7c7625b",
-    "qualification": "Published producer receipt: Core40116915193/1, 977 native, 2458 Python methods, 22 SDK probes and accepted END22c821a5. Not consumer/native/upload proof.",
+    "version": "0.31.9",
+    "revision": "352f567e839b8faf61b6df5840c5275b016addce",
+    "tagObject": "9050f4a1ce99d023e3a550ffc74f338a135d1d6c",
+    "publicationReceiptSHA256": "d262d84d4d504cd40f5f761dc070a44fb90491c433eec5e5e5e945ebce8e7c5a",
+    "qualification": "Published warning-policy receipt; freshCore followup not yet dispatched at publication, preview2UNRUN warning. No fresh producerCorePASS or consumer/native/upload claim.",
     "canonicalPNG": "c885ca50c30f5a4fcf55cb8f083d055831ed8878aff39b9fb782bd05a104edd8"
   },
   "unchangedExistingLockPins": 27,
@@ -28,7 +28,7 @@
   "feedbackConfigured": false,
   "accountIdentityInvented": false,
   "pushedRootResizeAlignmentProven": false,
-  "currentGuardStatus": "WARNING_ONLY at app boundary per Ben ship-all relay msg_3ba761ed1edf; earlier missing-lock graph HOLD is historical source observation, not admission gate. Genuine maintained SDK resolution occurs before strict resolved-only compilation.",
+  "currentGuardStatus": "App-boundary WARNING_ONLY; Common0319 also publishes warning policy. Normal genuineSDKresolution then strict resolved-only compile. NoA0/CoreEND/recipewait.",
   "historical0314Evidence": "independent-review.json, phase-checks.json, guard-wiring-verification.json and guard-diagnostics.json are observations of prior 90c1771/0.31.4, not current 0.31.7 reports.",
   "historical0316Evidence": "producer-0316-review.json records prior d3f0c750/0.31.6 review and then-unsupported asset handling, not current 0.31.7 evidence.",
   "currentGeneratorStatus": "Published0.31.7 preserves maintained Apple asset bindings with exact input hashes and source-only classification; native identity/closure UNVERIFIED. No generator plan executed: genuine SDK resolution still absent.",
@@ -40,5 +40,6 @@
     "VoiceInk/Features/Onboarding/Components/OnboardingLockedTextEditor.swift"
   ],
   "foundationImportReason": "Each file subclasses NSObject; exact0.31.7 source guard and producer instruction require direct Foundation import rather than transitive AppKit/Cocoa/Combine. No runtime behavior change or compiler PASS claim.",
-  "executionPolicy": "Owning lane maintained GitHub Actions directly; A0/slotGO/sealedrecipe/AI-first waits retired. Compile/sign/export/notary remain real checks."
+  "executionPolicy": "Owning lane maintained GitHub Actions directly; A0/slotGO/sealedrecipe/AI-first waits retired. Compile/sign/export/notary remain real checks.",
+  "historical0317Evidence": "producer-0317-review.json and warning-boundary-20261026.json record prior0317source/fixtures; newpin source review separate."
 }
