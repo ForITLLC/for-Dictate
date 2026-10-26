@@ -1,0 +1,257 @@
+{
+  "appEntitlements": {
+    "com.apple.security.app-sandbox": false,
+    "com.apple.security.automation.apple-events": true,
+    "com.apple.security.device.audio-input": true,
+    "com.apple.security.files.user-selected.read-only": true,
+    "com.apple.security.network.client": true,
+    "com.apple.security.network.server": true,
+    "com.apple.security.screen-capture": true
+  },
+  "appSandboxEnabled": false,
+  "compatibilityIssues": [
+    "Current app entitlement does not enable App Sandbox",
+    "Project contains explicit unsandboxed build settings; review XPC configurations",
+    "Cross-app Accessibility use needs a product compatibility strategy; enabling sandbox is not a behavior-preserving fix",
+    "System-wide keyboard posting/paste requires sandbox compatibility testing; no supported replacement is established"
+  ],
+  "externalPrerequisites": [
+    "Behavior-preserving sandbox/Accessibility/XPC design, then actual compatibility proof",
+    "ASC app ID visible to an authorized release identity; existing zero-match query is scoped",
+    "Existing approved Mac App Store distribution certificate/private key and TestFlight provisioning profile",
+    "Existing approved package-signing identity where export requires it",
+    "Named Apple Account Holder/Admin operational owner; currently unverified",
+    "Ben-decided for-Decisions card before any actual security/access/profile/credential change"
+  ],
+  "kind": "ADVISORY_SOURCE_INVENTORY_NOT_EXECUTION_CLEARANCE",
+  "limits": [
+    "Lexical source inventory, not Swift semantic analysis or complete compiler-input coverage",
+    "No network, credential/profile/keychain access, subprocess, build, install, export or upload",
+    "Does not modify App Sandbox, app behavior, active workflow or DMG release",
+    "No current or future Apple acceptance is inferred"
+  ],
+  "liveBuildUploadReady": false,
+  "metadataSHA256": {
+    "VoiceInk.xcodeproj/project.pbxproj": "0631cdbbfc7117cc10ac86df0fcd10e8c0347276e876bdf9086698d344eb10ec",
+    "VoiceInk.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved": "95ecbe839244ef237df31a2f5395d865e850190c063051230b0283d888c75fb9",
+    "VoiceInk/VoiceInk.entitlements": "5c0f0b469cd2ab9045ab1a1210309bad3f22be34366799f612138cf1b7c01864"
+  },
+  "projectSandboxSettingOccurrences": [
+    {
+      "line": 818,
+      "literal": "ENABLE_APP_SANDBOX = NO;"
+    },
+    {
+      "line": 847,
+      "literal": "ENABLE_APP_SANDBOX = NO;"
+    }
+  ],
+  "reason": "Source inspection cannot establish product compatibility, approved signing/access, or Apple acceptance",
+  "resolvedCommonPins": [
+    {
+      "identity": "for-icommon",
+      "kind": "remoteSourceControl",
+      "location": "https://github.com/ForITLLC/for-iCommon.git",
+      "state": {
+        "revision": "352f567e839b8faf61b6df5840c5275b016addce",
+        "version": "0.31.9"
+      }
+    }
+  ],
+  "schema": "forit.dictate.testflight-source-assessment.v1",
+  "sourceFindings": {
+    "crossAppAccessibility": [
+      {
+        "line": 416,
+        "path": "VoiceInk/App/VoiceInk.swift"
+      },
+      {
+        "line": 37,
+        "path": "VoiceInk/Features/Dashboard/Views/DashboardContent.swift"
+      },
+      {
+        "line": 444,
+        "path": "VoiceInk/Features/Dashboard/Views/DashboardContent.swift"
+      },
+      {
+        "line": 27,
+        "path": "VoiceInk/Features/Dictionary/AutoLearn/AutoLearnAXRuntime.swift"
+      },
+      {
+        "line": 55,
+        "path": "VoiceInk/Features/Dictionary/AutoLearn/AutoLearnAXRuntime.swift"
+      },
+      {
+        "line": 64,
+        "path": "VoiceInk/Features/Dictionary/AutoLearn/AutoLearnAXRuntime.swift"
+      },
+      {
+        "line": 120,
+        "path": "VoiceInk/Features/Dictionary/AutoLearn/AutoLearnAXRuntime.swift"
+      },
+      {
+        "line": 147,
+        "path": "VoiceInk/Features/Dictionary/AutoLearn/AutoLearnAXRuntime.swift"
+      },
+      {
+        "line": 160,
+        "path": "VoiceInk/Features/Dictionary/AutoLearn/AutoLearnAXRuntime.swift"
+      },
+      {
+        "line": 162,
+        "path": "VoiceInk/Features/Dictionary/AutoLearn/AutoLearnAXRuntime.swift"
+      },
+      {
+        "line": 171,
+        "path": "VoiceInk/Features/Dictionary/AutoLearn/AutoLearnAXRuntime.swift"
+      },
+      {
+        "line": 40,
+        "path": "VoiceInk/Features/Dictionary/AutoLearn/AutoLearnAXTextReader.swift"
+      },
+      {
+        "line": 41,
+        "path": "VoiceInk/Features/Dictionary/AutoLearn/AutoLearnAXTextReader.swift"
+      },
+      {
+        "line": 52,
+        "path": "VoiceInk/Features/Dictionary/AutoLearn/AutoLearnAXTextReader.swift"
+      },
+      {
+        "line": 76,
+        "path": "VoiceInk/Features/Dictionary/AutoLearn/AutoLearnAXTextReader.swift"
+      },
+      {
+        "line": 236,
+        "path": "VoiceInk/Features/Dictionary/AutoLearn/AutoLearnAXTextReader.swift"
+      },
+      {
+        "line": 262,
+        "path": "VoiceInk/Features/Dictionary/AutoLearn/AutoLearnAXTextReader.swift"
+      },
+      {
+        "line": 268,
+        "path": "VoiceInk/Features/Dictionary/AutoLearn/AutoLearnAXTextReader.swift"
+      },
+      {
+        "line": 278,
+        "path": "VoiceInk/Features/Dictionary/AutoLearn/AutoLearnAXTextReader.swift"
+      },
+      {
+        "line": 288,
+        "path": "VoiceInk/Features/Dictionary/AutoLearn/AutoLearnAXTextReader.swift"
+      },
+      {
+        "line": 381,
+        "path": "VoiceInk/Features/Dictionary/AutoLearn/AutoLearnAXTextReader.swift"
+      },
+      {
+        "line": 393,
+        "path": "VoiceInk/Features/Dictionary/AutoLearn/AutoLearnAXTextReader.swift"
+      },
+      {
+        "line": 87,
+        "path": "VoiceInk/Features/Dictionary/AutoLearn/AutoLearnFocusObserver.swift"
+      },
+      {
+        "line": 88,
+        "path": "VoiceInk/Features/Dictionary/AutoLearn/AutoLearnFocusObserver.swift"
+      },
+      {
+        "line": 133,
+        "path": "VoiceInk/Features/Onboarding/State/OnboardingPermissionController.swift"
+      },
+      {
+        "line": 159,
+        "path": "VoiceInk/Features/Onboarding/State/OnboardingPermissionController.swift"
+      },
+      {
+        "line": 218,
+        "path": "VoiceInk/Features/Settings/Diagnostics/SystemInfoService.swift"
+      },
+      {
+        "line": 17,
+        "path": "VoiceInk/Infrastructure/SystemIntegration/Accessibility/SelectedTextService.swift"
+      },
+      {
+        "line": 257,
+        "path": "VoiceInk/Infrastructure/SystemIntegration/Paste/CursorPaster.swift"
+      },
+      {
+        "line": 303,
+        "path": "VoiceInk/Infrastructure/SystemIntegration/Paste/CursorPaster.swift"
+      },
+      {
+        "line": 26,
+        "path": "VoiceInk/Infrastructure/SystemIntegration/Paste/DirectTextTyper.swift"
+      },
+      {
+        "line": 78,
+        "path": "VoiceInk/Infrastructure/SystemIntegration/ScreenCapture/ScreenCaptureService.swift"
+      },
+      {
+        "line": 79,
+        "path": "VoiceInk/Infrastructure/SystemIntegration/ScreenCapture/ScreenCaptureService.swift"
+      },
+      {
+        "line": 255,
+        "path": "VoiceInk/Infrastructure/SystemIntegration/ScreenCapture/ScreenCaptureService.swift"
+      },
+      {
+        "line": 257,
+        "path": "VoiceInk/Infrastructure/SystemIntegration/ScreenCapture/ScreenCaptureService.swift"
+      },
+      {
+        "line": 267,
+        "path": "VoiceInk/Infrastructure/SystemIntegration/ScreenCapture/ScreenCaptureService.swift"
+      },
+      {
+        "line": 276,
+        "path": "VoiceInk/Infrastructure/SystemIntegration/ScreenCapture/ScreenCaptureService.swift"
+      },
+      {
+        "line": 295,
+        "path": "VoiceInk/Infrastructure/SystemIntegration/ScreenCapture/ScreenCaptureService.swift"
+      }
+    ],
+    "hidEventPosting": [
+      {
+        "line": 237,
+        "path": "VoiceInk/Infrastructure/SystemIntegration/Media/PlaybackController.swift"
+      },
+      {
+        "line": 278,
+        "path": "VoiceInk/Infrastructure/SystemIntegration/Paste/CursorPaster.swift"
+      },
+      {
+        "line": 280,
+        "path": "VoiceInk/Infrastructure/SystemIntegration/Paste/CursorPaster.swift"
+      },
+      {
+        "line": 282,
+        "path": "VoiceInk/Infrastructure/SystemIntegration/Paste/CursorPaster.swift"
+      },
+      {
+        "line": 284,
+        "path": "VoiceInk/Infrastructure/SystemIntegration/Paste/CursorPaster.swift"
+      },
+      {
+        "line": 320,
+        "path": "VoiceInk/Infrastructure/SystemIntegration/Paste/CursorPaster.swift"
+      },
+      {
+        "line": 321,
+        "path": "VoiceInk/Infrastructure/SystemIntegration/Paste/CursorPaster.swift"
+      },
+      {
+        "line": 59,
+        "path": "VoiceInk/Infrastructure/SystemIntegration/Paste/DirectTextTyper.swift"
+      },
+      {
+        "line": 60,
+        "path": "VoiceInk/Infrastructure/SystemIntegration/Paste/DirectTextTyper.swift"
+      }
+    ]
+  },
+  "swiftFilesInspected": 350
+}

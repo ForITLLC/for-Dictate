@@ -1,5 +1,5 @@
 {
-  "originHash" : "15c38058afe4ec7fe9d718e5c988a04a0d0f495adc1485cf989bdc8b7a560ab7",
+  "originHash" : "2f55eab06318c1ecec17508c2710313e5b33d76fca868ed3acc4fd4ace5be86d",
   "pins" : [
     {
       "identity" : "axswift",
@@ -26,6 +26,15 @@
       "state" : {
         "branch" : "main",
         "revision" : "762baf6733ca0f0dbeb1ce335363fc75066bd2c9"
+      }
+    },
+    {
+      "identity" : "for-icommon",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/ForITLLC/for-iCommon.git",
+      "state" : {
+        "revision" : "352f567e839b8faf61b6df5840c5275b016addce",
+        "version" : "0.31.9"
       }
     },
     {

@@ -1,0 +1,196 @@
+{
+  "schema": "forit.dictate.testflight-integration-proposal.v1",
+  "task": "213C5FB4-FA07-4A5D-8211-77CEF2CF1B9E",
+  "request": "msg_2761ed577734",
+  "activation": {
+    "installed": false,
+    "executable": false,
+    "liveBuildUploadAuthorizedByThisFollowup": false,
+    "kind": "INACTIVE_SOURCE_PROPOSAL_COMMAND_TEMPLATES_ONLY"
+  },
+  "baseSource": "37848667ed2db61381a6fbdcb5d31c13e62eaae1",
+  "common": "0.31.9/352f567e839b8faf61b6df5840c5275b016addce",
+  "channelIntegration": {
+    "repository": "ForITLLC/for-Dictate-build",
+    "existingWorkflow": ".github/workflows/forit-release.yml",
+    "futureChange": "Add explicit manual distribution_channel=testflight selection and separate job AFTER compatible product source and approved signing/access exist",
+    "defaultOrAbsentChannel": "Existing DeveloperID DMG job unchanged",
+    "newWorkflowOrControllerRequired": false,
+    "currentJobsModified": false
+  },
+  "preservedFileSHA256": {
+    ".github/workflows/forit-release.yml": "87e3ee605ca41bfe45b1d5ca58c1102557123c792a08aa691290678082462aa0",
+    "scripts/forit-release.sh": "86cdc9247ea545c05656443002b177962a8e2922ba7c45034a1ffae7e0579b66",
+    "scripts/forit-whisper.sh": "f912465d6d396b90409ee11a06c51c6150cadd0b2507f0cf266d28b77dcff2c8",
+    "VoiceInk/VoiceInk.entitlements": "5c0f0b469cd2ab9045ab1a1210309bad3f22be34366799f612138cf1b7c01864",
+    "VoiceInk.xcodeproj/project.pbxproj": "0631cdbbfc7117cc10ac86df0fcd10e8c0347276e876bdf9086698d344eb10ec"
+  },
+  "bundleIdentity": {
+    "app": "io.forit.dictate",
+    "embeddedXPC": "io.forit.dictate.RefineXPC",
+    "team": "UUSSWWML2A",
+    "minimumMacOS": "15.0"
+  },
+  "owners": {
+    "sourceAndCIIntegration": "for-Dictate / term_83365ef6-5628-49de-9db1-aa40e6c25de2",
+    "productCompatibilityDecision": "Ben Thomas",
+    "actualSecurityChangeDecision": "Ben Thomas, decided for-Decisions card before change",
+    "appleAccountHolderOrAdminOperator": null,
+    "appleOperatorState": "NOT_VERIFIED; exact external ownership prerequisite, Ben must name authorized operator"
+  },
+  "requiredVerifiedInputs": {
+    "compatibleProductConfiguration": "Target-specific sandbox/XPC/Accessibility design preserving intended dictation behavior; not supplied or activated",
+    "archiveSigning": "Approved target-specific archive identities/profiles already available to the existing runner; no auto-provisioning",
+    "exportSigning": "Verified Mac App Store distribution application identity and package-signing identity where required; target-specific profile mappings",
+    "ASC": "Actual accessible app ID, matching bundle/team and upload-capable approved identity; none inferred from existing notary key",
+    "buildNumber": "Actual unique number selected from current ASC app record before future release",
+    "availability": "Existing internal beta group ID and authorized release scope; no tester/group/access creation"
+  },
+  "stages": [
+    {
+      "id": "public-source",
+      "operation": "Keep existing workflow public-commit verification; exact checkout is public before private mirror dispatch"
+    },
+    {
+      "id": "metadata",
+      "operation": "Run scripts/forit-testflight-assess.py and retain JSON as advisory source inventory, not release clearance"
+    },
+    {
+      "id": "resolve",
+      "operation": "Existing genuine SDK resolution, retain canonical lock and log; subsequent archive uses resolved versions only",
+      "commandTemplate": [
+        "/usr/bin/xcrun",
+        "xcodebuild",
+        "-resolvePackageDependencies",
+        "-project",
+        "VoiceInk.xcodeproj",
+        "-scheme",
+        "VoiceInk",
+        "-derivedDataPath",
+        "$DERIVED",
+        "-packageAuthorizationProvider",
+        "netrc"
+      ]
+    },
+    {
+      "id": "archive",
+      "state": "REQUIRES_REVIEWED_PRODUCT_AND_TARGET_SIGNING_CONFIGURATION",
+      "operation": "Archive the actual app and embedded XPC with target-specific approved signing/entitlements; no global profile override and no automatic capability changes",
+      "commandTemplate": [
+        "/usr/bin/xcrun",
+        "xcodebuild",
+        "archive",
+        "-project",
+        "VoiceInk.xcodeproj",
+        "-scheme",
+        "VoiceInk",
+        "-configuration",
+        "$REVIEWED_TESTFLIGHT_CONFIGURATION",
+        "-destination",
+        "generic/platform=macOS",
+        "-archivePath",
+        "$ARCHIVE",
+        "-derivedDataPath",
+        "$DERIVED",
+        "-onlyUsePackageVersionsFromResolvedFile",
+        "-packageAuthorizationProvider",
+        "netrc"
+      ]
+    },
+    {
+      "id": "export",
+      "state": "REQUIRES_VERIFIED_EXPORT_OPTIONS",
+      "operation": "Manual App Store Connect export from signed archive; preserve archive and actual export options",
+      "exportOptionsContract": {
+        "method": "app-store-connect",
+        "destination": "export",
+        "signingStyle": "manual",
+        "teamID": "UUSSWWML2A",
+        "manageAppVersionAndBuildNumber": false,
+        "signingCertificate": "REQUIRED verified distribution identity; no DeveloperID assumption",
+        "installerSigningCertificate": "REQUIRED if package export requests it; verify approved Mac App Store identity",
+        "provisioningProfiles": "REQUIRED actual bundle-to-approved-profile mapping; review each code item needing a profile"
+      },
+      "commandTemplate": [
+        "/usr/bin/xcrun",
+        "xcodebuild",
+        "-exportArchive",
+        "-archivePath",
+        "$ARCHIVE",
+        "-exportOptionsPlist",
+        "$VERIFIED_EXPORT_OPTIONS",
+        "-exportPath",
+        "$EXPORT"
+      ]
+    },
+    {
+      "id": "verify-package",
+      "operation": "Verify actual archive/pkg identifier, version/build, signatures, entitlements and embedded profiles before validation/upload; retain evidence. Not DeveloperID spctl/notary as substitute"
+    },
+    {
+      "id": "upload",
+      "state": "NOT_IMPLEMENTED_OR_EXECUTED",
+      "operation": "Use installed Xcode-supported App Store Connect package validation/upload within same maintained job and existing approved identity; do not add another executor or transport to evade a denial",
+      "expectedOutput": "Actual Apple transfer receipt and UTC; process rc0 alone is insufficient"
+    },
+    {
+      "id": "processing",
+      "operation": "Read actual matching ASC build ID/version/uploadedDate/processingState; retain processing VALID separately from transfer"
+    },
+    {
+      "id": "internal-availability",
+      "operation": "Read existing approved internal-group relationship and actual build availability; no new tester/group/permission mutations; record unverified if absent"
+    }
+  ],
+  "retainedEvidence": [
+    "publicSourceSHA",
+    "actualSDKLockAndResolveLog",
+    "assessmentJSON",
+    "xcarchiveAndArchiveLog",
+    "actualEntitlementsAndEmbeddedProfiles",
+    "actualExportOptionsAndExportLog",
+    "packageSHA256AndSigningMetadata",
+    "uploadReceiptAndUTC",
+    "ASCBuildProcessingReadback",
+    "existingInternalAvailabilityReadback"
+  ],
+  "forbiddenAutomaticOperations": [
+    "credential/key/certificate rotation or creation",
+    "profile creation or installation",
+    "app/access/role changes",
+    "device registration",
+    "testers or beta groups creation/invitation",
+    "-allowProvisioningUpdates",
+    "-allowProvisioningDeviceRegistration",
+    "alternative route/provider after actual approval refusal"
+  ],
+  "externalASCSnapshot": {
+    "atUTC": "2026-10-26T03:34:00Z",
+    "HTTPStatus": 200,
+    "matchingVisibleApps": 0,
+    "bundleId": "io.forit.dictate",
+    "globalAbsenceProven": false,
+    "buildQueryPerformed": false
+  },
+  "resolverProvenance": {
+    "sourceRun": 40263083260,
+    "artifact": 12625099583,
+    "path": "Package.resolved",
+    "sha256": "95ecbe839244ef237df31a2f5395d865e850190c063051230b0283d888c75fb9",
+    "pins": 28,
+    "original27Unchanged": true,
+    "thisProposalRanSDK": false
+  },
+  "notReleaseGates": [
+    "A0 admission",
+    "slot GO",
+    "Common Core-END wait",
+    "BR3/VS1 findings",
+    "unrun visual proof"
+  ],
+  "limits": [
+    "No TestFlight-capable product/configuration has been built or tested by this proposal",
+    "Command arrays are unexecuted templates; unresolved inputs are explicit prerequisites, not guessed live parameters",
+    "Mac App Store sandbox rules and unsupported sandbox Accessibility behavior are documented; no actual Apple validation rejection is claimed"
+  ]
+}
