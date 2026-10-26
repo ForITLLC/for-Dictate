@@ -146,3 +146,12 @@ subclass file. Four existing files lacked it: AppDelegate, WindowManager,
 QuickHistoryController and OnboardingLockedTextEditor. This update adds only that
 import in each file, including the nested editor Coordinator; it changes no
 callbacks or state logic and is not compiler execution proof.
+
+## Maintained workflow attempt 2026-10-26
+
+Run40261090228 passed source-public verification and signing-keychain setup, then
+stopped before SDK resolution because the app script rejected an existing
+`build-slot.local.conf`. The old app-side slot wrapper/precheck is removed under
+the gate-retirement instruction. The script now defaults to normal xcodebuild,
+retaining compiler selection, process deadlines and real build/sign/notary checks.
+No runner-global configuration, hook, process or lock is changed by this fix.

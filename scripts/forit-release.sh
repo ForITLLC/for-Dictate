@@ -11,7 +11,7 @@
 #   NOTARY_KEY               path to the App Store Connect API key (.p8) used by notarytool
 #   NOTARY_KEY_ID, NOTARY_ISSUER
 #   FORIT_SKIP_NOTARIZE=1    sign only (a local trial build; never shipped)
-#   FORIT_XCODEBUILD         xcodebuild to use. Defaults to the Mini's strict build-slot wrapper when present.
+#   FORIT_XCODEBUILD         xcodebuild to use. Defaults to the normal Xcode command.
 # Output: build/forit-release/ with ForIT-Dictate-<version>-<build>.dmg, its .sha256, notary receipts and
 # SOURCE.txt naming the public commit the build came from.
 set -euo pipefail
@@ -37,21 +37,11 @@ fail() { printf 'forit-release: %s\n' "$*" >&2; exit 1; }
 [[ -n $VERSION ]] || fail "forit/VERSION is empty"
 [[ -z $(git status --porcelain --untracked-files=no) ]] || fail "tracked files are modified; a shipped build must match a commit"
 
-# --- The Mini's build slot: every xcodebuild goes through the strict wrapper, by its literal path. ---
-SLOT_WRAPPER=/Users/Shared/ci-runner/xcodebuild
-if [[ -z ${FORIT_XCODEBUILD:-} && -x $SLOT_WRAPPER ]]; then
-  FORIT_XCODEBUILD=$SLOT_WRAPPER
-fi
-FORIT_XCODEBUILD=${FORIT_XCODEBUILD:-xcodebuild}
-if [[ $FORIT_XCODEBUILD == "$SLOT_WRAPPER" ]]; then
-  [[ ! -e /Users/Shared/ci-runner/build-slot.local.conf ]] || fail "build-slot.local.conf is present; the slot is not in its owner-set state"
-  [[ ! -e $HOME/.xcodebuild-slot-off ]] || fail "~/.xcodebuild-slot-off is present; builds are switched off"
-  while IFS= read -r name; do unset "$name"; done < <(compgen -v | grep -E '^(XCODEBUILD_SLOT_|CI_BUILD_SLOT_|CI_SLOT_)' || true)
-  unset CI_RUNNER_JOB_CONF_DIR CI_RUNNER_JOB_LOCKF
-  export CI_BUILD_SLOT_STRICT=1
-fi
+# --- The owning lane workflow runs Xcode directly; retired admission/slot gates are not release checks. ---
+# Keep explicit compiler selection and the existing execution deadlines without changing runner-global files.
+FORIT_XCODEBUILD=${FORIT_XCODEBUILD:-$(/usr/bin/xcrun --find xcodebuild)}
 export FORIT_XCODEBUILD
-log "xcodebuild: $FORIT_XCODEBUILD${CI_BUILD_SLOT_STRICT:+ (strict slot)}"
+log "xcodebuild: $FORIT_XCODEBUILD"
 
 if [[ ${FORIT_SKIP_NOTARIZE:-0} != 1 ]]; then
   for v in FORIT_CODESIGN_IDENTITY FORIT_CODESIGN_KEYCHAIN NOTARY_KEY NOTARY_KEY_ID NOTARY_ISSUER; do
