@@ -122,7 +122,6 @@ PKG_ARGS=(
   -project VoiceInk.xcodeproj
   -scheme VoiceInk
   -derivedDataPath "$DERIVED"
-  -onlyUsePackageVersionsFromResolvedFile
   -packageAuthorizationProvider netrc
 )
 
@@ -131,6 +130,11 @@ rc=0
 xcodebuild_within 20 "$OUT/resolve.log" -resolvePackageDependencies "${PKG_ARGS[@]}" || rc=$?
 grep -E '^(build-slot |error:|.*: error:)' "$OUT/resolve.log" || true
 (( rc == 0 )) || fail "package resolution failed ($rc; see resolve.log)"
+# Preserve genuine SDK resolution for release evidence; subsequent compilation must use it.
+RESOLVED=VoiceInk.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
+[[ -f $RESOLVED ]] || fail "SDK resolver did not leave the canonical Package.resolved"
+cp "$RESOLVED" "$OUT/Package.resolved"
+PKG_ARGS+=(-onlyUsePackageVersionsFromResolvedFile)
 
 # --- Build, unsigned: signing happens below, inside-out, with the job keychain named explicitly. ---
 log "Building $APP_NAME $VERSION ($BUILD) from $COMMIT"

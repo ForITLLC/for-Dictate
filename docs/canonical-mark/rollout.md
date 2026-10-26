@@ -1,3 +1,13 @@
+> Current execution policy, 2026-10-26: Ben's ship-all handoff
+> `msg_3ba761ed1edf` supersedes earlier A0/slot-GO/sealed-recipe/AI-first waits
+> recorded below. The owning lane dispatches its maintained workflow directly.
+> BR3 and Dark/Light/VS1 findings are warning-only at the app boundary; real
+> package resolution, compilation, signing, export and notarization still run.
+> The release resolver may update the canonical lock genuinely, then compilation
+> uses only that result. The actual SDK lock and resolver log are retained as
+> artifacts. No TestFlight route or availability is inferred from this DMG job.
+> Historical source/native observations below remain evidence, not approval gates.
+
 # Canonical Dictate mark and native Mac toolbar
 
 Task `6A908F35-88E6-4266-A043-35CE95BEF60F`; same rollout requested in

@@ -1,7 +1,7 @@
 {
   "schema": "forit.dictate.canonical-mark.native-plan.v1",
   "task": "6A908F35-88E6-4266-A043-35CE95BEF60F",
-  "state": "UNRUN_REQUIRES_FRESH_A0_ADMISSION",
+  "state": "UNRUN_DIAGNOSTIC_PLAN_NOT_EXECUTION_GATE",
   "platform": "macOS15",
   "common": "0.31.7/927a394b803c7c425517e35b532d44037fc279d9",
   "cases": [
@@ -55,11 +55,11 @@
   "capturesProduced": 0,
   "nativeRuns": 0,
   "constraints": [
-    "normalcurrentA0queue;AI firsteligibleconsumer",
     "no Ben device takeover, oldGO, independentnativecontroller or source-policywaiver",
     "deterministicprivacy-safe fixture; nevertranscript/audio/clipboard/usercredentials",
     "CommonCore977nativepasses do notproveconsumerfit/ship",
     "no actualASC/TestFlightversion/build/date/platform established; priorstaffDMG1.0.0(1834)Oct17 is separate",
-    "Producer reports AX5 Reply-editor/Send overlap149x16.5pt still open; shared functional tests do not establish pixel acceptance"
+    "Producer reports AX5 Reply-editor/Send overlap149x16.5pt still open; shared functional tests do not establish pixel acceptance",
+    "Owning lane workflow directly; BR3 and DarkLight/VS1 warning-only, A0/GO/sealedrecipe waits retired"
   ]
 }

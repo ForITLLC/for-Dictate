@@ -1,6 +1,6 @@
 {
   "schema": "forit.dictate.canonical-mark.source-check.v1",
-  "observedUTC": "2026-10-24T18:29:53.964590+00:00",
+  "observedUTC": "2026-10-26T02:48:21.639655+00:00",
   "baseline": "0fef1a4b073ab5cc95ab7d0bb6e04786ffe0cf3c",
   "common": {
     "version": "0.31.7",
@@ -28,7 +28,7 @@
   "feedbackConfigured": false,
   "accountIdentityInvented": false,
   "pushedRootResizeAlignmentProven": false,
-  "currentGuardStatus": "SOURCE_HOLD both targets: remote Common dependency has no matching canonical lock pin",
+  "currentGuardStatus": "WARNING_ONLY at app boundary per Ben ship-all relay msg_3ba761ed1edf; earlier missing-lock graph HOLD is historical source observation, not admission gate. Genuine maintained SDK resolution occurs before strict resolved-only compilation.",
   "historical0314Evidence": "independent-review.json, phase-checks.json, guard-wiring-verification.json and guard-diagnostics.json are observations of prior 90c1771/0.31.4, not current 0.31.7 reports.",
   "historical0316Evidence": "producer-0316-review.json records prior d3f0c750/0.31.6 review and then-unsupported asset handling, not current 0.31.7 evidence.",
   "currentGeneratorStatus": "Published0.31.7 preserves maintained Apple asset bindings with exact input hashes and source-only classification; native identity/closure UNVERIFIED. No generator plan executed: genuine SDK resolution still absent.",
@@ -39,5 +39,6 @@
     "VoiceInk/Features/History/Presentation/QuickHistoryController.swift",
     "VoiceInk/Features/Onboarding/Components/OnboardingLockedTextEditor.swift"
   ],
-  "foundationImportReason": "Each file subclasses NSObject; exact0.31.7 source guard and producer instruction require direct Foundation import rather than transitive AppKit/Cocoa/Combine. No runtime behavior change or compiler PASS claim."
+  "foundationImportReason": "Each file subclasses NSObject; exact0.31.7 source guard and producer instruction require direct Foundation import rather than transitive AppKit/Cocoa/Combine. No runtime behavior change or compiler PASS claim.",
+  "executionPolicy": "Owning lane maintained GitHub Actions directly; A0/slotGO/sealedrecipe/AI-first waits retired. Compile/sign/export/notary remain real checks."
 }

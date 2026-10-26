@@ -1,0 +1,103 @@
+{
+  "schema": "forit.dictate.warning-boundary-review.v1",
+  "observedUTC": "2026-10-26T02:49:44.144004+00:00",
+  "authority": "Oct26 ship-all handoff msg_3ba761ed1edf, root delegated app-only BR-3 warning boundary",
+  "base": "a0fdc800b81e1bd3ed3afd2c788d26c48c9dfb86",
+  "commonVersion": "0.31.7",
+  "commonRevision": "927a394b803c7c425517e35b532d44037fc279d9",
+  "scope": [
+    "two app-owned PBX BR-3 phase shell scripts",
+    "remove only optional Common/helper inputPaths",
+    "current README boundary note"
+  ],
+  "bothPhasesRemainFirstEveryBuild": true,
+  "guardArgumentsManifestsConfigAndReportsPreserved": true,
+  "scriptSandboxSettingsUnchanged": true,
+  "allOtherPBXBytesUnchanged": true,
+  "runtimeShellFixtureChecks": [
+    {
+      "target": "VoiceInk",
+      "case": "success",
+      "phaseExit": 0,
+      "warningExpected": false,
+      "unexpectedErrorDiagnostic": false
+    },
+    {
+      "target": "VoiceInk",
+      "case": "findings",
+      "phaseExit": 0,
+      "warningExpected": true,
+      "unexpectedErrorDiagnostic": false
+    },
+    {
+      "target": "VoiceInk",
+      "case": "tool_failure",
+      "phaseExit": 0,
+      "warningExpected": true,
+      "unexpectedErrorDiagnostic": false
+    },
+    {
+      "target": "VoiceInk",
+      "case": "unavailable",
+      "phaseExit": 0,
+      "warningExpected": true,
+      "unexpectedErrorDiagnostic": false
+    },
+    {
+      "target": "VoiceInkRefineXPC",
+      "case": "success",
+      "phaseExit": 0,
+      "warningExpected": false,
+      "unexpectedErrorDiagnostic": false
+    },
+    {
+      "target": "VoiceInkRefineXPC",
+      "case": "findings",
+      "phaseExit": 0,
+      "warningExpected": true,
+      "unexpectedErrorDiagnostic": false
+    },
+    {
+      "target": "VoiceInkRefineXPC",
+      "case": "tool_failure",
+      "phaseExit": 0,
+      "warningExpected": true,
+      "unexpectedErrorDiagnostic": false
+    },
+    {
+      "target": "VoiceInkRefineXPC",
+      "case": "unavailable",
+      "phaseExit": 0,
+      "warningExpected": true,
+      "unexpectedErrorDiagnostic": false
+    }
+  ],
+  "shellSyntaxChecks": {
+    "twoPhasesPOSIXSh": true,
+    "maintainedReleaseScriptBash": true
+  },
+  "maintainedReleaseReview": {
+    "resolverNoLongerRestrictsToPreexistingMissingCommonPin": true,
+    "resolverFailureStillFatal": true,
+    "canonicalResolverLockCopiedToReleaseArtifactsBeforeCompile": true,
+    "onlyUseResolvedVersionsAppliedToCompilationAfterResolve": true,
+    "workflowRetainsResolveLogAndCanonicalLock": true,
+    "compileSigningExportNotaryChecksUnchanged": true
+  },
+  "reviewedFilesSHA256": {
+    "VoiceInk.xcodeproj/project.pbxproj": "5a67f7fefb36cbdf272f6792ffbd189e72d6c6dd48058c5c1c4b7aeca56488bb",
+    "forit/control-guard/README.md": "72e7667432366fed5c20b5d1a1c66825b1071cd61f62538d3c0f2ded635dd731",
+    "scripts/forit-release.sh": "96b0e981dc047be0d0292f86f851e45ad58434814d1bc738860fff6c6b4dcb57",
+    ".github/workflows/forit-release.yml": "87e3ee605ca41bfe45b1d5ca58c1102557123c792a08aa691290678082462aa0"
+  },
+  "limits": [
+    "No production guard or SDK/native command executed; shell checks used synthetic Python guard fixtures only.",
+    "Warning-only phases do not assert guard PASS or fresh retained-report validity.",
+    "With optional tool paths undeclared, script sandbox denial is advisory too.",
+    "Native Xcode phase preflight and report-output warnings have not been executed."
+  ],
+  "externalSends": false,
+  "upstreamOrGlobalConfigEdited": false,
+  "nativeOrSDKExecuted": false,
+  "status": "APP_WARNING_BOUNDARY_SOURCE_AND_SHELL_CHECKS_PASS_NATIVE_UNRUN"
+}

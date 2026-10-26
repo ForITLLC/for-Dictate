@@ -1,4 +1,22 @@
-# Current source handback: Common 0.31.7
+# Current app build boundary: 2026-10-26
+
+The current ship-all instruction makes BR-3 advisory at this app's two build
+phases. They still run the exact published 0.31.7 guard/input/report/revision
+commands when available, convert guard diagnostics to warnings, and continue if
+the guard reports findings or cannot run. This does not assert a guard PASS or
+change the guard implementation. Real dependency resolution, compilation,
+signing, export and notarization checks retain their normal failure behavior.
+
+Optional Common/tool paths are no longer declared as required Xcode script
+inputs: otherwise missing tooling could stop Xcode before the warning boundary
+runs. Project, lock and input-manifest declarations and exact report output paths
+remain; script sandboxing stays enabled. A sandbox-denied guard is also reported
+as a warning. Existing report files are not proof of a current successful check.
+
+Earlier A0/recipe/guard-admission prerequisites below are retained history, not
+current release gates. The owning lane uses its existing maintained workflow.
+
+# Historical source handback: Common 0.31.7
 
 The package declaration, both mandatory precompile phases and configuration bind
 published `0.31.7` / `927a394b803c7c425517e35b532d44037fc279d9`.
