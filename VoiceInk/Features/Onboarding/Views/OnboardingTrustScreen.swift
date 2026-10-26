@@ -1,4 +1,4 @@
-import AppKit
+import ForITCommon
 import SwiftUI
 
 struct OnboardingTrustScreen: View {
@@ -119,7 +119,7 @@ private struct TrustMapView: View {
             )
             .offset(x: 172, y: -12)
 
-            TrustShield()
+            ForITMark(size: 52)
                 .offset(y: 76)
         }
     }
@@ -175,35 +175,5 @@ private struct TrustPill: View {
             Capsule()
                 .stroke(AppTheme.Border.subtle, lineWidth: 1)
         )
-    }
-}
-
-private struct TrustShield: View {
-    var body: some View {
-        ZStack {
-            Image(systemName: "shield.fill")
-                .font(.system(size: 96, weight: .regular))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [
-                            AppTheme.Surface.control,
-                            AppTheme.Surface.controlActive,
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .overlay(
-                    Image(systemName: "shield")
-                        .font(.system(size: 96, weight: .regular))
-                        .foregroundColor(AppTheme.Border.control)
-                )
-
-            Image(nsImage: NSApplication.shared.applicationIconImage)
-                .resizable()
-                .interpolation(.high)
-                .scaledToFit()
-                .frame(width: 52, height: 52)
-        }
     }
 }

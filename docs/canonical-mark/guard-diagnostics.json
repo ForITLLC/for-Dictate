@@ -1,0 +1,99 @@
+{
+  "schema": "forit.dictate.guard-diagnostics-summary.v1",
+  "observedUTC": "2026-10-24T07:12:40.249613+00:00",
+  "toolRevision": "de99b5701b0287314b3e1d60ebbee495812ea16e",
+  "scope": "UNATTESTED_SOURCE_ANALYSIS_ONLY",
+  "productionGuardAdmission": false,
+  "canonicalCapabilityAttestation": false,
+  "sourcePolicyConformancePassed": false,
+  "VoiceInk": {
+    "count": 2009,
+    "byCode": {
+      "UNEVALUABLE": 989,
+      "UNEVALUABLE_RENDERING_LOOKUP": 101,
+      "OWN_CHROME": 719,
+      "OWN_STYLE": 132,
+      "UNEVALUABLE_STORED_BUILDER": 27,
+      "OWN_ACTION_SPACING": 2,
+      "OWN_FIELD_STYLE": 24,
+      "OWN_TOGGLE_STYLE": 9,
+      "TOGGLE_ROLE": 1,
+      "UNEVALUABLE_NATIVE": 5
+    },
+    "representativeFindings": [
+      {
+        "path": "VoiceInk/App/AppIntents/AppShortcuts.swift",
+        "line": 5,
+        "code": "UNEVALUABLE",
+        "message": "Layout unproved native attribute role/module/declaration/default lookup"
+      },
+      {
+        "path": "VoiceInk/App/MenuBar/MenuBarView.swift",
+        "line": 141,
+        "code": "UNEVALUABLE_RENDERING_LOOKUP",
+        "message": "unproved renderer transport is unsupported"
+      },
+      {
+        "path": "VoiceInk/App/Navigation/AppSidebar.swift",
+        "line": 150,
+        "code": "OWN_CHROME",
+        "message": "app-owned control geometry/chrome: .padding"
+      },
+      {
+        "path": "VoiceInk/App/Navigation/AppSidebar.swift",
+        "line": 157,
+        "code": "OWN_STYLE",
+        "message": "native style outside a directly proven toolbar/list/menu context"
+      },
+      {
+        "path": "VoiceInk/DesignSystem/Components/QuickPanelControls.swift",
+        "line": 42,
+        "code": "UNEVALUABLE_STORED_BUILDER",
+        "message": "unreviewed stored builder member attribute/modifier is unsupported"
+      },
+      {
+        "path": "VoiceInk/Features/AudioSettings/Views/AudioSetupView.swift",
+        "line": 187,
+        "code": "OWN_ACTION_SPACING",
+        "message": "direct sibling action group must explicitly use ForITControlMetrics.actionSpacing; local/default spacing is not shared"
+      },
+      {
+        "path": "VoiceInk/Features/Dashboard/Views/DashboardContent.swift",
+        "line": 397,
+        "code": "OWN_FIELD_STYLE",
+        "message": "explicit app textFieldStyle is outside shared field policy"
+      },
+      {
+        "path": "VoiceInk/Features/Dictionary/Views/AutoLearnReviewPanel.swift",
+        "line": 376,
+        "code": "OWN_TOGGLE_STYLE",
+        "message": "only the canonical typed ToggleStyle is permitted"
+      },
+      {
+        "path": "VoiceInk/Features/ModelLibrary/Views/ModelSettingsPanel.swift",
+        "line": 224,
+        "code": "TOGGLE_ROLE",
+        "message": "ForITToggleStyle requires a proven Toggle receiver"
+      },
+      {
+        "path": "VoiceInk/Features/Settings/Backup/ImportExportService.swift",
+        "line": 20,
+        "code": "UNEVALUABLE_NATIVE",
+        "message": "unresolved native control rendering effect: allCases"
+      }
+    ],
+    "fullDiagnosticsSHA256": "ed8c4cd2addc0abb9999b0a60ed2ea183236e6b63ca59bbb384be26f168a1e43"
+  },
+  "VoiceInkRefineXPC": {
+    "unattestedFindingCount": 0,
+    "productionCLIObservation": "PASS_SOURCE_POLICY_ONLY",
+    "nativeClosure": "UNVERIFIED_PENDING_NATIVE_BUILD"
+  },
+  "appCLIObservation": {
+    "exit": 1,
+    "result": "UNEVALUABLE",
+    "diagnostic": "temporary immutable Git-object export is not a genuine official frozen Git/tool root; root attestation unavailable"
+  },
+  "meaning": "Conservative diagnostics include parser/capability limitations and retained app-local styling; not 2009 established product defects. Requires attested maintained-tool run and reviewed classification before conformance/admission.",
+  "nativeCommands": 0
+}

@@ -78,6 +78,8 @@ jobs:
             build/forit-release/*.sha256
             build/forit-release/notary-*.json
             build/forit-release/SOURCE.txt
+            build/forit-release/Package.resolved
+            build/forit-release/resolve.log
             build/forit-release/codesign.txt
             build/forit-release/entitlements.plist
             build/forit-release/spctl-*.txt

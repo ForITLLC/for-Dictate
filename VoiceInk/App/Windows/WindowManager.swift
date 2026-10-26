@@ -1,3 +1,4 @@
+import Foundation
 import AppKit
 import SwiftUI
 
@@ -76,11 +77,14 @@ class WindowManager: NSObject {
         }
 
         let requiredStyleMask: NSWindow.StyleMask = [
-            .titled, .closable, .miniaturizable, .resizable, .fullSizeContentView,
+            .titled, .closable, .miniaturizable, .resizable,
         ]
         window.styleMask.formUnion(requiredStyleMask)
-        window.titlebarAppearsTransparent = true
-        window.titleVisibility = .hidden
+        // SwiftUI's shared navigation toolbar owns the mark and title. Keep
+        // normal titled-window chrome instead of extending content beneath it.
+        window.styleMask.remove(.fullSizeContentView)
+        window.titlebarAppearsTransparent = false
+        window.titleVisibility = .visible
         window.backgroundColor = .clear
         window.isReleasedWhenClosed = false
         window.title = "ForIT Dictate"

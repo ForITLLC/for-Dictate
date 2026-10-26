@@ -1,0 +1,106 @@
+{
+  "schema": "forit.dictate.producer-0316-independent-review.v1",
+  "observedUTC": "2026-10-24T10:47:03.117453+00:00",
+  "verdict": "PASS_SOURCE_HAND_BACK_REVIEW_WITH_EXPECTED_RESOLUTION_HOLD",
+  "reviewedBase": "90c177128feb5523d699232cf489f2b461e44ffe",
+  "commonVersion": "0.31.6",
+  "commonRevision": "46d3f5d53e230b29ec97e803381f32135a02d8ff",
+  "commonTree": "f755cef2b134a67bdd07b85d3294fae020037f62",
+  "publicationReceiptSHA256": "d5511d41b69d4e578ae717bdd073fbaa73c4497c2fa1728b9ef5c8425367494c",
+  "lock": {
+    "path": "VoiceInk.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved",
+    "byteExactOriginalCanonicalCommit": "0fef1a4b073ab5cc95ab7d0bb6e04786ffe0cf3c",
+    "sha256": "0591af3250b7733caa9184bc7a29fb32dd276e469f3bafda569ed94c858ff2f8",
+    "originalPinsPreserved": 27,
+    "CommonPinPresent": false,
+    "sdkResolutionPerformed": false,
+    "originalOriginHashPreserved": true
+  },
+  "criticalPublishedObjects": {
+    "Package.swift": {
+      "unchanged": true,
+      "sha256": "914e05dc866a97b76fbc618f02bce5f6fc17b755266e866a50396f6a8be22bd5"
+    },
+    "Sources/ForITCommon/App/ForITBarMark.swift": {
+      "unchanged": true,
+      "sha256": "4db496ebabd04ee0f151b55989b2c716f8678dd2011ed73a2bf3a35c6e07d8f6"
+    },
+    "Sources/ForITCommon/App/ForITProfileMenu.swift": {
+      "unchanged": true,
+      "sha256": "89660add6ac3ee2552372689e688ce567f1b47bc9d14ef0a261c95454133dd4c"
+    },
+    "Sources/ForITCommon/Brand/ForITMark.swift": {
+      "unchanged": true,
+      "sha256": "2d599b04e7f2aab79df4c7703a582c4134083e4a1b6cc7c5b135c8aae41228ae"
+    },
+    "Sources/ForITCommon/Brand/ForITBrandUI.swift": {
+      "unchanged": true,
+      "sha256": "0c490dcca2bcac748d35948ca917f14a6d8a7038a5c6ee613615a81b48590814"
+    },
+    "Sources/ForITCommon/Resources/forit-hex.png": {
+      "unchanged": true,
+      "sha256": "c885ca50c30f5a4fcf55cb8f083d055831ed8878aff39b9fb782bd05a104edd8"
+    },
+    "Scripts/brand-export.py": {
+      "unchanged": true,
+      "sha256": "083db68e0e7f37ae1cc1394146e177fa7d42162d1b7f3b11005c436f23fc3701"
+    }
+  },
+  "allSourcesPackageAndExporterUnchangedFrom0314": true,
+  "phaseChecks": {
+    "VoiceInk": {
+      "exactCurrentRevisionAndConfig": true,
+      "firstAndEveryBuildDirectExec": true,
+      "effectiveSandboxYES": true,
+      "report": "/Users/Shared/forit-build-artifacts/for-Dictate/control-guard/VoiceInk-macOS.json"
+    },
+    "VoiceInkRefineXPC": {
+      "exactCurrentRevisionAndConfig": true,
+      "firstAndEveryBuildDirectExec": true,
+      "effectiveSandboxYES": true,
+      "report": "/Users/Shared/forit-build-artifacts/for-Dictate/control-guard/VoiceInkRefineXPC-macOS.json"
+    }
+  },
+  "actualPublishedReadOnlyGraphResults": {
+    "VoiceInk": {
+      "state": "HOLD",
+      "actualError": "remote package needs exactly one matching Package.resolved pin: https://github.com/ForITLLC/for-iCommon.git"
+    },
+    "VoiceInkRefineXPC": {
+      "state": "HOLD",
+      "actualError": "remote package needs exactly one matching Package.resolved pin: https://github.com/ForITLLC/for-iCommon.git"
+    }
+  },
+  "generator": {
+    "executed": false,
+    "publishedSource": "Scripts/control-guard/br3_adoption.py:184-188",
+    "limitation": "prepare_plan records toolGeneratedAssetBindings as generated and refuses before plan emission. Prior same-source Apple asset bindings require maintained owner-reviewed handling even after real SDK resolution.",
+    "sdkResolutionAloneDoesNotProvePlanReadiness": true
+  },
+  "documentationReviewed": {
+    "prior0314ReportsMarkedHistorical": true,
+    "currentBothTargetHOLDExplicit": true,
+    "originalLockRestorationNotResolverProof": true,
+    "noNativeOrConsumerConformanceClaim": true
+  },
+  "reviewedFilesSHA256": {
+    "VoiceInk.xcodeproj/project.pbxproj": "edea296ef6374fb2ec65e35e06393b8edaad4588e3b1d330820b200be1134324",
+    "VoiceInk.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved": "0591af3250b7733caa9184bc7a29fb32dd276e469f3bafda569ed94c858ff2f8",
+    "forit-app.json": "0943f88ae021957b5639588195c6ef73c3157665632b06080186c0ad43f3c92f",
+    "forit/control-guard/README.md": "6359efecb150332eff491db766e8e0f6adb8d9ccf77b90a6c46f986b2008218c",
+    "docs/canonical-mark/rollout.md": "1bc1f18094e1341e9b5720ac9a6e57f2d9ade8469540172e516b13f7d8357131",
+    "docs/canonical-mark/source-checks.json": "89d34fd142a138cd9c3d775836e1d076571aecf002cc33db00d61c2fecad87b5",
+    "docs/canonical-mark/native-plan.json": "51ba693b2922ce644db51cd1fa60fe597f910befa236e06cc4f8433cc6b65ac0"
+  },
+  "blockingReviewFindings": [],
+  "remainingHolds": [
+    "genuine SDK resolution and canonical Common lock evidence in the existing admitted A0 job",
+    "published generator handling of actual Apple asset bindings",
+    "official frozen tool checkout and maintained current-policy/release pairing",
+    "fresh final-workspace guard reports and consumer native/render/AX/distribution evidence"
+  ],
+  "nativeOrSDKExecuted": false,
+  "productionGuardPASSClaimed": false,
+  "externalSendsPerformed": false,
+  "reviewArtifactOnlyWrite": true
+}

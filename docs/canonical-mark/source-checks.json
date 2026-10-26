@@ -1,0 +1,45 @@
+{
+  "schema": "forit.dictate.canonical-mark.source-check.v1",
+  "observedUTC": "2026-10-26T03:00:59.062312+00:00",
+  "baseline": "0fef1a4b073ab5cc95ab7d0bb6e04786ffe0cf3c",
+  "common": {
+    "version": "0.31.9",
+    "revision": "352f567e839b8faf61b6df5840c5275b016addce",
+    "tagObject": "9050f4a1ce99d023e3a550ffc74f338a135d1d6c",
+    "publicationReceiptSHA256": "d262d84d4d504cd40f5f761dc070a44fb90491c433eec5e5e5e945ebce8e7c5a",
+    "qualification": "Published warning-policy receipt; freshCore followup not yet dispatched at publication, preview2UNRUN warning. No fresh producerCorePASS or consumer/native/upload claim.",
+    "canonicalPNG": "c885ca50c30f5a4fcf55cb8f083d055831ed8878aff39b9fb782bd05a104edd8"
+  },
+  "unchangedExistingLockPins": 27,
+  "packageResolutionPerformed": false,
+  "lockEntry": "Original canonical 27-pin committed lock restored byte-for-byte, including original originHash. It has no Common entry. Declaration and lock intentionally await genuine admitted SDK resolution; no current resolution/binding PASS.",
+  "frozenPR2": "3127a2a9040a1d2e47d000fdda2896665a037533 remainsOPEN_DRAFT_UNMERGED",
+  "sourceChecklist": [
+    "oneNavigationStack aroundbothbranches",
+    "sharedforITProfileMenu/accountnil and navigationTitle",
+    "realSettingsscene with5requiredEnvironmentObjects+sameSwiftData",
+    "preserved MainWindowRequestBridge and tray callbacks",
+    "removedhiddenTitleBar/fullsizeexplicitconfiguration",
+    "canonicalinappmark noLocalshield/glow",
+    "unusedAppIconViewremoved/noactualcallers"
+  ],
+  "nativeRenderAXBuildProof": false,
+  "appIconAssetsChanged": false,
+  "feedbackConfigured": false,
+  "accountIdentityInvented": false,
+  "pushedRootResizeAlignmentProven": false,
+  "currentGuardStatus": "App-boundary WARNING_ONLY; Common0319 also publishes warning policy. Normal genuineSDKresolution then strict resolved-only compile. NoA0/CoreEND/recipewait.",
+  "historical0314Evidence": "independent-review.json, phase-checks.json, guard-wiring-verification.json and guard-diagnostics.json are observations of prior 90c1771/0.31.4, not current 0.31.7 reports.",
+  "historical0316Evidence": "producer-0316-review.json records prior d3f0c750/0.31.6 review and then-unsupported asset handling, not current 0.31.7 evidence.",
+  "currentGeneratorStatus": "Published0.31.7 preserves maintained Apple asset bindings with exact input hashes and source-only classification; native identity/closure UNVERIFIED. No generator plan executed: genuine SDK resolution still absent.",
+  "knownProducerVisualFinding": "Producer relay msg_b61b932309d7 reports AX5 Reply-editor/Send overlap149x16.5pt; separate repair active, no whole-app pixel acceptance.",
+  "explicitFoundationImportsAdded": [
+    "VoiceInk/App/Lifecycle/AppDelegate.swift",
+    "VoiceInk/App/Windows/WindowManager.swift",
+    "VoiceInk/Features/History/Presentation/QuickHistoryController.swift",
+    "VoiceInk/Features/Onboarding/Components/OnboardingLockedTextEditor.swift"
+  ],
+  "foundationImportReason": "Each file subclasses NSObject; exact0.31.7 source guard and producer instruction require direct Foundation import rather than transitive AppKit/Cocoa/Combine. No runtime behavior change or compiler PASS claim.",
+  "executionPolicy": "Owning lane maintained GitHub Actions directly; A0/slotGO/sealedrecipe/AI-first waits retired. Compile/sign/export/notary remain real checks.",
+  "historical0317Evidence": "producer-0317-review.json and warning-boundary-20261026.json record prior0317source/fixtures; newpin source review separate."
+}
