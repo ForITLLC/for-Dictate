@@ -1,6 +1,6 @@
 {
   "schema": "forit.dictate.branding-source-slice.v1",
-  "recordedUTC": "2026-10-29T20:35:00.406749+00:00",
+  "recordedUTC": "2026-10-29T23:48:08Z",
   "baseline": "37848667ed2db61381a6fbdcb5d31c13e62eaae1",
   "translationChange": {
     "locale": "de",
@@ -18,33 +18,34 @@
   "ownedSourceFilesSHA256": {
     "VoiceInk/Localizable.xcstrings": "11a7c2404025a7a584eaadb6bc4b9a6841e9132e6e036186dae7250d56cdf1ce",
     "VoiceInk/Features/Settings/Backup/ImportExportService.swift": "9f168e4991479f9e11a5b55e412325270815297f9641e1bdcd4e8fc59f8652b9",
-    "VoiceInk/Features/Dictionary/Views/DictionaryFilePanelService.swift": "8ccd5f9ba6a2503592ee7e85dc66bef83d45c0fc1ce48539760609063349a9f3",
+    "VoiceInk/Features/Dictionary/Views/DictionaryFilePanelService.swift": "1b990915501f4fb122a34ac90b2edf40ad065c57349ba3b964d3c86b5c9fc1f9",
     "VoiceInk/Features/History/Export/VoiceInkCSVExportService.swift": "c177b0d04121ce73b0b3331f5f73fd33c99e8f3a9ed45004d17e1cbd7b4de044",
-    "VoiceInk/Infrastructure/Diagnostics/LogExporter.swift": "532c851727372a109a0cbf8493d31991f2feb731a0b0f060c4784e937505471c",
-    "forit/branding/install_app_icon.py": "f00e0d0515499a7d571083e42aef5c0752015d0bc08e3b97a35ccec86f84a551"
+    "VoiceInk/Infrastructure/Diagnostics/LogExporter.swift": "532c851727372a109a0cbf8493d31991f2feb731a0b0f060c4784e937505471c"
   },
   "icon": {
-    "status": "AWAITING_HEALTH_OWNED_DICTATE_PROFILE_AND_APPROVED_OUTPUT",
+    "status": "HEALTH_OWNED_DICTATE_PRODUCER_RENDER_AND_DELIVERY_PENDING",
     "catalogCurrentlyUnchanged": true,
-    "currentCanonicalOwnershipReference": "ForITLLC/for-iCommon docs/forit-mark.md:80-84",
-    "observedOwnershipDocSHA256": "48b270ae26028a999c376bcc8c098180b771786a1a87b5221ece44a5bcc945c7",
-    "maintainedGenerator": "ForITLLC/for-Health ios/scripts/icon_family.py",
-    "observedGeneratorLastChange": "eb56f195a3c04f3045fa7ce8221f8c17a54ac936",
-    "observedGeneratorSHA256": "ed090e880604d8d219d4260c767507fe0e1c53d217dab4b7a8d9f5497d5a0c70",
-    "observedProfileGap": "No Dictate/VoiceInk entry in APPS, PRODUCT_PROFILES, NATIVE_CONSUMERS or external-profile index",
-    "requestedProducerProfile": {
+    "historicalObservation": {
+      "recordedUTC": "2026-10-29T20:35:00.406749+00:00",
+      "ownershipReference": "ForITLLC/for-iCommon docs/forit-mark.md:80-84",
+      "observedOwnershipDocSHA256": "48b270ae26028a999c376bcc8c098180b771786a1a87b5221ece44a5bcc945c7",
+      "maintainedGenerator": "ForITLLC/for-Health ios/scripts/icon_family.py",
+      "observedGeneratorLastChange": "eb56f195a3c04f3045fa7ce8221f8c17a54ac936",
+      "observedGeneratorSHA256": "ed090e880604d8d219d4260c767507fe0e1c53d217dab4b7a8d9f5497d5a0c70",
+      "profileGapAtThatObservation": "No Dictate/VoiceInk entry was observed in APPS, PRODUCT_PROFILES, NATIVE_CONSUMERS or external-profile index",
+      "status": "Historical observation superseded by Health producer ownership message msg_053a54abcbca; external source hashes were not refreshed in this correction"
+    },
+    "producerDelivery": {
       "name": "ForIT Dictate",
       "bundle": "io.forit.dictate",
       "platform": "macOS",
-      "artifact": "approved flat 1024x1024 PNG from canonical icon-family profile plus source revision, SHA256 and owner receipt",
-      "styleAuthority": "Health owns glyph, colour, frame and canonical mark selection; this app creates none"
+      "artifact": "Complete Health-produced AppIcon.appiconset folder at an immutable producer revision",
+      "styleAuthority": "Health owns glyph, colour, frame, canonical mark selection and all output sizes",
+      "consumerOperation": "Adopt the complete producer folder byte-for-byte; no app-owned resizing",
+      "currentOwnerMessage": "msg_053a54abcbca",
+      "deliveryReceived": false
     },
-    "producerCommandAfterProfileExists": "python3 ios/scripts/icon_family.py OUT_DIR --apps dictate (only if Health registers that exact profile key; no --sheet needed for this source handoff)",
-    "consumerInstaller": "forit/branding/install_app_icon.py",
-    "consumerCommandAfterOwnerReceipt": "python3 forit/branding/install_app_icon.py --source HEALTH_APPROVED_1024_PNG --sha256 APPROVED_PNG_SHA256 --health-revision HEALTH_FULL_GIT_SHA --receipt HEALTH_OWNER_RECEIPT --receipt-sha256 OWNER_RECEIPT_SHA256",
-    "consumerOperation": "Copy approved 1024 PNG byte-exact; Pillow LANCZOS downsample to existing16/32/64/128/256/512px paths; retain Contents.json unchanged; emit app-icon-provenance.json",
-    "installerExecuted": false,
-    "approvalCheck": "Owning root must verify that the supplied receipt approves the Dictate profile and binds that exact PNG/revision before running the installer."
+    "nativeAppearanceAndShippingProof": "Not established by this source record"
   },
   "unchangedContracts": [
     "bundle and executable identities",
@@ -55,7 +56,7 @@
   ],
   "testsBuildCompilerNativeDeviceExecuted": false,
   "externalSends": false,
-  "scope": "Source and asset installer preparation only; no icon installation, native appearance or shipping proof",
+  "scope": "Branding source changes and producer handoff tracking only; no icon installation, native appearance or shipping proof",
   "iconProducerUpdate": {
     "message": "msg_053a54abcbca",
     "owner": "for-Health",
@@ -63,6 +64,5 @@
     "profile": "dictate",
     "state": "Producer rendering pending current for-dev slot; adopt whole AppIcon.appiconset folder at immutable SHA, no app-owned resizing pipeline",
     "forDevRenderRequest": "msg_59dcfa7623a3"
-  },
-  "installer": "No app-owned icon installer: replace complete producer folder byte-for-byte when delivered."
+  }
 }

@@ -6,7 +6,9 @@
     "VoiceInk/Features/History/Integrations/TinycastHistoryExporter.swift",
     "VoiceInk/Infrastructure/Persistence/Models/Transcription.swift",
     "VoiceInk/Features/Dictionary/Workflows/SharedVocabulary.swift",
-    "VoiceInk/Features/Dictionary/Workflows/SharedVocabularyCatalogLock.swift"
+    "VoiceInk/Features/Dictionary/Workflows/SharedVocabularyCatalogLock.swift",
+    "VoiceInk/Features/Dictionary/Workflows/SharedVocabularyService.swift",
+    "VoiceInk/Infrastructure/Persistence/Models/VocabularyWord.swift"
   ],
   "testPatterns": [
     "Tests/VoiceInkTests/TinycastHistory*Tests.swift",

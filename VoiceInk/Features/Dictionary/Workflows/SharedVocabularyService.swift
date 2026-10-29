@@ -15,6 +15,7 @@ final class SharedVocabularyService: ObservableObject {
     private let cache: SharedVocabularyCache
     private weak var modelContext: ModelContext?
     private var saveObserver: NSObjectProtocol?
+    private var configurationID = UUID()
     private var personalWords: [String] = []
     private var preferencesWarning: String?
 
@@ -34,23 +35,44 @@ final class SharedVocabularyService: ObservableObject {
         guard modelContext !== context else { return }
         if let saveObserver { NotificationCenter.default.removeObserver(saveObserver) }
         modelContext = context
-        loadFiles()
-        refreshPersonalWords(from: context)
+        let configurationID = UUID()
+        self.configurationID = configurationID
+        let containerID = ObjectIdentifier(context.container)
+        // Observe every saving context in this container, including the separate
+        // WordReplacementStore ModelActor used by AutoLearn. Inspect the sender
+        // on its saving executor; only identities cross into the main-actor task.
         saveObserver = NotificationCenter.default.addObserver(
-            forName: ModelContext.didSave, object: context, queue: .main
-        ) { [weak self] _ in
+            forName: ModelContext.didSave, object: nil, queue: nil
+        ) { [weak self] notification in
+            guard let savedContext = notification.object as? ModelContext,
+                ObjectIdentifier(savedContext.container) == containerID
+            else { return }
             Task { @MainActor [weak self] in
-                guard let self, let context = self.modelContext else { return }
+                guard let self, self.configurationID == configurationID,
+                    let context = self.modelContext,
+                    ObjectIdentifier(context.container) == containerID
+                else { return }
                 self.refreshPersonalWords(from: context)
             }
         }
+        // Register before the initial read so a concurrent committed save cannot
+        // fall between initial snapshot construction and observer installation.
+        loadFiles()
+        refreshPersonalWords(from: context)
     }
 
     func refreshPersonalWords(from context: ModelContext) {
+        if let configured = modelContext, configured.container !== context.container { return }
+        // A reused main context can contain unsaved inserts/edits and registered
+        // stale models. Read committed values in a fresh, actor-confined context
+        // even when another context's save caused this refresh.
+        let committedContext = ModelContext(context.container)
+        committedContext.autosaveEnabled = false
         var descriptor = FetchDescriptor<VocabularyWord>(sortBy: [SortDescriptor(\VocabularyWord.word)])
         descriptor.fetchLimit = SharedVocabularyLimits.personalTerms
+        descriptor.includePendingChanges = false
         do {
-            personalWords = try context.fetch(descriptor).map(\.word)
+            personalWords = try committedContext.fetch(descriptor).map(\.word)
             publishSnapshot()
         } catch {
             // Keep the last valid personal overlay rather than silently losing
