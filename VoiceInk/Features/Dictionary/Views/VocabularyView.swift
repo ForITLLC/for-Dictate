@@ -95,8 +95,13 @@ struct VocabularyView: View {
                 .padding(.top, 4)
             }
 
+            Divider().padding(.vertical, 8)
+            SharedVocabularyView()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .onChange(of: vocabularyWords.map(\.word).sorted()) { _, _ in
+            SharedVocabularyService.shared.refreshPersonalWords(from: modelContext)
+        }
         .alert("Vocabulary", isPresented: $showAlert) {
             Button("OK", role: .cancel) {}
         } message: {

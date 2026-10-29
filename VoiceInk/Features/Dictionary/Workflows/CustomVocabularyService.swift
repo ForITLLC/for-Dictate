@@ -6,8 +6,11 @@ class CustomVocabularyService {
 
     private init() {}
 
+    @MainActor
     func getCustomVocabulary(from context: ModelContext) -> String {
-        guard let customWords = getCustomVocabularyWords(from: context), !customWords.isEmpty else {
+        SharedVocabularyService.shared.refreshPersonalWords(from: context)
+        let customWords = SharedVocabularyCache.shared.snapshot.words
+        guard !customWords.isEmpty else {
             return ""
         }
 
@@ -15,15 +18,4 @@ class CustomVocabularyService {
         return "Important Vocabulary: \(wordsText)"
     }
 
-    private func getCustomVocabularyWords(from context: ModelContext) -> [String]? {
-        let descriptor = FetchDescriptor<VocabularyWord>(sortBy: [SortDescriptor(\VocabularyWord.word)])
-
-        do {
-            let items = try context.fetch(descriptor)
-            let words = items.map { $0.word }
-            return words.isEmpty ? nil : words
-        } catch {
-            return nil
-        }
-    }
 }

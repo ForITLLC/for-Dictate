@@ -8,6 +8,12 @@ name: forit-release
 
 on:
   workflow_dispatch:
+    inputs:
+      validate_only:
+        description: Run synthetic helper checks only; no app launch, app build, signing or notarization
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: forit-release
@@ -38,7 +44,12 @@ jobs:
           [ "$code" = 200 ] || { echo "$GITHUB_SHA is not in public ForITLLC/for-Dictate (HTTP $code); push it there first"; exit 1; }
           echo "public source: https://github.com/ForITLLC/for-Dictate/commit/$GITHUB_SHA"
 
+      - name: Synthetic integration checks only
+        if: inputs.validate_only
+        run: /usr/bin/python3 scripts/check-dictate-integrations.py --output build/forit-release/integration-tests
+
       - name: Signing keychain and keys
+        if: ${{ !inputs.validate_only }}
         env:
           DEVELOPER_ID_CERT_BASE64: ${{ secrets.DEVELOPER_ID_CERT_BASE64 }}
           DEVELOPER_ID_KEY_BASE64: ${{ secrets.DEVELOPER_ID_KEY_BASE64 }}
@@ -68,11 +79,12 @@ jobs:
           { echo "FORIT_CODESIGN_KEYCHAIN=$KC"; echo "NOTARY_KEY=$RUNNER_TEMP/notary.p8"; } >> "$GITHUB_ENV"
 
       - name: Build, sign, notarize, staple
+        if: ${{ !inputs.validate_only }}
         run: scripts/forit-release.sh
 
       - uses: actions/upload-artifact@v4
         with:
-          name: forit-dictate-mac-${{ github.run_number }}
+          name: ${{ inputs.validate_only && 'forit-dictate-checks' || 'forit-dictate-mac' }}-${{ github.run_number }}
           path: |
             build/forit-release/*.dmg
             build/forit-release/*.sha256
@@ -83,17 +95,20 @@ jobs:
             build/forit-release/codesign.txt
             build/forit-release/entitlements.plist
             build/forit-release/spctl-*.txt
+            build/forit-release/integration-tests/
           retention-days: 90
 
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: forit-dictate-build-log-${{ github.run_number }}
-          path: build/forit-release/*.log
+          path: |
+            build/forit-release/*.log
+            build/forit-release/integration-tests/
           retention-days: 14
 
       - name: Clean up
-        if: always()
+        if: ${{ always() && !inputs.validate_only }}
         run: |
           KC=$RUNNER_TEMP/forit-dictate-signing.keychain-db
           security list-keychains -d user -s $(security list-keychains -d user | tr -d '"' | grep -v "$KC")

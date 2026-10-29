@@ -91,6 +91,8 @@ struct VoiceInkApp: App {
 
         container = resolvedContainer
         DictionaryService.cleanUpDictionaryContent(context: resolvedContainer.mainContext, source: "launch")
+        SharedVocabularyService.shared.configure(context: resolvedContainer.mainContext)
+        TinycastHistoryExporter.shared.start(container: resolvedContainer)
 
         // Initialize services with proper sharing of instances
         let aiService = AIService()

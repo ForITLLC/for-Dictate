@@ -13,13 +13,49 @@ class LastTranscriptionService: ObservableObject {
             let transcriptions = try modelContext.fetch(descriptor)
             return transcriptions.first
         } catch {
-            print("Error fetching last transcription: \(error)")
+            print("Could not read dictation history.")
+            return nil
+        }
+    }
+
+    /// Read past failed/pending rows, including all timestamp ties, instead of assuming the
+    /// newest stored row is a usable dictation. Original and preferred paste share this selection.
+    static func getLatestSuccessfulTranscription(from modelContext: ModelContext) -> Transcription? {
+        let completed = TranscriptionStatus.completed.rawValue
+        var descriptor = FetchDescriptor<Transcription>(
+            predicate: #Predicate { $0.transcriptionStatus == nil || $0.transcriptionStatus == completed },
+            sortBy: [SortDescriptor(\.timestamp, order: .reverse)])
+        descriptor.fetchLimit = 128
+        descriptor.fetchOffset = 0
+        descriptor.includePendingChanges = false
+        var selected: Transcription?
+        do {
+            while true {
+                let page = try modelContext.fetch(descriptor)
+                if page.isEmpty { return selected }
+                for transcription in page {
+                    if let selected,
+                        let selectedDate = HistorySuccessPolicy.normalizedTimestamp(selected.timestamp),
+                        let currentDate = HistorySuccessPolicy.normalizedTimestamp(transcription.timestamp),
+                        currentDate < selectedDate { return selected }
+                    guard transcription.isSuccessfulHistoryEntry else { continue }
+                    if selected == nil || HistorySuccessPolicy.precedes(
+                        timestamp: transcription.timestamp, id: transcription.id.uuidString,
+                        timestamp: selected!.timestamp, id: selected!.id.uuidString) {
+                        selected = transcription
+                    }
+                }
+                if page.count < 128 { return selected }
+                descriptor.fetchOffset += page.count
+            }
+        } catch {
+            print("Could not read dictation history.")
             return nil
         }
     }
 
     static func copyLastTranscription(from modelContext: ModelContext) {
-        guard let lastTranscription = getLastTranscription(from: modelContext) else {
+        guard let lastTranscription = getLatestSuccessfulTranscription(from: modelContext) else {
             Task { @MainActor in
                 NotificationManager.shared.showNotification(
                     title: String(localized: "No transcription available"),
@@ -29,14 +65,7 @@ class LastTranscriptionService: ObservableObject {
             return
         }
 
-        // Prefer enhanced text; fallback to original text
-        let textToCopy: String = {
-            if let enhancedText = lastTranscription.enhancedText, !enhancedText.isEmpty {
-                return enhancedText
-            } else {
-                return lastTranscription.text
-            }
-        }()
+        let textToCopy = lastTranscription.preferredHistoryText
 
         let success = ClipboardManager.copyToClipboard(textToCopy)
 
@@ -56,7 +85,7 @@ class LastTranscriptionService: ObservableObject {
     }
 
     static func pasteLastTranscription(from modelContext: ModelContext) {
-        guard let lastTranscription = getLastTranscription(from: modelContext) else {
+        guard let lastTranscription = getLatestSuccessfulTranscription(from: modelContext) else {
             Task { @MainActor in
                 NotificationManager.shared.showNotification(
                     title: String(localized: "No transcription available"),
@@ -74,7 +103,7 @@ class LastTranscriptionService: ObservableObject {
     }
 
     static func pasteLastEnhancement(from modelContext: ModelContext) {
-        guard let lastTranscription = getLastTranscription(from: modelContext) else {
+        guard let lastTranscription = getLatestSuccessfulTranscription(from: modelContext) else {
             Task { @MainActor in
                 NotificationManager.shared.showNotification(
                     title: String(localized: "No transcription available"),
@@ -84,14 +113,7 @@ class LastTranscriptionService: ObservableObject {
             return
         }
 
-        // Prefer enhanced text; if unavailable, fallback to original text (which may contain an error message)
-        let textToPaste: String = {
-            if let enhancedText = lastTranscription.enhancedText, !enhancedText.isEmpty {
-                return enhancedText
-            } else {
-                return lastTranscription.text
-            }
-        }()
+        let textToPaste = lastTranscription.preferredHistoryText
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
             CursorPaster.pasteAtCursor(textToPaste)
@@ -139,9 +161,7 @@ class LastTranscriptionService: ObservableObject {
                 )
                 let newTranscription = result.transcription
 
-                let textToCopy =
-                    result.enhancementFailure == nil && newTranscription.enhancedText?.isEmpty == false
-                    ? newTranscription.enhancedText! : newTranscription.text
+                let textToCopy = newTranscription.preferredHistoryText
                 _ = ClipboardManager.copyToClipboard(textToCopy)
 
                 if let enhancementFailure = result.enhancementFailure {

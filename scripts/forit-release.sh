@@ -59,6 +59,11 @@ security find-identity -v -p codesigning "$FORIT_CODESIGN_KEYCHAIN" | grep -q "$
 rm -rf "$OUT" "$DERIVED"
 mkdir -p "$OUT"
 
+# Synthetic checks compile the actual new Foundation helpers without launching
+# Dictate or opening the runner user's transcription database. One compiler job.
+log "Checking history integration and shared vocabulary"
+/usr/bin/python3 scripts/check-dictate-integrations.py --output "$OUT/integration-tests"
+
 # --- whisper.cpp ---
 scripts/forit-whisper.sh
 
@@ -135,6 +140,7 @@ xcodebuild_within 90 "$OUT/xcodebuild.log" build \
   -destination 'generic/platform=macOS' \
   -skipPackagePluginValidation \
   -skipMacroValidation \
+  -jobs 2 \
   CODE_SIGNING_ALLOWED=NO \
   CODE_SIGNING_REQUIRED=NO \
   CODE_SIGN_IDENTITY= \

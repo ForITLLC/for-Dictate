@@ -59,7 +59,7 @@ class WhisperTranscriptionService: TranscriptionService {
 
         // Set prompt
         await whisperContext.setLanguage(context.language)
-        await whisperContext.setPrompt(context.prompt ?? "")
+        await whisperContext.setPrompt(context.whisperPrompt ?? "")
 
         // Transcribe
         let success = await whisperContext.fullTranscribe(samples: data)
