@@ -23,7 +23,7 @@ remain; script sandboxing stays enabled. A sandbox-denied guard is also reported
 as a warning. Existing report files are not proof of a current successful check.
 
 Earlier A0/recipe/guard-admission prerequisites below are retained history, not
-current release gates. The owning lane uses its existing maintained workflow.
+current release gates. The owning lane uses the shared Apple launcher and its app-owned release adapter.
 
 # Historical source handback: Common 0.31.7
 

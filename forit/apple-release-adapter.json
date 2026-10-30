@@ -1,0 +1,31 @@
+{
+  "schema": "forit.dictate.apple-source-adapter.v1",
+  "state": "source-preparation-native-proof-pending",
+  "publicSourceRepository": "ForITLLC/for-Dictate",
+  "proposedSharedManifestEntry": {
+    "owner": "for-Dictate",
+    "repo": "for-Dictate-build",
+    "cwd": ".",
+    "platforms": {
+      "macos": {
+        "command": ["/bin/bash", "scripts/forit-mini-release.sh", "{build}"],
+        "upload_args": ["--upload"]
+      }
+    }
+  },
+  "requiredInheritedEnvironment": ["FORIT_GATE_RUN", "FORIT_CODESIGN_KEYCHAIN"],
+  "existingSlot": "/Users/Shared/ci-runner/ci-runner-job-slot.sh",
+  "existingGate": "/Users/Shared/forit-gate/mini-gate.sh",
+  "nativeTests": 52,
+  "nativeTestsExecutedDuringPreparation": 0,
+  "channel": "Developer ID notarized DMG; --upload is rejected",
+  "receipt": "build/forit-release/release-evidence.log",
+  "notEstablished": [
+    "reviewed common publication and manifest adoption",
+    "exact merged source native proof",
+    "approved installed signing keychain path and availability",
+    "actual new signed build and both Apple Accepted receipts",
+    "default-branch Actions retirement",
+    "active release automation on the lane worktree with conversation reuse"
+  ]
+}
