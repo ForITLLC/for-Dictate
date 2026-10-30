@@ -23,8 +23,14 @@ done
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$REPO_ROOT"
 export FORIT_BUILD_NUMBER="$BUILD"
+CHECKOUT_SOURCE_COMMIT=$(git rev-parse HEAD)
+if [[ -n ${FORIT_SOURCE_COMMIT:-} ]]; then
+  [[ $FORIT_SOURCE_COMMIT =~ ^[0-9a-f]{40}$ ]] || fail 'inherited FORIT_SOURCE_COMMIT must be a full lowercase 40-hex SHA'
+  [[ $FORIT_SOURCE_COMMIT == "$CHECKOUT_SOURCE_COMMIT" ]] || fail 'inherited FORIT_SOURCE_COMMIT does not match checkout HEAD'
+else
+  FORIT_SOURCE_COMMIT=$CHECKOUT_SOURCE_COMMIT
+fi
 export FORIT_SOURCE_COMMIT
-FORIT_SOURCE_COMMIT=$(git rev-parse HEAD)
 export FORIT_XCODEBUILD=${FORIT_XCODEBUILD:-"$HOME/bin/xcodebuild"}
 export FORIT_CODESIGN_IDENTITY=${FORIT_CODESIGN_IDENTITY:-'Developer ID Application: ForIT Limited Liability Company (UUSSWWML2A)'}
 export NOTARY_KEY=${NOTARY_KEY:-"$HOME/AppleCerts/AuthKey_78ND83SSBB.p8"}

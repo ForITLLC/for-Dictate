@@ -218,11 +218,13 @@ class MiniReleaseContractTests(unittest.TestCase):
             "FORIT_TEST_SOURCE_HEAD": self.head, "FORIT_TEST_UNAME": "Linux",
         }
 
-    def invoke(self, *arguments, system="Linux", actions=None):
+    def invoke(self, *arguments, system="Linux", actions=None, source_commit=None):
         global _ALLOWED_LAUNCH
         environment = dict(self.environment, FORIT_TEST_UNAME=system)
         if actions is not None:
             environment["GITHUB_ACTIONS"] = actions
+        if source_commit is not None:
+            environment["FORIT_SOURCE_COMMIT"] = source_commit
         command = ("/bin/bash", str(self.adapter), *arguments)
         _ALLOWED_LAUNCH = {"command": command, "environment": environment, "cwd": str(self.scripts.parent),
                            "home": str(self.home), "path": str(self.shims)}
@@ -242,6 +244,7 @@ class MiniReleaseContractTests(unittest.TestCase):
         self.assertIn(message, result.stderr)
         self.assertEqual(result.stdout, "")
         self.assertNotIn("python3", [record["command"] for record in records])
+        return result, records
 
     def test_plan_reports_source_head_and_explicit_build(self):
         result, _ = self.invoke("1901", "--plan")
@@ -263,6 +266,37 @@ class MiniReleaseContractTests(unittest.TestCase):
         self.assertEqual(plan["requiredEnvironment"], ["FORIT_GATE_RUN", "FORIT_CODESIGN_KEYCHAIN"])
         self.assertEqual([record["command"] for record in records], ["dirname", "git", "python3"])
         self.assertFalse((self.scripts.parent / "build").exists())
+
+    def test_matching_inherited_full_source_is_accepted_without_replacing_it(self):
+        result, records = self.invoke("1901", "--plan", source_commit=self.head)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["commit"], self.head)
+        self.assertEqual([record["command"] for record in records], ["dirname", "git", "python3"])
+        self.assertFalse((self.scripts.parent / "build").exists())
+
+    def test_mismatched_inherited_full_source_fails_before_plan_or_native_preflight(self):
+        different = ("0" if self.head[0] != "0" else "1") + self.head[1:]
+        for mode in [[], ["--plan"], ["--check-only"]]:
+            with self.subTest(mode=mode):
+                _, records = self.rejected(["1901", *mode], "does not match checkout HEAD",
+                                           system="Darwin", source_commit=different)
+                self.assertEqual(set(record["command"] for record in records), {"dirname", "git"})
+                self.assertFalse((self.scripts.parent / "build").exists())
+
+    def test_invalid_inherited_source_fails_before_plan_or_native_preflight(self):
+        for value in ["a" * 39, "a" * 41, "A" * 40, "g" * 40, " ", "a" * 40 + "\n"]:
+            for mode in [[], ["--plan"], ["--check-only"]]:
+                with self.subTest(value=value, mode=mode):
+                    _, records = self.rejected(["1901", *mode], "full lowercase 40-hex SHA",
+                                               system="Darwin", source_commit=value)
+                    self.assertEqual(set(record["command"] for record in records), {"dirname", "git"})
+                    self.assertFalse((self.scripts.parent / "build").exists())
+
+    def test_empty_inherited_source_keeps_metadata_plan_head_fallback(self):
+        result, records = self.invoke("1901", "--plan", source_commit="")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["commit"], self.head)
+        self.assertEqual([record["command"] for record in records], ["dirname", "git", "python3"])
 
     def test_plan_preserves_each_positive_explicit_build(self):
         for build in ["1", "1902", "999999"]:
