@@ -2,19 +2,23 @@
 # scripts/forit-release.sh: build, sign, notarize and package ForIT Dictate as a Developer ID DMG.
 #
 # ForIT Dictate is ForIT's build of VoiceInk (GPLv3). This script is part of its Corresponding Source: it is
-# the whole of how a shipped build is made from this repository. It runs on the Mac mini's GitHub runner
-# (.github/workflows/forit-release.yml) and on any Mac that has the identity and notary key below.
+# the whole of how a shipped build is made from this repository. The shared Apple launcher calls
+# scripts/forit-mini-release.sh in its existing whole-job slot and Common gate. GitHub Actions is retired.
 #
 # Inputs (environment):
 #   FORIT_CODESIGN_IDENTITY  SHA-1 of the "Developer ID Application: ForIT Limited Liability Company" identity
-#   FORIT_CODESIGN_KEYCHAIN  keychain that holds it (unlocked)
+#   FORIT_CODESIGN_KEYCHAIN  existing keychain that holds it (already usable; never changed here)
+#   FORIT_BUILD_NUMBER      explicit build number; never inferred from a shallow checkout or Actions run
+#   FORIT_GATE_RUN          existing Common run inherited from the shared launcher
 #   NOTARY_KEY               path to the App Store Connect API key (.p8) used by notarytool
 #   NOTARY_KEY_ID, NOTARY_ISSUER
 #   FORIT_SKIP_NOTARIZE=1    sign only (a local trial build; never shipped)
-#   FORIT_XCODEBUILD         xcodebuild to use. Defaults to the normal Xcode command.
+#   FORIT_XCODEBUILD         installed slot-aware xcodebuild wrapper (defaults to ~/bin/xcodebuild)
 # Output: build/forit-release/ with ForIT-Dictate-<version>-<build>.dmg, its .sha256, notary receipts and
 # SOURCE.txt naming the public commit the build came from.
 set -euo pipefail
+
+[[ ${GITHUB_ACTIONS:-false} != true ]] || { echo 'Apple builds through GitHub Actions are retired.' >&2; exit 64; }
 
 REPO_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$REPO_ROOT"
@@ -24,7 +28,7 @@ BUNDLE_ID=io.forit.dictate
 TEAM_ID=UUSSWWML2A
 PUBLIC_REPO=https://github.com/ForITLLC/for-Dictate
 VERSION=$(tr -d '[:space:]' < forit/VERSION)
-BUILD=$(git rev-list --count HEAD)
+BUILD=${FORIT_BUILD_NUMBER:?an explicit FORIT_BUILD_NUMBER is required; use scripts/forit-mini-release.sh}
 COMMIT=$(git rev-parse HEAD)
 OUT="$REPO_ROOT/build/forit-release"
 DERIVED="$REPO_ROOT/build/forit-dd"
@@ -35,11 +39,15 @@ log() { printf '==> %s\n' "$*"; }
 fail() { printf 'forit-release: %s\n' "$*" >&2; exit 1; }
 
 [[ -n $VERSION ]] || fail "forit/VERSION is empty"
-[[ -z $(git status --porcelain --untracked-files=no) ]] || fail "tracked files are modified; a shipped build must match a commit"
+[[ $BUILD =~ ^[1-9][0-9]*$ ]] || fail "build number must be a positive integer"
+[[ ${FORIT_GATE_RUN:-} == /* && -f $FORIT_GATE_RUN/lane ]] || fail "an active inherited Common gate run is required"
+[[ -z $(git status --porcelain --untracked-files=all) ]] || fail "source is modified or has untracked files; a shipped build must match a commit"
+[[ -z ${FORIT_SOURCE_COMMIT:-} || $FORIT_SOURCE_COMMIT == "$COMMIT" ]] || fail "source commit does not match the staged checkout"
 
-# --- The owning lane workflow runs Xcode directly; retired admission/slot gates are not release checks. ---
-# Keep explicit compiler selection and the existing execution deadlines without changing runner-global files.
-FORIT_XCODEBUILD=${FORIT_XCODEBUILD:-$(/usr/bin/xcrun --find xcodebuild)}
+# The outer launcher owns the existing slot and gate lifecycle. Use the installed wrapper;
+# never create a second gate, change the host, or silently bypass its slot checks.
+FORIT_XCODEBUILD=${FORIT_XCODEBUILD:-"$HOME/bin/xcodebuild"}
+[[ -x $FORIT_XCODEBUILD ]] || fail "installed slot-aware xcodebuild wrapper is unavailable"
 export FORIT_XCODEBUILD
 log "xcodebuild: $FORIT_XCODEBUILD"
 
@@ -56,8 +64,27 @@ fi
 security find-identity -v -p codesigning "$FORIT_CODESIGN_KEYCHAIN" | grep -q "$FORIT_CODESIGN_IDENTITY" \
   || fail "identity $FORIT_CODESIGN_IDENTITY is not in $FORIT_CODESIGN_KEYCHAIN"
 
+# Keep the former workflow's GPL public-source check in the app-owned path,
+# including builds staged from the private mirror.
+public_status=$(curl -sS --retry 3 --max-time 30 -o /dev/null -w '%{http_code}' \
+  "https://api.github.com/repos/ForITLLC/for-Dictate/commits/$COMMIT")
+[[ $public_status == 200 ]] || fail "source commit is not available in the public fork (HTTP $public_status)"
+
 rm -rf "$OUT" "$DERIVED"
 mkdir -p "$OUT"
+STAGE=""
+finish() {
+  local result=$?
+  trap - EXIT
+  if ! /usr/bin/python3 scripts/forit-release-evidence.py --output "$OUT" --commit "$COMMIT" \
+      --build "$BUILD" --version "$VERSION" --exit-code "$result"; then
+    (( result != 0 )) || result=1
+  fi
+  [[ -z $STAGE ]] || rm -rf "$STAGE"
+  exit "$result"
+}
+trap finish EXIT
+{ "$FORIT_XCODEBUILD" -version; /usr/bin/xcrun --show-sdk-version; } > "$OUT/toolchain.log" 2>&1
 
 # Synthetic checks compile the actual new Foundation helpers without launching
 # Dictate or opening the runner user's transcription database. One compiler job.
@@ -67,43 +94,19 @@ log "Checking history integration and shared vocabulary"
 # --- whisper.cpp ---
 scripts/forit-whisper.sh
 
-# --- xcodebuild with a deadline. ---
-# xcodebuild_within <minutes> <log> <args...> runs "$FORIT_XCODEBUILD" <args> into <log>. The clock runs only
-# while Xcode's xcodebuild itself runs, not while the slot wrapper waits for a slot. Past the deadline it
-# prints the process tree and any keychain prompt securityd raised (read-only, never an attach), stops the
-# tree and returns 124, so a hung build fails the job instead of sitting until the workflow timeout.
-descendants() {
-  local p kids
-  for p in "$@"; do
-    echo "$p"
-    kids=$(pgrep -P "$p" || true)
-    [[ -z $kids ]] || descendants $kids
-  done
-}
+# --- Bounded Xcode steps, in the shared launcher's inherited process group. ---
+# On timeout return failure. The outer owner must stop/reap its proven process
+# group before copying artifacts or deleting source; never signal guessed PIDs.
 xcodebuild_within() {
-  local minutes=$1 logf=$2 pid pids ran=0; shift 2
+  local minutes=$1 logf=$2 pid began=$SECONDS; shift 2
   "$FORIT_XCODEBUILD" "$@" >"$logf" 2>&1 &
   pid=$!
   while kill -0 "$pid" 2>/dev/null; do
-    sleep 10
-    pids=$(descendants "$pid" | paste -sd, -)
-    if ps -o command= -p "$pids" 2>/dev/null | grep -E '/Contents/Developer/usr/bin/xcodebuild( |$)' >/dev/null; then
-      ran=$((ran + 10))
-    fi
-    if (( ran >= minutes * 60 )); then
-      echo "xcodebuild ran past its $minutes-minute deadline. Its processes:"
-      ps -o pid,ppid,etime,stat,command -p "$pids" 2>/dev/null | cut -c1-240 || true
-      echo "Keychain prompts securityd raised in that time:"
-      /usr/bin/log show --last "$((minutes + 30))m" --style compact \
-        --predicate 'process == "securityd" AND eventMessage CONTAINS "displaying keychain prompt"' 2>/dev/null \
-        | cut -c1-240 | tail -5 || true
-      pids=$(descendants "$pid")
-      kill -TERM $pids 2>/dev/null || true
-      sleep 10
-      kill -KILL $pids 2>/dev/null || true
-      wait "$pid" 2>/dev/null || true
+    if (( SECONDS - began >= minutes * 60 )); then
+      echo "Xcode step timed out after $minutes minutes; owned-process cleanup belongs to the shared launcher."
       return 124
     fi
+    sleep 5
   done
   wait "$pid"
 }
@@ -124,6 +127,7 @@ log "Resolving Swift packages"
 rc=0
 xcodebuild_within 20 "$OUT/resolve.log" -resolvePackageDependencies "${PKG_ARGS[@]}" || rc=$?
 grep -E '^(build-slot |error:|.*: error:)' "$OUT/resolve.log" || true
+(( rc != 124 )) || exit 124
 (( rc == 0 )) || fail "package resolution failed ($rc; see resolve.log)"
 # Preserve genuine SDK resolution for release evidence; subsequent compilation must use it.
 RESOLVED=VoiceInk.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
@@ -148,7 +152,8 @@ xcodebuild_within 90 "$OUT/xcodebuild.log" build \
   MARKETING_VERSION="$VERSION" \
   CURRENT_PROJECT_VERSION="$BUILD" || rc=$?
 grep -E '^(build-slot |\*\* |error:|.*: error:|warning: .*deprecated)' "$OUT/xcodebuild.log" || true
-(( rc != 124 )) || fail "xcodebuild ran past its deadline (see above and xcodebuild.log)"
+(( rc != 124 )) || exit 124
+(( rc == 0 )) || fail "xcodebuild failed ($rc; see xcodebuild.log)"
 grep -q '\*\* BUILD SUCCEEDED \*\*' "$OUT/xcodebuild.log" || fail "xcodebuild did not succeed (see xcodebuild.log)"
 
 BUILT_APP="$DERIVED/Build/Products/Release/VoiceInk.app"
@@ -160,6 +165,14 @@ INFO="$APP/Contents/Info.plist"
 plist() { /usr/libexec/PlistBuddy -c "Print :$1" "$INFO"; }
 [[ $(plist CFBundleIdentifier) == "$BUNDLE_ID" ]] || fail "bundle id is $(plist CFBundleIdentifier), expected $BUNDLE_ID"
 [[ $(plist CFBundleShortVersionString) == "$VERSION" ]] || fail "version is $(plist CFBundleShortVersionString), expected $VERSION"
+[[ $(plist CFBundleVersion) == "$BUILD" ]] || fail "build is $(plist CFBundleVersion), expected $BUILD"
+/usr/bin/python3 - "$INFO" "$OUT/bundle-info.json" <<'PY'
+import json, plistlib, sys
+from pathlib import Path
+value = plistlib.loads(Path(sys.argv[1]).read_bytes())
+Path(sys.argv[2]).write_text(json.dumps({"bundleId": value["CFBundleIdentifier"],
+    "version": value["CFBundleShortVersionString"], "build": str(value["CFBundleVersion"])}, indent=2) + "\n")
+PY
 if /usr/libexec/PlistBuddy -c "Print :SUFeedURL" "$INFO" >/dev/null 2>&1; then
   fail "Info.plist still has a Sparkle feed (SUFeedURL)"
 fi
@@ -220,15 +233,14 @@ if [[ ${FORIT_SKIP_NOTARIZE:-0} != 1 ]]; then
   ditto -c -k --keepParent "$APP" "$OUT/app-for-notary.zip"
   notarize "$OUT/app-for-notary.zip" app
   rm -f "$OUT/app-for-notary.zip"
-  xcrun stapler staple "$APP"
-  xcrun stapler validate "$APP"
+  xcrun stapler staple "$APP" > "$OUT/stapler-app.log" 2>&1
+  xcrun stapler validate "$APP" >> "$OUT/stapler-app.log" 2>&1
   spctl -a -t execute -vv "$APP" 2>&1 | tee "$OUT/spctl-app.txt"
 fi
 
 # --- DMG ---
 log "Packaging $BASENAME.dmg"
-STAGE=$(mktemp -d)
-trap 'rm -rf "$STAGE"' EXIT
+STAGE=$(mktemp -d "$OUT/dmg-stage.XXXXXX")
 ditto "$APP" "$STAGE/$APP_NAME.app"
 ln -s /Applications "$STAGE/Applications"
 cp LICENSE "$STAGE/LICENSE (GPLv3).txt"
@@ -238,8 +250,8 @@ codesign --force --timestamp --keychain "$FORIT_CODESIGN_KEYCHAIN" --sign "$FORI
 codesign --verify --strict --verbose=2 "$DMG"
 if [[ ${FORIT_SKIP_NOTARIZE:-0} != 1 ]]; then
   notarize "$DMG" dmg
-  xcrun stapler staple "$DMG"
-  xcrun stapler validate "$DMG"
+  xcrun stapler staple "$DMG" > "$OUT/stapler-dmg.log" 2>&1
+  xcrun stapler validate "$DMG" >> "$OUT/stapler-dmg.log" 2>&1
   spctl -a -t open --context context:primary-signature -vv "$DMG" 2>&1 | tee "$OUT/spctl-dmg.txt"
 fi
 (cd "$OUT" && shasum -a 256 "$BASENAME.dmg" > "$BASENAME.dmg.sha256")

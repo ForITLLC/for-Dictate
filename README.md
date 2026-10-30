@@ -31,7 +31,7 @@ Before it copies the app to /Applications, the script checks that the DMG and th
 
 ## How a release is built
 
-`scripts/forit-release.sh` does the whole build. It builds whisper.cpp from a pinned tag (`scripts/forit-whisper.sh`), builds the app, signs every piece of code from the inside out, notarizes and staples both the app and the DMG, and writes `SOURCE.txt` with the public commit the build came from. It runs on ForIT's Mac mini through the shared build slot, and someone starts it by hand from a private build mirror that holds the signing keys. The workflow refuses any commit that isn't already public here, so the source of every shipped build is in this repository.
+`scripts/forit-mini-release.sh BUILD` is the app-owned adapter for the shared Apple build launcher. It uses the Mac's existing signing identity and notary key. The release script runs the synthetic tests, builds pinned whisper.cpp and the app, signs code from the inside out, then notarizes and staples both the app and DMG. It verifies the actual app build number and preserves public source, signing, Apple receipts and checksums. GitHub Actions does not run Apple builds. See [the adapter contract](docs/apple-release-adapter.md) for the required existing slot, Common checks and retained evidence. The new route still needs exact-commit native proof after the shared launcher is published.
 
 The version is in `forit/VERSION`, and the build number is the commit count.
 

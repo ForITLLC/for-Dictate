@@ -1,7 +1,7 @@
 #!/bin/bash
 # scripts/forit-install.sh <ForIT-Dictate-*.dmg>: install a ForIT Dictate release DMG into /Applications on
 # this Mac, after checking that it is ForIT's Developer ID build and that Apple notarized it.
-# The DMG comes from the forit-release workflow's artifact; a .sha256 beside it is checked when present.
+# The DMG comes from the shared Apple launcher's retained evidence; a .sha256 beside it is checked when present.
 set -euo pipefail
 
 DMG=${1:?usage: scripts/forit-install.sh <ForIT-Dictate-<version>-<build>.dmg>}
