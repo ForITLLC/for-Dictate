@@ -36,6 +36,31 @@ let package = Package(
 '''
 
 
+def write_check_evidence(output, receipt):
+    """Retain check-only evidence in the shared collector's existing .log allowlist."""
+    destination = output / "check-evidence.log"
+    destination.unlink(missing_ok=True)  # Never leave an older PASS after a failed refresh.
+    retained = {"schema": "forit.dictate.check-evidence.v1", "status": receipt["status"], "receipt": receipt}
+    if receipt["status"] == "PASS":
+        completed = (receipt.get("exitCode") == 0 and receipt.get("testSummaryComplete") is True
+                     and receipt.get("timeout_cleanup_delegated") is False
+                     and receipt.get("syntheticFixtureValid") is True
+                     and receipt.get("testCount") == receipt.get("expectedTestCount") == 52
+                     and receipt.get("failureCount") == 0)
+        if not completed:
+            raise ValueError("Check evidence requires completed, valid checks before retaining a fixture")
+        data = (output / "synthetic-history-v1.json").read_bytes()
+        digest = hashlib.sha256(data).hexdigest()
+        if len(data) > 8 * 1024 * 1024 or digest != receipt.get("syntheticFixtureSHA256"):
+            raise ValueError("Synthetic fixture no longer matches the completed check receipt")
+        retained["syntheticFixture"] = {"contentUTF8": data.decode("utf-8"),
+                                         "sha256": digest, "byteCount": len(data)}
+    descriptor = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+        json.dump(retained, stream, ensure_ascii=False, indent=2)
+        stream.write("\n")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", required=True, type=Path)
@@ -135,6 +160,7 @@ def main():
     receipt["status"] = "PASS" if passed else "FAIL"
     receipt["syntheticFixtureValid"] = fixture_valid
     (output / "RESULT.json").write_text(json.dumps(receipt, indent=2) + "\n")
+    write_check_evidence(output, receipt)
     print(f"Synthetic integration tests: {receipt['status']} ({total} tests, {failures} failures); jobs=1")
     if not passed:
         if timed_out:
