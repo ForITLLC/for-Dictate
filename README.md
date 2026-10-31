@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="VoiceInk/Assets.xcassets/AppIcon.appiconset/256-mac.png" width="180" height="180" />
+  <img src="VoiceInk/Assets.xcassets/AppIcon.appiconset/mac-256.png" width="180" height="180" />
   <h1>ForIT Dictate</h1>
   <p>ForIT's Mac dictation app, built from VoiceInk</p>
 
@@ -21,19 +21,24 @@ Builds are signed with ForIT's Developer ID (team UUSSWWML2A), notarized by Appl
 
 ## Install
 
-Get the DMG from the latest `forit-release` run (ForIT staff only), then:
+Get the original DMG, its matching `.dmg.sha256` file and verified release receipt
+from the maintained Mini release (ForIT staff only). Keep the two files together.
+Finish any active dictation and close the app through the device owner's normal
+flow before installing:
 
 ```bash
 scripts/forit-install.sh ForIT-Dictate-<version>-<build>.dmg
 ```
 
-Before it copies the app to /Applications, the script checks that the DMG and the app carry ForIT's Developer ID signature and Apple's notarization. On first launch, allow Microphone and Accessibility when macOS asks. Accessibility is what lets the app type into other apps.
+Before it copies the app to /Applications, the script requires the matching checksum, ForIT's Developer ID signatures and Apple's stapled tickets for both the DMG and app. It refuses to replace a running app and leaves the installed app closed. It preserves the app's history, models and settings. On first launch, allow Microphone and Accessibility when macOS asks. Accessibility is what lets the app type into other apps.
 
 ## How a release is built
 
-`scripts/forit-mini-release.sh BUILD` is the app-owned adapter for the shared Apple build launcher. It uses the Mac's existing signing identity and notary key. The release script runs the synthetic tests, builds pinned whisper.cpp and the app, signs code from the inside out, then notarizes and staples both the app and DMG. It verifies the actual app build number and preserves public source, signing, Apple receipts and checksums. GitHub Actions does not run Apple builds. See [the adapter contract](docs/apple-release-adapter.md) for the required existing slot, Common checks and retained evidence. The new route still needs exact-commit native proof after the shared launcher is published.
+`scripts/forit-mini-release.sh BUILD` is the app-owned adapter for the shared Apple build launcher. It uses the Mac's existing signing identity and notary key. The release script runs the synthetic tests, builds pinned whisper.cpp and the app, signs code from the inside out, then notarizes and staples both the app and DMG. It verifies the actual app build number and preserves public source, signing, Apple receipts and checksums. GitHub Actions does not run Apple builds. See [the adapter contract](docs/apple-release-adapter.md) for the required existing slot, Common checks and retained evidence. The registered route still needs exact-commit native proof.
 
-The version is in `forit/VERSION`, and the build number is the commit count.
+The version is in `forit/VERSION`. The release owner reserves an explicit build
+number against the existing release records and passes it to the adapter; a
+shallow checkout's commit count is not a build number.
 
 ## License and credits
 

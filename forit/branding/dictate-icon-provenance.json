@@ -119,5 +119,16 @@
     "installedAppearance": false,
     "signedDelivery": false
   },
-  "supersession": "Health retains icon recipe ownership. This local rendering is not a Health delivery or a new app-owned logo; a later Health folder is adopted whole after provenance review."
+  "supersession": "Health retains icon recipe ownership. This local rendering is not a Health delivery or a new app-owned logo; a later Health folder is adopted whole after provenance review.",
+  "independentReview": {
+    "owner": "for-Health",
+    "message": "msg_d77458228149",
+    "existingRequest": "msg_59dcfa7623a3",
+    "result": "PASS_EXISTING_CONSUMER_RENDER_RECONCILED",
+    "macManifestSHA256": "40cbe9fbeb7b6df4f5c139a10d8228477ef86264f742b0c987596b4796589605",
+    "reviewReceiptSHA256": "59bbbd7351ded2d2982409272b5fb54a1e24b4b4617197d53c07cdf52e638f60",
+    "healthReportedAll28PayloadHashesValid": true,
+    "rootComparedAll8AdoptedMacFilesToHealthManifest": true,
+    "nativeOrTwoRunDeterminismCertified": false
+  }
 }
