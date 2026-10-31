@@ -1,0 +1,123 @@
+{
+  "schema": "forit.dictate.app-icon-adoption.v1",
+  "recordedUTCDate": "2026-10-31",
+  "state": "CANONICAL_HEALTH_RECIPE_RENDERED_LOCALLY_AND_ADOPTED_SOURCE_ONLY",
+  "consumer": {
+    "repository": "ForITLLC/for-Dictate",
+    "bundleIdentifier": "io.forit.dictate",
+    "assetFolder": "VoiceInk/Assets.xcassets/AppIcon.appiconset",
+    "appIconBuildSetting": "AppIcon"
+  },
+  "recipeOwner": {
+    "repository": "ForITLLC/for-Health",
+    "revision": "264e03f40dc0fdba818dd6c0aec92dca76b7fa47",
+    "path": "ios/scripts/icon_family.py",
+    "sha256": "a26587c4081e1d72206d29647b93aaf146353cfb6d02e34a9a507c40da8072d7",
+    "profile": "dictate"
+  },
+  "inputs": {
+    "canonicalMark": {
+      "repository": "ForITLLC/forit-Common",
+      "revision": "504b5a9b61606d0f5d4b5f21dafef71ce48544e0",
+      "path": "packages/ui/assets/brand/forit-hex-only.png",
+      "sha256": "a983a6d29f5310df1941e9212b4f4040a9ef33e67c3e7d5437bed89a91b33adc"
+    },
+    "glyph": {
+      "package": "@phosphor-icons/core",
+      "version": "2.1.1",
+      "path": "assets/duotone/microphone-duotone.svg",
+      "sha256": "c1bd548c24ecfaaa07054cefd93885537c518234691f9614e144e52aa19eedce"
+    },
+    "accent": {
+      "token": "forit-300",
+      "color": "#5ECDE5"
+    }
+  },
+  "render": {
+    "operator": "for-Dictate root",
+    "environment": "isolated ephemeral Linux dependency environment",
+    "CairoSVG": "2.8.2",
+    "generatorModified": false,
+    "nativeMacExecution": false,
+    "healthDeliveredRenderedArtifact": false,
+    "determinismCertified": false,
+    "evidence": "handoffs/for-Dictate/voiceink-forit-branding-20261029/icon-canonical-render-20261031/"
+  },
+  "adoption": {
+    "operation": "Replace complete AppIcon.appiconset with generated folder byte for byte; no PNG bytes modified or regenerated during adoption",
+    "macSlots": 10,
+    "pngFiles": 7,
+    "files": {
+      "Contents.json": {
+        "sha256": "5c297be4fc539d1e5085dbfd569752d96de1741d96b3b359ce3bb8b638a0b40b",
+        "bytes": 1241
+      },
+      "mac-1024.png": {
+        "sha256": "aafa1a60b1f8b9c47af69928357c5908513989421b272c1e303f1c3a5b40ac95",
+        "bytes": 68852,
+        "pixelDimensions": [
+          1024,
+          1024
+        ]
+      },
+      "mac-128.png": {
+        "sha256": "283de6ef2e04662391da84bbead4791462548b899347c1da4b78a8dd9c9e616c",
+        "bytes": 7303,
+        "pixelDimensions": [
+          128,
+          128
+        ]
+      },
+      "mac-16.png": {
+        "sha256": "9601cb6cde30a98a5a9c00dfacebb50cae7d9de5108db71c541907e571803507",
+        "bytes": 659,
+        "pixelDimensions": [
+          16,
+          16
+        ]
+      },
+      "mac-256.png": {
+        "sha256": "35334edad4010eab7ebfb9ced1933ce1679ddbac890ec60f41780082c67aca46",
+        "bytes": 16060,
+        "pixelDimensions": [
+          256,
+          256
+        ]
+      },
+      "mac-32.png": {
+        "sha256": "344ba2bd0e64bd449323aa28a384202549375301f6209c8d447afc5c86719b70",
+        "bytes": 1583,
+        "pixelDimensions": [
+          32,
+          32
+        ]
+      },
+      "mac-512.png": {
+        "sha256": "ed88ed718a763a4aafb11d9bc9df8b113e816d1349db4e46cd5faed739930770",
+        "bytes": 35419,
+        "pixelDimensions": [
+          512,
+          512
+        ]
+      },
+      "mac-64.png": {
+        "sha256": "f90b2361eeb7a357a069283ae1fa9165cadaa0a6ea3c6bbc524e9ea199d9cbe1",
+        "bytes": 3330,
+        "pixelDimensions": [
+          64,
+          64
+        ]
+      }
+    }
+  },
+  "validation": {
+    "allSourceDestinationBytesEqual": true,
+    "allMacSlotPixelDimensionsMatch": true,
+    "noSymlinks": true,
+    "nativeAssetCompilation": false,
+    "applicationBuild": false,
+    "installedAppearance": false,
+    "signedDelivery": false
+  },
+  "supersession": "Health retains icon recipe ownership. This local rendering is not a Health delivery or a new app-owned logo; a later Health folder is adopted whole after provenance review."
+}
