@@ -63,7 +63,7 @@ enum ShortcutAction: Hashable {
         case .secondaryRecording:
             return String(localized: "Secondary Shortcut")
         case .pasteLastTranscription:
-            return String(localized: "Paste Last Transcription")
+            return String(localized: "Paste Last Original Transcription")
         case .pasteLastEnhancement:
             return String(localized: "Paste Last Enhanced Transcription")
         case .retryLastTranscription:

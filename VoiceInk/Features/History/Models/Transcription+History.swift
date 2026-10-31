@@ -2,7 +2,13 @@ import Foundation
 
 extension Transcription {
     var preferredHistoryText: String {
-        enhancedHistoryText ?? text
+        HistorySuccessPolicy.preferredText(rawText: text, enhancedText: enhancedText)
+    }
+
+    var isSuccessfulHistoryEntry: Bool {
+        HistorySuccessPolicy.isSuccessful(status: transcriptionStatus, rawText: text)
+            && duration.isFinite && duration >= 0
+            && HistorySuccessPolicy.normalizedTimestamp(timestamp) != nil
     }
 
     var hasEnhancedHistoryText: Bool {
@@ -36,36 +42,6 @@ extension Transcription {
     }
 
     private var enhancedHistoryText: String? {
-        guard let enhancedText = historyEnhancementDetailText else { return nil }
-
-        let normalizedLowercasedText = enhancedText
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-            .lowercased()
-        let isFailureMessage = Self.enhancementFailurePrefixes.contains {
-            normalizedLowercasedText.hasPrefix($0)
-        }
-
-        return isFailureMessage ? nil : enhancedText
+        HistorySuccessPolicy.validatedEnhancedText(enhancedText)
     }
-
-    private static let enhancementFailurePrefixes: [String] = {
-        let formatKey = "Enhancement failed: %@"
-        let localizedBundles = Bundle.main.localizations.compactMap { localization in
-            Bundle.main.path(forResource: localization, ofType: "lproj")
-                .flatMap(Bundle.init(path:))
-        }
-
-        let formats = [formatKey] + ([Bundle.main] + localizedBundles)
-            .map { bundle in
-                bundle.localizedString(forKey: formatKey, value: formatKey, table: nil)
-            }
-
-        return formats.compactMap { format in
-            guard let placeholderRange = format.range(of: "%@") else { return nil }
-            return format[..<placeholderRange.lowerBound]
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .lowercased()
-        }
-        .filter { !$0.isEmpty }
-    }()
 }

@@ -1,0 +1,68 @@
+{
+  "schema": "forit.dictate.branding-source-slice.v1",
+  "recordedUTC": "2026-10-29T23:48:08Z",
+  "baseline": "37848667ed2db61381a6fbdcb5d31c13e62eaae1",
+  "translationChange": {
+    "locale": "de",
+    "appNameValuesChanged": 23,
+    "operation": "Replace stale VoiceInk app name with ForIT Dictate only where English key already names ForIT Dictate",
+    "modelAndVendorKeys": "VoiceInk Refine keys and their translations retained",
+    "keysPlaceholdersOtherLocalesAndTranslationState": "unchanged"
+  },
+  "suggestedExportNames": {
+    "settings": "ForIT_Dictate_Settings_Backup.json",
+    "dictionary": "ForIT_Dictate_Dictionary.json",
+    "history": "ForIT_Dictate_Transcription.csv",
+    "logs": "ForIT_Dictate_Logs_<timestamp>.log"
+  },
+  "ownedSourceFilesSHA256": {
+    "VoiceInk/Localizable.xcstrings": "11a7c2404025a7a584eaadb6bc4b9a6841e9132e6e036186dae7250d56cdf1ce",
+    "VoiceInk/Features/Settings/Backup/ImportExportService.swift": "9f168e4991479f9e11a5b55e412325270815297f9641e1bdcd4e8fc59f8652b9",
+    "VoiceInk/Features/Dictionary/Views/DictionaryFilePanelService.swift": "1b990915501f4fb122a34ac90b2edf40ad065c57349ba3b964d3c86b5c9fc1f9",
+    "VoiceInk/Features/History/Export/VoiceInkCSVExportService.swift": "c177b0d04121ce73b0b3331f5f73fd33c99e8f3a9ed45004d17e1cbd7b4de044",
+    "VoiceInk/Infrastructure/Diagnostics/LogExporter.swift": "532c851727372a109a0cbf8493d31991f2feb731a0b0f060c4784e937505471c"
+  },
+  "icon": {
+    "status": "HEALTH_OWNED_DICTATE_PRODUCER_RENDER_AND_DELIVERY_PENDING",
+    "catalogCurrentlyUnchanged": true,
+    "historicalObservation": {
+      "recordedUTC": "2026-10-29T20:35:00.406749+00:00",
+      "ownershipReference": "ForITLLC/for-iCommon docs/forit-mark.md:80-84",
+      "observedOwnershipDocSHA256": "48b270ae26028a999c376bcc8c098180b771786a1a87b5221ece44a5bcc945c7",
+      "maintainedGenerator": "ForITLLC/for-Health ios/scripts/icon_family.py",
+      "observedGeneratorLastChange": "eb56f195a3c04f3045fa7ce8221f8c17a54ac936",
+      "observedGeneratorSHA256": "ed090e880604d8d219d4260c767507fe0e1c53d217dab4b7a8d9f5497d5a0c70",
+      "profileGapAtThatObservation": "No Dictate/VoiceInk entry was observed in APPS, PRODUCT_PROFILES, NATIVE_CONSUMERS or external-profile index",
+      "status": "Historical observation superseded by Health producer ownership message msg_053a54abcbca; external source hashes were not refreshed in this correction"
+    },
+    "producerDelivery": {
+      "name": "ForIT Dictate",
+      "bundle": "io.forit.dictate",
+      "platform": "macOS",
+      "artifact": "Complete Health-produced AppIcon.appiconset folder at an immutable producer revision",
+      "styleAuthority": "Health owns glyph, colour, frame, canonical mark selection and all output sizes",
+      "consumerOperation": "Adopt the complete producer folder byte-for-byte; no app-owned resizing",
+      "currentOwnerMessage": "msg_053a54abcbca",
+      "deliveryReceived": false
+    },
+    "nativeAppearanceAndShippingProof": "Not established by this source record"
+  },
+  "unchangedContracts": [
+    "bundle and executable identities",
+    "PRODUCT_NAME and VoiceInk.app release paths",
+    "vendor/model/provider attribution including VoiceInk Refine",
+    "license text",
+    "current AppIcon artwork pending canonical producer output"
+  ],
+  "testsBuildCompilerNativeDeviceExecuted": false,
+  "externalSends": false,
+  "scope": "Branding source changes and producer handoff tracking only; no icon installation, native appearance or shipping proof",
+  "iconProducerUpdate": {
+    "message": "msg_053a54abcbca",
+    "owner": "for-Health",
+    "branch": "BTForIT/dictate-mac-icon",
+    "profile": "dictate",
+    "state": "Producer rendering pending current for-dev slot; adopt whole AppIcon.appiconset folder at immutable SHA, no app-owned resizing pipeline",
+    "forDevRenderRequest": "msg_59dcfa7623a3"
+  }
+}

@@ -9,7 +9,7 @@ class VoiceInkCSVExportService {
 
         let savePanel = NSSavePanel()
         savePanel.allowedContentTypes = [.commaSeparatedText]
-        savePanel.nameFieldStringValue = "VoiceInk-transcription.csv"
+        savePanel.nameFieldStringValue = "ForIT_Dictate_Transcription.csv"
 
         savePanel.begin { result in
             if result == .OK, let url = savePanel.url {

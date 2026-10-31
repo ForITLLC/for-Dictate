@@ -1,0 +1,18 @@
+{
+  "expectedTestCount": 52,
+  "sources": [
+    "VoiceInk/Features/History/Models/HistorySuccessPolicy.swift",
+    "VoiceInk/Features/History/Integrations/TinycastHistorySnapshot.swift",
+    "VoiceInk/Features/History/Integrations/TinycastHistorySnapshotWriter.swift",
+    "VoiceInk/Features/History/Integrations/TinycastHistoryExporter.swift",
+    "VoiceInk/Infrastructure/Persistence/Models/Transcription.swift",
+    "VoiceInk/Features/Dictionary/Workflows/SharedVocabulary.swift",
+    "VoiceInk/Features/Dictionary/Workflows/SharedVocabularyCatalogLock.swift",
+    "VoiceInk/Features/Dictionary/Workflows/SharedVocabularyService.swift",
+    "VoiceInk/Infrastructure/Persistence/Models/VocabularyWord.swift"
+  ],
+  "testPatterns": [
+    "Tests/VoiceInkTests/TinycastHistory*Tests.swift",
+    "Tests/VoiceInkTests/SharedVocabulary*Tests.swift"
+  ]
+}
