@@ -6,7 +6,6 @@ struct AudioSetupView: View {
     @ObservedObject private var audioDeviceManager = AudioDeviceManager.shared
     @ObservedObject private var mediaController = MediaController.shared
     @ObservedObject private var playbackController = PlaybackController.shared
-    @State private var microphoneSourceBeforePriorityOrder: MicrophoneSourceSelection = .systemDefault
     @State private var refreshIconRotation = 0.0
 
     var body: some View {
@@ -47,31 +46,41 @@ struct AudioSetupView: View {
         }
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
-        .onAppear {
-            if !usesPriorityOrder {
-                microphoneSourceBeforePriorityOrder = currentMicrophoneSource
-            }
-        }
     }
 
     @ViewBuilder
     private var inputSettingsRows: some View {
         Picker("Microphone Mode", selection: inputRouteSelection) {
+            Text("Follow macOS Default").tag(InputRoute.systemDefault)
             Text("Selected Microphone").tag(InputRoute.singleMicrophone)
             Text("Priority Order").tag(InputRoute.priorityOrder)
         }
         .pickerStyle(.menu)
 
-        if !usesPriorityOrder {
-            Picker("Microphone", selection: microphoneSourceSelection) {
-                Text(systemDefaultSourceTitle).tag(MicrophoneSourceSelection.systemDefault)
-
+        if audioDeviceManager.inputMode == .systemDefault {
+            LabeledContent("macOS Default Input", value: systemDefaultSourceTitle)
+            Text("ForIT Dictate follows the input selected in macOS, including during recording.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        } else if audioDeviceManager.inputMode == .custom {
+            Picker("Microphone", selection: microphoneSelection) {
+                if let selectedDeviceUID,
+                    !audioDeviceManager.availableDevices.contains(where: { $0.uid == selectedDeviceUID }) {
+                    Text("Saved Microphone (Unavailable)").tag(selectedDeviceUID)
+                        .disabled(true)
+                } else if audioDeviceManager.availableDevices.isEmpty {
+                    Text("No microphones found").tag("")
+                        .disabled(true)
+                }
                 ForEach(audioDeviceManager.availableDevices, id: \.uid) { device in
-                    Text(device.name).tag(MicrophoneSourceSelection.device(device.uid))
+                    Text(device.name).tag(device.uid)
                 }
             }
             .pickerStyle(.menu)
+        }
 
+        if !usesPriorityOrder {
             if let deviceID = audioDeviceManager.resolveCurrentRecordingDevice().deviceID {
                 AudioInputChannelsView(deviceID: deviceID)
             }
@@ -111,9 +120,17 @@ struct AudioSetupView: View {
 
     private var inputRouteSelection: Binding<InputRoute> {
         Binding(
-            get: { usesPriorityOrder ? .priorityOrder : .singleMicrophone },
+            get: {
+                switch audioDeviceManager.inputMode {
+                case .systemDefault: return .systemDefault
+                case .custom: return .singleMicrophone
+                case .prioritized: return .priorityOrder
+                }
+            },
             set: { route in
                 switch route {
+                case .systemDefault:
+                    audioDeviceManager.selectInputMode(.systemDefault)
                 case .singleMicrophone:
                     selectSingleMicrophoneMode()
                 case .priorityOrder:
@@ -123,12 +140,12 @@ struct AudioSetupView: View {
         )
     }
 
-    private var microphoneSourceSelection: Binding<MicrophoneSourceSelection> {
+    private var microphoneSelection: Binding<String> {
         Binding(
-            get: { currentMicrophoneSource },
-            set: { selection in
-                microphoneSourceBeforePriorityOrder = selection
-                selectMicrophoneSource(selection)
+            get: { selectedDeviceUID ?? "" },
+            set: { uid in
+                guard let device = audioDeviceManager.availableDevices.first(where: { $0.uid == uid }) else { return }
+                audioDeviceManager.selectDeviceAndSwitchToCustomMode(id: device.id)
             }
         )
     }
@@ -218,54 +235,38 @@ struct AudioSetupView: View {
         }
     }
 
-    private var currentMicrophoneSource: MicrophoneSourceSelection {
-        switch audioDeviceManager.inputMode {
-        case .systemDefault:
-            return .systemDefault
-        case .custom:
-            if let selectedDeviceUID {
-                return .device(selectedDeviceUID)
-            }
-            return .systemDefault
-        case .prioritized:
-            return microphoneSourceBeforePriorityOrder
-        }
-    }
-
-    private func selectMicrophoneSource(_ selection: MicrophoneSourceSelection) {
-        switch selection {
-        case .systemDefault:
-            audioDeviceManager.selectInputMode(.systemDefault)
-        case .device(let uid):
-            guard let device = audioDeviceManager.availableDevices.first(where: { $0.uid == uid }) else {
-                audioDeviceManager.selectInputMode(.systemDefault)
-                return
-            }
-            audioDeviceManager.selectDeviceAndSwitchToCustomMode(id: device.id)
-        }
-    }
-
     private func selectSingleMicrophoneMode() {
-        selectMicrophoneSource(microphoneSourceBeforePriorityOrder)
+        // Follow/Priority changes leave the custom preference intact, including
+        // when its device is temporarily absent or this view has been reopened.
+        if let savedUID = UserDefaults.standard.selectedAudioDeviceUID {
+            if let device = audioDeviceManager.availableDevices.first(where: { $0.uid == savedUID }) {
+                audioDeviceManager.selectDeviceAndSwitchToCustomMode(id: device.id)
+            } else {
+                audioDeviceManager.selectInputMode(.custom)
+            }
+        } else {
+            let defaultDeviceID = audioDeviceManager.getSystemDefaultDevice()
+            if let device = audioDeviceManager.availableDevices.first(where: { $0.id == defaultDeviceID })
+                ?? audioDeviceManager.availableDevices.first {
+                audioDeviceManager.selectDeviceAndSwitchToCustomMode(id: device.id)
+            } else {
+                audioDeviceManager.selectInputMode(.custom)
+            }
+        }
     }
 
     private func selectPriorityOrderMode() {
-        if !usesPriorityOrder {
-            microphoneSourceBeforePriorityOrder = currentMicrophoneSource
-        }
         audioDeviceManager.selectInputMode(.prioritized)
     }
 
     private var selectedDeviceUID: String? {
-        guard let selectedDeviceID = audioDeviceManager.selectedDeviceID else { return nil }
-        return audioDeviceManager.availableDevices.first { $0.id == selectedDeviceID }?.uid
+        if let savedUID = UserDefaults.standard.selectedAudioDeviceUID { return savedUID }
+        return audioDeviceManager.availableDevices.first { $0.id == audioDeviceManager.selectedDeviceID }?.uid
+            ?? audioDeviceManager.availableDevices.first?.uid
     }
 
     private var systemDefaultSourceTitle: String {
-        guard let name = audioDeviceManager.getSystemDefaultDeviceName() else {
-            return String(localized: "System Default")
-        }
-        return String(format: String(localized: "System Default (%@)"), name)
+        audioDeviceManager.getSystemDefaultDeviceName() ?? String(localized: "No microphones found")
     }
 
     private func refreshMicrophones() {
@@ -334,12 +335,8 @@ struct AudioSetupView: View {
     }
 }
 
-private enum MicrophoneSourceSelection: Hashable {
-    case systemDefault
-    case device(String)
-}
-
 private enum InputRoute: Hashable {
+    case systemDefault
     case singleMicrophone
     case priorityOrder
 }

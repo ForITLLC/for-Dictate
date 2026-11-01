@@ -297,6 +297,7 @@ class AudioDeviceManager: ObservableObject {
             let uid = deviceToSelect.uid
             let modelUID = getDeviceModelUID(deviceID: id)
             DispatchQueue.main.async {
+                self.recordingDeviceSession.cancelSystemDefaultChanges()
                 self.inputMode = .custom
                 self.selectedDeviceID = id
                 UserDefaults.standard.audioInputModeRawValue = AudioInputMode.custom.rawValue
@@ -310,6 +311,9 @@ class AudioDeviceManager: ObservableObject {
     }
 
     func selectInputMode(_ mode: AudioInputMode) {
+        if mode != .systemDefault {
+            recordingDeviceSession.cancelSystemDefaultChanges()
+        }
         inputMode = mode
         UserDefaults.standard.audioInputModeRawValue = mode.rawValue
 
@@ -329,6 +333,9 @@ class AudioDeviceManager: ObservableObject {
         }
 
         notifyDeviceChange()
+        if mode == .systemDefault {
+            reconcileRecordingDeviceRouting()
+        }
     }
 
     private func loadPrioritizedDevices() {
@@ -434,12 +441,7 @@ class AudioDeviceManager: ObservableObject {
             guard let self = self else { return }
 
             if self.isRecordingActive {
-                guard let activeDeviceID = self.activeRecordingDeviceID,
-                    !self.isOperationalInputDevice(activeDeviceID)
-                else {
-                    return
-                }
-                self.requestRecordingDeviceChange(reason: .deviceUnavailable)
+                self.reconcileRecordingDeviceRouting()
                 return
             }
 
@@ -467,6 +469,7 @@ class AudioDeviceManager: ObservableObject {
             self.loadAvailableDevices { [weak self] in
                 guard let self, self.inputMode == .systemDefault else { return }
                 self.notifyDeviceChange()
+                self.reconcileRecordingDeviceRouting()
             }
         }
         let status = AudioObjectAddPropertyListenerBlock(
