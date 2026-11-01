@@ -26,7 +26,7 @@ from xml.parsers.expat import ExpatError
 SCHEMA = "forit.dictate.release-evidence.v1"
 RECEIPT_NAME = "release-evidence.log"
 MAX_FILE_BYTES = 16 * 1024 * 1024
-EXPECTED_TEST_COUNT = 52
+EXPECTED_TEST_COUNT = 63
 BUNDLE_ID = "io.forit.dictate"
 FILES = (
     "SOURCE.txt", "Package.resolved", "codesign.txt", "entitlements.plist",

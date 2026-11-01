@@ -16,7 +16,7 @@
   "requiredInheritedEnvironment": ["FORIT_GATE_RUN", "FORIT_CODESIGN_KEYCHAIN"],
   "existingSlot": "/Users/Shared/ci-runner/ci-runner-job-slot.sh",
   "existingGate": "/Users/Shared/forit-gate/mini-gate.sh",
-  "nativeTests": 52,
+  "nativeTests": 63,
   "nativeTestsExecutedDuringPreparation": 0,
   "channel": "Developer ID notarized DMG; --upload is rejected",
   "receipt": "build/forit-release/release-evidence.log",

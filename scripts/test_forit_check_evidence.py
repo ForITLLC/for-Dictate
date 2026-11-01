@@ -43,7 +43,7 @@ class CheckEvidenceTests(unittest.TestCase):
             "schema": "forit.dictate.integration-tests.v1", "status": "PASS", "exitCode": 0,
             "sourceCommit": "a" * 40, "sourceSHA256": {"synthetic/source.swift": "b" * 64},
             "jobs": 1, "processGroup": "inherited", "timeoutSeconds": 600,
-            "expectedTestCount": 52, "testCount": 52, "failureCount": 0,
+            "expectedTestCount": 63, "testCount": 63, "failureCount": 0,
             "testSummaryComplete": True, "timeout_cleanup_delegated": False,
             "retained_package_relative_path": None, "syntheticFixtureValid": True,
             "syntheticFixtureSHA256": hashlib.sha256(self.data).hexdigest(),
