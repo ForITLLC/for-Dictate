@@ -46,7 +46,7 @@ class LastTranscriptionService: ObservableObject {
                     }
                 }
                 if page.count < 128 { return selected }
-                descriptor.fetchOffset += page.count
+                descriptor.fetchOffset = (descriptor.fetchOffset ?? 0) + page.count
             }
         } catch {
             print("Could not read dictation history.")

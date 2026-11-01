@@ -130,7 +130,7 @@ private actor TinycastHistorySnapshotWorker {
                         try builder.append(entry)
                     }
                 }
-                descriptor.fetchOffset += page.count
+                descriptor.fetchOffset = (descriptor.fetchOffset ?? 0) + page.count
                 if page.count < 16 { break }
             }
             let snapshot = builder.encodedSnapshot()
