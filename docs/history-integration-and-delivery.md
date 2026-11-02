@@ -23,6 +23,16 @@ distinctive token in raw text, enhanced text or saved request messages. The
 observed rows identified Parakeet V3 and no cleanup model. No transcript contents,
 clipboard contents or audio were returned or changed by the investigation.
 
+Later that day, the MacBook owner's native audit found the reported phrase in
+the latest completed Monologue history entry selected by Tinycast's old
+Monologue Paste Last command. The owner removed only that command's shortcut,
+reloaded Tinycast and independently verified that the shortcut remained absent,
+preserving Monologue's data and other bindings. This demonstrates a stale-text
+source when that shortcut is used; it does not establish that every reported
+insertion used that path. The replacement consumer reads only Dictate's current
+versioned feed, with no Monologue fallback. The removed binding must remain
+absent while the replacement is qualified.
+
 Two independent source defects were identified:
 
 * Clipboard paste wrote the new dictation, waited 200 ms, then posted Paste
@@ -49,7 +59,10 @@ with synthetic clipboard snapshots, injected delays and recorded key events.
 They cover replacement during the pre-paste delay, replacement between Command
 and V, change-away-and-back, missing ownership, AppleScript dispatch, safe
 restoration, key release and clipboard-independent direct typing. The maintained
-integration checker includes them alongside the previous 52 tests (63 total).
+integration checker includes them alongside the previous 52 tests and the 13
+Foundation-only recording-device session tests (76 total). The latter cover
+following macOS input changes, deferred switches and stale-session cancellation
+without opening audio devices.
 
 Swift compilation, these XCTest cases, physical clipboard/key-event behavior,
 Whisper/Parakeet model execution and installed-app acceptance must run through
@@ -71,6 +84,15 @@ Native acceptance uses synthetic A/B phrases, with no user history or audio:
 4. Verify the installed producer creates and updates the snapshot after a
    successful transcription, edit and deletion. Check Tinycast Search, Copy Last
    and Paste Last against the same synthetic record, preserving other commands
-   and bindings.
+   and bindings. Confirm the old Monologue Paste Last binding remains absent and
+   the consumer selects the current successful Dictate record rather than the
+   old Monologue entry. Report any remaining repeated-text symptom separately;
+   an absent binding alone does not prove complete incident acceptance.
 5. Confirm the installed build and visible ForIT icon before calling branding
    delivered. A signed DMG or a source commit alone is insufficient.
+
+The requested delivery combines this branding/history/paste work with the
+[system-default microphone change](system-default-input.md) in one signed Mac
+build. Its 13 Foundation session tests join the existing 63 checks. Physical
+microphone switching, destination paste behavior and actual installation remain
+separate native acceptance observations; source consistency is not their result.

@@ -59,51 +59,84 @@ extension Recorder {
         )
     }
 
+    private struct DeviceSwitchOutcome {
+        let activeDeviceID: AudioDeviceID
+        let isCapturing: Bool
+        let error: Error?
+    }
+
     private func handleRecordingDeviceChange(_ notification: Notification) async {
         guard let request = notification.object as? RecordingDeviceChangeRequest else { return }
-        guard let fallbackDeviceID = request.fallbackDeviceID else {
-            deviceManager.recordingDeviceChangeFinished()
+        guard deviceManager.isCurrent(request) else {
+            _ = deviceManager.finish(request)
+            return
+        }
+        guard let targetDeviceID = request.fallbackDeviceID else {
+            // A safety fallback with no device ends capture but keeps the WAV.
+            guard await finishRecordingAfterInputFailure() else { return }
             showNoFallbackNotification(reason: request.reason)
             return
         }
         guard let recorder else {
-            deviceManager.recordingDeviceChangeFinished()
+            _ = deviceManager.finish(request)
             return
         }
-        let selectedChannels = deviceManager.selectedInputChannels(for: fallbackDeviceID)
-
-        do {
-            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-                audioSetupQueue.async {
-                    do {
-                        try recorder.switchDevice(to: fallbackDeviceID, selectedInputChannels: selectedChannels)
-                        continuation.resume()
-                    } catch {
-                        continuation.resume(throwing: error)
-                    }
+        let selectedChannels = deviceManager.selectedInputChannels(for: targetDeviceID)
+        let outcome: DeviceSwitchOutcome? = await withCheckedContinuation { continuation in
+            audioSetupQueue.async {
+                // Only the thread-safe lease crosses queues, not manager state.
+                guard request.lease.isValid else {
+                    continuation.resume(returning: nil)
+                    return
                 }
+                var switchError: Error?
+                do {
+                    try recorder.switchDevice(to: targetDeviceID, selectedInputChannels: selectedChannels)
+                } catch {
+                    switchError = error
+                }
+                continuation.resume(returning: DeviceSwitchOutcome(
+                    activeDeviceID: recorder.currentDevice,
+                    isCapturing: recorder.isCapturingAudio, error: switchError
+                ))
             }
-
-            deviceManager.recordingDeviceChangeFinished(activeDeviceID: fallbackDeviceID)
-            UserDefaults.standard.set(
-                String(fallbackDeviceID),
-                forKey: "lastUsedMicrophoneDeviceID"
+        }
+        guard deviceManager.isCurrentRecordingSession(request.sessionID) else { return }
+        guard let outcome else {
+            _ = deviceManager.finish(request)
+            return
+        }
+        guard outcome.isCapturing else {
+            guard await finishRecordingAfterInputFailure() else { return }
+            NotificationManager.shared.showNotification(
+                title: String(localized: "Microphone input stopped. The audio already recorded has been kept."),
+                type: .error, duration: 7.0
             )
-            if let deviceName = deviceManager.availableDevices.first(where: { $0.id == fallbackDeviceID })?.name {
-                NotificationManager.shared.showNotification(
-                    title: String(format: String(localized: "Switched to: %@"), deviceName),
-                    type: .info
-                )
-            }
-        } catch {
-            deviceManager.recordingDeviceChangeFinished()
+            return
+        }
+        guard deviceManager.finish(request, activeDeviceID: outcome.activeDeviceID) else { return }
+        if let error = outcome.error {
             logger.error("Failed to switch recording devices: \(error, privacy: .public)")
             NotificationManager.shared.showNotification(
                 title: String(localized: "ForIT Dictate could not switch to another microphone."),
-                type: .error,
-                duration: 7.0
+                type: .error, duration: 7.0
+            )
+            return
+        }
+        UserDefaults.standard.set(String(outcome.activeDeviceID), forKey: "lastUsedMicrophoneDeviceID")
+        if let name = deviceManager.availableDevices.first(where: { $0.id == outcome.activeDeviceID })?.name {
+            NotificationManager.shared.showNotification(
+                title: String(format: String(localized: "Switched to: %@"), name), type: .info
             )
         }
+    }
+
+    private func finishRecordingAfterInputFailure() async -> Bool {
+        let failedSessionID = inputFailurePlaybackSessionID
+        await stopRecording()
+        guard inputFailurePlaybackSessionID == failedSessionID else { return false }
+        await onAudioInputFailure?()
+        return inputFailurePlaybackSessionID == failedSessionID
     }
 
     private func showNoFallbackNotification(reason: RecordingDeviceChangeReason) {

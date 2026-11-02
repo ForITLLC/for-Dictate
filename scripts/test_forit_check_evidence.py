@@ -43,7 +43,7 @@ class CheckEvidenceTests(unittest.TestCase):
             "schema": "forit.dictate.integration-tests.v1", "status": "PASS", "exitCode": 0,
             "sourceCommit": "a" * 40, "sourceSHA256": {"synthetic/source.swift": "b" * 64},
             "jobs": 1, "processGroup": "inherited", "timeoutSeconds": 600,
-            "expectedTestCount": 63, "testCount": 63, "failureCount": 0,
+            "expectedTestCount": 76, "testCount": 76, "failureCount": 0,
             "testSummaryComplete": True, "timeout_cleanup_delegated": False,
             "retained_package_relative_path": None, "syntheticFixtureValid": True,
             "syntheticFixtureSHA256": hashlib.sha256(self.data).hexdigest(),
@@ -53,7 +53,7 @@ class CheckEvidenceTests(unittest.TestCase):
     def retained(self):
         return json.loads(self.destination.read_text(encoding="utf-8"))
 
-    def test_completed_checks_retain_exact_original_utf8_hash_and_entire_receipt(self):
+    def test_completed_checks_require_current_count_and_retain_exact_utf8_receipt(self):
         evidence.write_check_evidence(self.output, self.receipt)
         retained = self.retained()
         self.assertEqual(retained["status"], "PASS")
@@ -63,6 +63,13 @@ class CheckEvidenceTests(unittest.TestCase):
         self.assertEqual(fixture["sha256"], self.receipt["syntheticFixtureSHA256"])
         self.assertEqual(fixture["byteCount"], len(self.data))
         self.assertEqual(self.destination.stat().st_mode & 0o777, 0o600)
+        for expected, actual in ((63, 63), (76, 63), (63, 76), (75, 75), (77, 77)):
+            with self.subTest(expected=expected, actual=actual):
+                self.destination.write_text('{"status":"PASS","stale":true}', encoding="utf-8")
+                receipt = dict(self.receipt, expectedTestCount=expected, testCount=actual)
+                with self.assertRaisesRegex(ValueError, "completed, valid checks"):
+                    evidence.write_check_evidence(self.output, receipt)
+                self.assertFalse(self.destination.exists())
 
     def test_failure_and_timeout_stay_fail_without_reading_live_fixture(self):
         for code, timed_out in [(27, False), (124, True)]:

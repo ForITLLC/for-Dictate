@@ -1,4 +1,4 @@
-import Darwin
+import Darwin.C
 import Foundation
 
 /// Cooperating apps must hold this sibling advisory lock across their entire
@@ -15,11 +15,11 @@ enum SharedVocabularyCatalogLock {
         )
         guard descriptor >= 0 else { throw SharedVocabularyError.lockUnavailable }
         defer { Darwin.close(descriptor) }
-        guard Darwin.flock(descriptor, LOCK_EX | LOCK_NB) == 0 else {
+        guard flock(descriptor, LOCK_EX | LOCK_NB) == 0 else {
             if errno == EWOULDBLOCK || errno == EAGAIN { throw SharedVocabularyError.catalogBusy }
             throw SharedVocabularyError.lockUnavailable
         }
-        defer { _ = Darwin.flock(descriptor, LOCK_UN) }
+        defer { _ = flock(descriptor, LOCK_UN) }
         return try body()
     }
 }

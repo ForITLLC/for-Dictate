@@ -82,7 +82,7 @@ class ReleaseEvidenceTests(unittest.TestCase):
         })
         self.test_result = {
             "schema": "forit.dictate.integration-tests.v1", "status": "PASS", "exitCode": 0,
-            "testCount": 63, "failureCount": 0, "sourceCommit": self.commit,
+            "testCount": 76, "failureCount": 0, "sourceCommit": self.commit,
             "syntheticFixtureValid": True, "syntheticFixtureSHA256": hashlib.sha256(
                 (self.output / "integration-tests/synthetic-history-v1.json").read_bytes()).hexdigest(),
         }
@@ -157,7 +157,8 @@ class ReleaseEvidenceTests(unittest.TestCase):
                 self.assertEqual(self.run_helper(), 1)
 
     def test_test_receipt_requires_exact_count_source_status_and_fixture_hash(self):
-        for update in ({"testCount": 51}, {"testCount": True}, {"failureCount": 1}, {"exitCode": 1},
+        for update in ({"testCount": 63}, {"testCount": 75}, {"testCount": 77},
+                       {"testCount": True}, {"failureCount": 1}, {"exitCode": 1},
                        {"status": "FAIL"}, {"schema": "future"}, {"sourceCommit": "b" * 40},
                        {"syntheticFixtureValid": False}, {"syntheticFixtureSHA256": "0" * 64}):
             with self.subTest(update=update):

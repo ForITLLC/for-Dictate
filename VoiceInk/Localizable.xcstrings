@@ -25293,6 +25293,174 @@
         }
       }
     },
+    "Failed to pause AudioUnit: %lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AudioUnit konnte nicht angehalten werden: %lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to pause AudioUnit: %lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de mettre AudioUnit en pause : %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法暂停 AudioUnit：%lld"
+          }
+        }
+      }
+    },
+    "Microphone input stopped. The audio already recorded has been kept." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Mikrofoneingabe wurde beendet. Die bereits aufgenommenen Audiodaten wurden beibehalten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone input stopped. The audio already recorded has been kept."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’entrée du microphone s’est arrêtée. L’audio déjà enregistré a été conservé."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "麦克风输入已停止。已录制的音频已保留。"
+          }
+        }
+      }
+    },
+    "Follow macOS Default" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der macOS-Standardeingabe folgen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Follow macOS Default"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suivre l’entrée par défaut de macOS"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟随 macOS 默认输入"
+          }
+        }
+      }
+    },
+    "ForIT Dictate follows the input selected in macOS, including during recording." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ForIT Dictate folgt dem in macOS ausgewählten Eingang, auch während der Aufnahme."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ForIT Dictate follows the input selected in macOS, including during recording."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ForIT Dictate suit l’entrée sélectionnée dans macOS, même pendant l’enregistrement."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ForIT Dictate 会跟随 macOS 中选择的输入设备，包括录音期间。"
+          }
+        }
+      }
+    },
+    "macOS Default Input" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS-Standardeingabe"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS Default Input"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrée par défaut de macOS"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS 默认输入"
+          }
+        }
+      }
+    },
+    "Saved Microphone (Unavailable)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gespeichertes Mikrofon (nicht verfügbar)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved Microphone (Unavailable)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone enregistré (indisponible)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已保存的麦克风（不可用）"
+          }
+        }
+      }
+    },
     "System Default" : {
       "localizations" : {
         "de" : {

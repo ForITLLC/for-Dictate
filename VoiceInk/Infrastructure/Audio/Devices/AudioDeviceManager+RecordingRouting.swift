@@ -8,22 +8,6 @@ struct RecordingDeviceResolution {
     let fellBackFromClosedInternalMicrophone: Bool
 }
 
-struct RecordingDeviceSession {
-    var isActive = false
-    var activeDeviceID: AudioDeviceID?
-    var isDeviceChangePending = false
-}
-
-enum RecordingDeviceChangeReason: Equatable {
-    case closedLid
-    case deviceUnavailable
-}
-
-struct RecordingDeviceChangeRequest {
-    let fallbackDeviceID: AudioDeviceID?
-    let reason: RecordingDeviceChangeReason
-}
-
 extension AudioDeviceManager {
     func setupRecordingDeviceRouting() {
         clamshellStateMonitor = ClamshellStateMonitor { [weak self] isClosed in
@@ -31,25 +15,47 @@ extension AudioDeviceManager {
         }
     }
 
-    func beginRecordingSetup(deviceID: AudioDeviceID) {
-        recordingDeviceSession.isActive = true
-        recordingDeviceSession.activeDeviceID = deviceID
+    @discardableResult
+    func beginRecordingSetup(deviceID: AudioDeviceID) -> UUID {
+        recordingDeviceSession.beginSetup(deviceID: deviceID)
     }
 
-    func recordingDidStart(deviceID: AudioDeviceID) {
-        recordingDeviceSession.isActive = true
-        recordingDeviceSession.activeDeviceID = deviceID
-    }
-
-    func recordingDeviceChangeFinished(activeDeviceID: AudioDeviceID? = nil) {
-        if let activeDeviceID {
-            recordingDeviceSession.activeDeviceID = activeDeviceID
+    @discardableResult
+    func recordingDidStart(deviceID: AudioDeviceID, sessionID: UUID) -> Bool {
+        guard recordingDeviceSession.didStart(deviceID: deviceID, sessionID: sessionID) else {
+            return false
         }
-        recordingDeviceSession.isDeviceChangePending = false
+        // Default/lid/device changes during AUHAL setup must use the latest route now.
+        _ = recordingDeviceSession.takeDeferredChange()
+        reconcileRecordingDeviceRouting()
+        return true
+    }
+
+    func isCurrentRecordingSession(_ sessionID: UUID) -> Bool {
+        recordingDeviceSession.isCurrentSession(sessionID)
+    }
+
+    func isCurrent(_ request: RecordingDeviceChangeRequest) -> Bool {
+        recordingDeviceSession.isCurrent(request)
+    }
+
+    @discardableResult
+    func finish(
+        _ request: RecordingDeviceChangeRequest, activeDeviceID: AudioDeviceID? = nil
+    ) -> Bool {
+        let wasCanceled = !request.lease.isValid
+        guard recordingDeviceSession.finish(request, activeDeviceID: activeDeviceID) else {
+            return false
+        }
+        if recordingDeviceSession.takeDeferredChange() != nil {
+            // Re-read Core Audio rather than applying the device captured by an older callback.
+            reconcileRecordingDeviceRouting(suppressingTargetOf: wasCanceled ? nil : request)
+        }
+        return true
     }
 
     func recordingDidStop() {
-        recordingDeviceSession = RecordingDeviceSession()
+        recordingDeviceSession.stop()
     }
 
     func resolveCurrentRecordingDevice(
@@ -124,6 +130,11 @@ extension AudioDeviceManager {
             notifyDeviceChange()
             return
         }
+        if inputMode == .systemDefault {
+            // Reopening the lid can make the system-default microphone usable again.
+            reconcileRecordingDeviceRouting()
+            return
+        }
         guard isClosed,
             let activeRecordingDeviceID,
             isInternalMicrophone(activeRecordingDeviceID)
@@ -135,17 +146,43 @@ extension AudioDeviceManager {
     }
 
     func requestRecordingDeviceChange(reason: RecordingDeviceChangeReason) {
-        guard let activeDeviceID = activeRecordingDeviceID,
-            !recordingDeviceSession.isDeviceChangePending
-        else {
+        requestRecordingDeviceChange(reason: reason, suppressingTargetOf: nil)
+    }
+
+    /// Reconcile actual recording state; changing mode never rewrites a personal device choice.
+    func reconcileRecordingDeviceRouting() {
+        reconcileRecordingDeviceRouting(suppressingTargetOf: nil)
+    }
+
+    private func reconcileRecordingDeviceRouting(
+        suppressingTargetOf completedRequest: RecordingDeviceChangeRequest?
+    ) {
+        guard let activeDeviceID = activeRecordingDeviceID, isRecordingActive else { return }
+        let reason: RecordingDeviceChangeReason
+        if !isOperationalInputDevice(activeDeviceID) {
+            reason = .deviceUnavailable
+        } else if isClamshellClosed && isInternalMicrophone(activeDeviceID) {
+            reason = .closedLid
+        } else if inputMode == .systemDefault {
+            reason = .systemDefaultChanged
+        } else {
             return
         }
+        requestRecordingDeviceChange(reason: reason, suppressingTargetOf: completedRequest)
+    }
 
-        recordingDeviceSession.isDeviceChangePending = true
-        let request = RecordingDeviceChangeRequest(
-            fallbackDeviceID: resolveCurrentRecordingDevice(excluding: activeDeviceID).deviceID,
-            reason: reason
-        )
+    private func requestRecordingDeviceChange(
+        reason: RecordingDeviceChangeReason,
+        suppressingTargetOf completedRequest: RecordingDeviceChangeRequest?
+    ) {
+        guard let activeDeviceID = activeRecordingDeviceID, isRecordingActive else { return }
+        guard reason != .systemDefaultChanged || inputMode == .systemDefault else { return }
+        let excludedDeviceID = reason == .systemDefaultChanged ? nil : activeDeviceID
+        let target = resolveCurrentRecordingDevice(excluding: excludedDeviceID).deviceID
+        if let completedRequest, completedRequest.fallbackDeviceID == target { return }
+        guard let request = recordingDeviceSession.requestChange(to: target, reason: reason) else {
+            return
+        }
         NotificationCenter.default.post(
             name: .recordingDeviceChangeRequired,
             object: request
