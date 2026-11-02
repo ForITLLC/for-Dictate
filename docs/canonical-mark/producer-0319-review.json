@@ -1,0 +1,24 @@
+{
+  "schema": "forit.dictate.published0319-transition-review.v1",
+  "reviewedBase": "5d88fc3c2bd89b1c99e31d0b3b1c928a15eda68a",
+  "Common": "0.31.9/352f567e839b8faf61b6df5840c5275b016addce",
+  "receiptSHA256": "d262d84d4d504cd40f5f761dc070a44fb90491c433eec5e5e5e945ebce8e7c5a",
+  "publicationAndTagPeelVerified": true,
+  "independentReview": "dictate_guard_review immutable Git comparison; PBX exactly3substitutions, bothwarningwrappers preserved",
+  "unchangedFrom0317": [
+    "ProfileMenu",
+    "Mark",
+    "nativeMacimports",
+    "PNG",
+    "Package.swift",
+    "brandexporter"
+  ],
+  "otherProducerDelta": "sharedfield/composerlayoutchanges require actualconsumerqualification",
+  "publishedPolicy": "BR3/VS1 advisory, analysis findings retained; generatorApplebindings sourceonly",
+  "PBXSHA256": "0631cdbbfc7117cc10ac86df0fcd10e8c0347276e876bdf9086698d344eb10ec",
+  "committedLock": "original27pins byteexact; nofakeCommonpin, genuineSDKresolverwillupdate",
+  "activeOlderRun": 40261340613,
+  "noDuplicateRelease": true,
+  "SDKorNativeExecutedFor0319": false,
+  "freshProducerCorePASSClaimed": false
+}

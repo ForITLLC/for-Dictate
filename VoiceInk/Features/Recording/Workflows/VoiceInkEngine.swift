@@ -98,6 +98,7 @@ class VoiceInkEngine: NSObject, ObservableObject {
     var currentSession: TranscriptionSession?
     private var currentSessionTranscriptionConfiguration: TranscriptionRuntimeConfiguration?
     private var activeRecordingStartID: UUID?
+    private var resourceCleanupDepth = 0
     private var activePipelineTranscriptionID: UUID?
     private var canceledPipelineTranscriptionIDs = Set<UUID>()
     private var activeRecordingUseCase: RecordingUseCase = .newSession
@@ -160,6 +161,16 @@ class VoiceInkEngine: NSObject, ObservableObject {
 
         super.init()
 
+        recorder.onAudioInputFailure = { [weak self] in
+            guard let self else { return }
+            if self.recordingState == .recording {
+                // Use the normal stop/transcription path for the WAV already captured.
+                await self.toggleRecord()
+            } else if self.recordingState == .starting {
+                // A startup failure retains any captured audio in canceled history.
+                await self.cancelRecording()
+            }
+        }
         setupNotifications()
         createRecordingsDirectoryIfNeeded()
     }
@@ -219,6 +230,11 @@ class VoiceInkEngine: NSObject, ObservableObject {
                 await cleanupResources()
             }
         } else {
+            // Shared model teardown must finish before admitting another capture.
+            guard resourceCleanupDepth == 0 else { return }
+            let startID = UUID()
+            activeRecordingStartID = startID
+            recordingState = .starting
             let canContinueAssistantSession = isAssistantFollowUp && assistantSession.canSendFollowUp
             let recordingUseCase: RecordingUseCase = canContinueAssistantSession ? .assistantFollowUp : .newSession
 
@@ -233,14 +249,15 @@ class VoiceInkEngine: NSObject, ObservableObject {
             }
 
             requestRecordPermission { [self] granted in
+                guard self.activeRecordingStartID == startID else { return }
                 if granted {
                     Task { @MainActor [self] in
+                        guard self.activeRecordingStartID == startID else { return }
                         guard await self.passesRecordingPreflight() else {
+                            if self.activeRecordingStartID == startID { self.activeRecordingStartID = nil }
                             return
                         }
-
-                        let startID = UUID()
-                        self.activeRecordingStartID = startID
+                        guard self.activeRecordingStartID == startID, self.resourceCleanupDepth == 0 else { return }
                         let activeModeTask = ActiveWindowService.shared.beginApplyingConfiguration(modeId: modeId) {
                             [weak self] in
                             guard let self else { return false }
@@ -402,20 +419,25 @@ class VoiceInkEngine: NSObject, ObservableObject {
 
                         } catch {
                             activeModeTask.cancel()
+                            // An older hardware-start completion cannot clean up a newer session.
+                            guard self.activeRecordingStartID == startID else { return }
+                            let failedRecordingURL = self.recordedFile
                             self.logger.error("Recording failed to start: \(error, privacy: .public)")
                             let audioFailure = self.recordingAudioFailure(for: error)
                             if audioFailure == nil {
                                 await self.recorder.stopRecording()
+                                guard self.activeRecordingStartID == startID else { return }
                             }
                             self.cancelCurrentSession()
-                            if let recordedFile = self.recordedFile {
-                                try? FileManager.default.removeItem(at: recordedFile)
+                            if let failedRecordingURL {
+                                try? FileManager.default.removeItem(at: failedRecordingURL)
                             }
                             self.recordingState = .idle
                             self.recordedFile = nil
                             self.activeRecordingStartID = nil
                             self.clearActiveRecordingContext()
                             await self.cleanupResources()
+                            guard self.activeRecordingStartID == nil, self.recordingState == .idle else { return }
                             if let failure = audioFailure {
                                 NotificationManager.shared.showNotification(
                                     title: failure.title,
@@ -431,6 +453,9 @@ class VoiceInkEngine: NSObject, ObservableObject {
                         }
                     }
                 } else {
+                    guard self.activeRecordingStartID == startID else { return }
+                    self.activeRecordingStartID = nil
+                    self.recordingState = .idle
                     logger.error("Recording permission denied")
                 }
             }
@@ -869,6 +894,8 @@ class VoiceInkEngine: NSObject, ObservableObject {
     }
 
     func cleanupResources() async {
+        resourceCleanupDepth += 1
+        defer { resourceCleanupDepth -= 1 }
         logger.notice("cleanupResources: releasing model resources")
         activeRecordingStartID = nil
         activeRecordingUseCase = .newSession

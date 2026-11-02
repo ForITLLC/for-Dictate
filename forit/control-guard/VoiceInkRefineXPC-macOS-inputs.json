@@ -1,0 +1,13 @@
+{
+  "schema": "forit.control-guard.inputs.v1",
+  "root": "../..",
+  "target": "VoiceInkRefineXPC",
+  "platform": "macOS",
+  "sources": [
+    "Shared/VoiceInkRefineXPCProtocol.swift",
+    "VoiceInkRefineXPC/VoiceInkRefineInferenceEngine.swift",
+    "VoiceInkRefineXPC/VoiceInkRefineXPCService.swift",
+    "VoiceInkRefineXPC/main.swift"
+  ],
+  "bridges": []
+}

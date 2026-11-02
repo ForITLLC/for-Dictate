@@ -249,116 +249,93 @@ final class CoreAudioRecorder: @unchecked Sendable {
     var currentRecordingURL: URL? { recordingURL }
     var currentDevice: AudioDeviceID { currentDeviceID }
 
-    /// Switches to a new input device mid-recording without stopping the file write
+    /// Atomic capture status, safe to snapshot on the serial hardware queue after a switch.
+    var isCapturingAudio: Bool { recordingActive.load(ordering: .acquiring) }
+
+    /// Keep the same output file and streaming callback throughout a device change.
     func switchDevice(to newDeviceID: AudioDeviceID, selectedInputChannels: [UInt32]? = nil) throws {
         guard isRecording, let unit = audioUnit else {
             throw CoreAudioRecorderError.audioUnitNotInitialized
         }
-
-        // Don't switch if it's the same device
         guard newDeviceID != currentDeviceID else { return }
+        try validateDevice(newDeviceID)
 
-        let oldDeviceID = currentDeviceID
-        logger.notice(
-            "🎙️ Switching recording device from \(oldDeviceID, privacy: .public) to \(newDeviceID, privacy: .public)")
+        let previousDeviceID = currentDeviceID
+        let previousSelection = captureChannelSelection
+        do {
+            try reconfigureRecordingInput(unit, deviceID: newDeviceID, selectedInputChannels: selectedInputChannels)
+        } catch {
+            let switchError = error
+            logger.error("Microphone switch failed; restoring the previous input: \(switchError, privacy: .public)")
+            do {
+                try reconfigureRecordingInput(
+                    unit, deviceID: previousDeviceID, selectedInputChannels: nil,
+                    restoring: previousSelection
+                )
+            } catch {
+                // Keep the WAV open for the normal stop/finalization path. The caller
+                // snapshots isCapturingAudio and ends the session instead of claiming
+                // an active recording while hardware is stopped.
+                recordingActive.store(false, ordering: .releasing)
+                // AUHAL may now be bound to a partially configured target. Force
+                // the next start to rebuild instead of trusting the previous ID.
+                currentDeviceID = 0
+                logger.error("Previous microphone could not be restored: \(error, privacy: .public)")
+            }
+            throw switchError
+        }
+    }
 
-        // Step 1: Stop the AudioUnit (but keep file open)
+    private func reconfigureRecordingInput(
+        _ unit: AudioUnit,
+        deviceID: AudioDeviceID,
+        selectedInputChannels: [UInt32]?,
+        restoring selection: AudioInputChannelSelection? = nil
+    ) throws {
+        try validateDevice(deviceID)
         recordingActive.store(false, ordering: .releasing)
         var status = AudioOutputUnitStop(unit)
-        if status != noErr {
-            logger.warning("🎙️ Warning: AudioOutputUnitStop returned \(status, privacy: .public)")
-        }
-
+        guard status == noErr else { throw CoreAudioRecorderError.failedToStop(status: status) }
         waitForRenderCallbacksToFinish()
         drainAudioProcessingQueue()
         logDroppedInputBufferCounters(context: "device-switch")
 
-        // Step 2: Uninitialize to allow reconfiguration
-        status = AudioUnitUninitialize(unit)
-        if status != noErr {
-            logger.warning("🎙️ Warning: AudioUnitUninitialize returned \(status, privacy: .public)")
+        if isAudioUnitInitialized {
+            status = AudioUnitUninitialize(unit)
+            guard status == noErr else { throw CoreAudioRecorderError.failedToInitialize(status: status) }
+            isAudioUnitInitialized = false
         }
-        isAudioUnitInitialized = false
-
-        // Step 3: Set the new device
-        var device = newDeviceID
+        var device = deviceID
         status = AudioUnitSetProperty(
-            unit,
-            kAudioOutputUnitProperty_CurrentDevice,
-            kAudioUnitScope_Global,
-            0,
-            &device,
-            UInt32(MemoryLayout<AudioDeviceID>.size)
+            unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0,
+            &device, UInt32(MemoryLayout<AudioDeviceID>.size)
         )
+        guard status == noErr else { throw CoreAudioRecorderError.failedToSetDevice(status: status) }
 
-        if status != noErr {
-            // Try to recover by restarting with old device
-            logger.error("Failed to set new device: \(status, privacy: .public). Attempting recovery...")
-            var recoveryDevice = oldDeviceID
-            AudioUnitSetProperty(
-                unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &recoveryDevice,
-                UInt32(MemoryLayout<AudioDeviceID>.size))
-            let initializeStatus = AudioUnitInitialize(unit)
-            isAudioUnitInitialized = initializeStatus == noErr
-            if initializeStatus == noErr {
-                let startStatus = AudioOutputUnitStart(unit)
-                if startStatus == noErr {
-                    recordingActive.store(true, ordering: .releasing)
-                }
-            }
-            throw CoreAudioRecorderError.failedToSetDevice(status: status)
-        }
-
-        // Step 4: Get new device format
-        var formatSize = UInt32(MemoryLayout<AudioStreamBasicDescription>.size)
-        var newDeviceFormat = AudioStreamBasicDescription()
+        var format = AudioStreamBasicDescription()
+        var size = UInt32(MemoryLayout<AudioStreamBasicDescription>.size)
         status = AudioUnitGetProperty(
-            unit,
-            kAudioUnitProperty_StreamFormat,
-            kAudioUnitScope_Input,
-            1,
-            &newDeviceFormat,
-            &formatSize
+            unit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 1, &format, &size
         )
-
-        if status != noErr {
-            throw CoreAudioRecorderError.failedToGetDeviceFormat(status: status)
-        }
-
-        // Step 5: Configure the callback and apply this device's input selection.
-        let newCaptureChannelCount = try configureCaptureFormat(
-            deviceID: newDeviceID,
-            deviceFormat: newDeviceFormat,
-            selectedInputChannels: selectedInputChannels
+        guard status == noErr else { throw CoreAudioRecorderError.failedToGetDeviceFormat(status: status) }
+        let channels = try configureCaptureFormat(
+            deviceID: deviceID, deviceFormat: format,
+            selectedInputChannels: selectedInputChannels, restoring: selection
         )
-
-        // Step 6: Reallocate buffers if needed
         allocateAudioBuffers(
-            maxFrames: renderFrameCapacity(for: newDeviceID),
-            channelCount: newCaptureChannelCount,
-            inputSampleRate: newDeviceFormat.mSampleRate,
-            resetQueuedAudio: true
+            maxFrames: renderFrameCapacity(for: deviceID), channelCount: channels,
+            inputSampleRate: format.mSampleRate, resetQueuedAudio: true
         )
-
-        // Update stored format
-        deviceFormat = newDeviceFormat
-        captureChannelCount = newCaptureChannelCount
-        currentDeviceID = newDeviceID
-
-        // Step 7: Reinitialize and restart
+        deviceFormat = format
+        captureChannelCount = channels
         status = AudioUnitInitialize(unit)
-        if status != noErr {
-            throw CoreAudioRecorderError.failedToInitialize(status: status)
-        }
+        guard status == noErr else { throw CoreAudioRecorderError.failedToInitialize(status: status) }
         isAudioUnitInitialized = true
-
         status = AudioOutputUnitStart(unit)
-        if status != noErr {
-            throw CoreAudioRecorderError.failedToStart(status: status)
-        }
+        guard status == noErr else { throw CoreAudioRecorderError.failedToStart(status: status) }
+        currentDeviceID = deviceID
         recordingActive.store(true, ordering: .releasing)
-
-        logger.notice("🎙️ Successfully switched to device \(newDeviceID, privacy: .public)")
+        logger.notice("Recording input is now device \(deviceID, privacy: .public)")
     }
 
     // MARK: - AudioUnit Setup
@@ -511,19 +488,21 @@ final class CoreAudioRecorder: @unchecked Sendable {
     private func configureCaptureFormat(
         deviceID: AudioDeviceID,
         deviceFormat: AudioStreamBasicDescription,
-        selectedInputChannels: [UInt32]?
+        selectedInputChannels: [UInt32]?,
+        restoring restoredSelection: AudioInputChannelSelection? = nil
     ) throws -> UInt32 {
         guard let audioUnit else {
             throw CoreAudioRecorderError.audioUnitNotInitialized
         }
 
-        let selection = AudioInputChannelSelection.resolve(
+        let selection = restoredSelection ?? AudioInputChannelSelection.resolve(
             deviceChannelCount: deviceFormat.mChannelsPerFrame,
             preferredStereoChannels: getPreferredInputChannels(deviceID: deviceID),
             selectedChannels: selectedInputChannels
         )
         let channelCount = UInt32(selection.deviceChannelIndices.count)
-        guard channelCount > 0 else {
+        guard channelCount > 0, deviceFormat.mSampleRate.isFinite, deviceFormat.mSampleRate > 0,
+              selection.deviceChannelIndices.allSatisfy({ $0 >= 0 && UInt32($0) < deviceFormat.mChannelsPerFrame }) else {
             throw CoreAudioRecorderError.failedToSetFormat(status: kAudio_ParamError)
         }
 
@@ -1317,6 +1296,7 @@ enum CoreAudioRecorderError: LocalizedError {
     case failedToSetFileFormat(status: OSStatus)
     case failedToInitialize(status: OSStatus)
     case failedToStart(status: OSStatus)
+    case failedToStop(status: OSStatus)
 
     var errorDescription: String? {
         switch self {
@@ -1348,6 +1328,8 @@ enum CoreAudioRecorderError: LocalizedError {
             return String(format: String(localized: "Failed to initialize AudioUnit: %lld"), Int64(status))
         case .failedToStart(let status):
             return String(format: String(localized: "Failed to start AudioUnit: %lld"), Int64(status))
+        case .failedToStop(let status):
+            return String(format: String(localized: "Failed to pause AudioUnit: %lld"), Int64(status))
         }
     }
 }

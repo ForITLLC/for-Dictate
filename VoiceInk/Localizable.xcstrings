@@ -3155,7 +3155,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ein genauerer Blick auf deine VoiceInk-Nutzung."
+            "value" : "Ein genauerer Blick auf deine ForIT Dictate-Nutzung."
           }
         },
         "fr" : {
@@ -6590,7 +6590,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceInk-Lizenz kaufen"
+            "value" : "ForIT Dictate-Lizenz kaufen"
           }
         },
         "fr" : {
@@ -7058,7 +7058,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wähle eine VoiceInk-Wörterbuchdatei im JSON-Format."
+            "value" : "Wähle eine ForIT Dictate-Wörterbuchdatei im JSON-Format."
           }
         },
         "fr" : {
@@ -10307,7 +10307,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceInk-Aufnahme schließen und aktive Aufnahme abbrechen."
+            "value" : "ForIT Dictate-Aufnahme schließen und aktive Aufnahme abbrechen."
           }
         },
         "fr" : {
@@ -10329,7 +10329,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceInk-Aufnahme schließen"
+            "value" : "ForIT Dictate-Aufnahme schließen"
           }
         },
         "fr" : {
@@ -12293,7 +12293,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceInk-Einstellungen exportieren"
+            "value" : "ForIT Dictate-Einstellungen exportieren"
           }
         },
         "fr" : {
@@ -14231,7 +14231,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceInk-Einstellungen importieren"
+            "value" : "ForIT Dictate-Einstellungen importieren"
           }
         },
         "fr" : {
@@ -19350,7 +19350,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Öffne aktuelle Transkriptionen, ohne das VoiceInk-Hauptfenster zu öffnen. Suche, wähle eine aus und drücke die Eingabetaste, um sie in deine aktuelle App einzufügen."
+            "value" : "Öffne aktuelle Transkriptionen, ohne das ForIT Dictate-Hauptfenster zu öffnen. Suche, wähle eine aus und drücke die Eingabetaste, um sie in deine aktuelle App einzufügen."
           }
         },
         "fr" : {
@@ -19442,7 +19442,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceInk-Update %@ öffnen"
+            "value" : "ForIT Dictate-Update %@ öffnen"
           }
         },
         "fr" : {
@@ -20769,7 +20769,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceInk-Aktivität wird zusammengeführt."
+            "value" : "ForIT Dictate-Aktivität wird zusammengeführt."
           }
         },
         "fr" : {
@@ -22067,7 +22067,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Erforderlich für VoiceInk-Tastaturkürzel und app-weite Steuerung."
+            "value" : "Erforderlich für ForIT Dictate-Tastaturkürzel und app-weite Steuerung."
           }
         },
         "fr" : {
@@ -24784,7 +24784,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceInk-Aufnahme für Sprachtranskription starten oder stoppen."
+            "value" : "ForIT Dictate-Aufnahme für Sprachtranskription starten oder stoppen."
           }
         },
         "fr" : {
@@ -25289,6 +25289,174 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "系统"
+          }
+        }
+      }
+    },
+    "Failed to pause AudioUnit: %lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "AudioUnit konnte nicht angehalten werden: %lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to pause AudioUnit: %lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Impossible de mettre AudioUnit en pause : %lld"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法暂停 AudioUnit：%lld"
+          }
+        }
+      }
+    },
+    "Microphone input stopped. The audio already recorded has been kept." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Mikrofoneingabe wurde beendet. Die bereits aufgenommenen Audiodaten wurden beibehalten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone input stopped. The audio already recorded has been kept."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L’entrée du microphone s’est arrêtée. L’audio déjà enregistré a été conservé."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "麦克风输入已停止。已录制的音频已保留。"
+          }
+        }
+      }
+    },
+    "Follow macOS Default" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der macOS-Standardeingabe folgen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Follow macOS Default"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suivre l’entrée par défaut de macOS"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟随 macOS 默认输入"
+          }
+        }
+      }
+    },
+    "ForIT Dictate follows the input selected in macOS, including during recording." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ForIT Dictate folgt dem in macOS ausgewählten Eingang, auch während der Aufnahme."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ForIT Dictate follows the input selected in macOS, including during recording."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ForIT Dictate suit l’entrée sélectionnée dans macOS, même pendant l’enregistrement."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ForIT Dictate 会跟随 macOS 中选择的输入设备，包括录音期间。"
+          }
+        }
+      }
+    },
+    "macOS Default Input" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS-Standardeingabe"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS Default Input"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entrée par défaut de macOS"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "macOS 默认输入"
+          }
+        }
+      }
+    },
+    "Saved Microphone (Unavailable)" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gespeichertes Mikrofon (nicht verfügbar)"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saved Microphone (Unavailable)"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Microphone enregistré (indisponible)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已保存的麦克风（不可用）"
           }
         }
       }
@@ -26726,7 +26894,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Diese Datei enthält kein gültiges VoiceInk-Wörterbuch."
+            "value" : "Diese Datei enthält kein gültiges ForIT Dictate-Wörterbuch."
           }
         },
         "fr" : {
@@ -27186,7 +27354,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceInk-Aufnahme umschalten"
+            "value" : "ForIT Dictate-Aufnahme umschalten"
           }
         },
         "fr" : {
@@ -28993,7 +29161,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceInk-App ist nicht verfügbar"
+            "value" : "ForIT Dictate-App ist nicht verfügbar"
           }
         },
         "fr" : {
@@ -29244,7 +29412,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceInk-Wirkungsübersicht"
+            "value" : "ForIT Dictate-Wirkungsübersicht"
           }
         },
         "fr" : {
@@ -29266,7 +29434,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceInk-Einblicke"
+            "value" : "ForIT Dictate-Einblicke"
           }
         },
         "fr" : {
@@ -29420,7 +29588,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceInk-Modi"
+            "value" : "ForIT Dictate-Modi"
           }
         },
         "fr" : {
@@ -29442,7 +29610,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceInk-Modi umfassen Diktat, Verbesserung, E-Mail, Assistent, Umschreiben, Fragen, Zusammenfassen und Übersetzen."
+            "value" : "ForIT Dictate-Modi umfassen Diktat, Verbesserung, E-Mail, Assistent, Umschreiben, Fragen, Zusammenfassen und Übersetzen."
           }
         },
         "fr" : {
@@ -29512,7 +29680,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceInk-Fortschritt"
+            "value" : "ForIT Dictate-Fortschritt"
           }
         },
         "fr" : {
@@ -29556,7 +29724,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceInk-Aufnahme geschlossen"
+            "value" : "ForIT Dictate-Aufnahme geschlossen"
           }
         },
         "fr" : {
@@ -29578,7 +29746,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceInk-Aufnahme umgeschaltet"
+            "value" : "ForIT Dictate-Aufnahme umgeschaltet"
           }
         },
         "fr" : {
@@ -29600,7 +29768,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "VoiceInk-Aufnahmedienst ist nicht verfügbar"
+            "value" : "ForIT Dictate-Aufnahmedienst ist nicht verfügbar"
           }
         },
         "fr" : {
@@ -31041,6 +31209,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "你的字数和基准对比会显示在这里。"
+          }
+        }
+      }
+    },
+    "Clipboard changed during paste. Check the text field. Your dictation is saved in History.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clipboard changed during paste. Check the text field. Your dictation is saved in History."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Zwischenablage hat sich beim Einfügen geändert. Prüfe das Textfeld. Dein Diktat ist im Verlauf gespeichert."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le presse-papiers a changé pendant le collage. Vérifiez le champ de texte. Votre dictée est enregistrée dans l’historique."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "粘贴时剪贴板发生了更改。请检查文本框。你的听写已保存在历史记录中。"
           }
         }
       }

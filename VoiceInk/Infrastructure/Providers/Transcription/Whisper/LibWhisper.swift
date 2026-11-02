@@ -29,7 +29,16 @@ actor WhisperContext {
         }
     }
 
-    func fullTranscribe(samples: [Float]) -> Bool {
+    /// Keep configuration, decoding and result collection in one actor turn. The
+    /// loaded context may also serve prewarming, imports and history retries.
+    func transcribe(samples: [Float], language: String?, prompt: String?) -> String? {
+        self.language = language
+        self.prompt = prompt
+        guard fullTranscribe(samples: samples) else { return nil }
+        return getTranscription()
+    }
+
+    private func fullTranscribe(samples: [Float]) -> Bool {
         guard let context = context else { return false }
 
         let maxThreads = max(1, min(8, cpuCount() - 2))
@@ -101,7 +110,7 @@ actor WhisperContext {
         return success
     }
 
-    func getTranscription() -> String {
+    private func getTranscription() -> String {
         guard let context = context else { return "" }
         var transcription = ""
         for i in 0..<whisper_full_n_segments(context) {

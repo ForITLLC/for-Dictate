@@ -1,0 +1,127 @@
+{
+  "schema": "forit.dictate.producer-0317-independent-review.v1",
+  "observedUTC": "2026-10-24T18:31:58.060305+00:00",
+  "verdict": "PASS_SOURCE_REVIEW_WITH_EXPECTED_COMMON_RESOLUTION_HOLD",
+  "reviewedBase": "d3f0c7500ef59c5315e615f94ac154c2f8cf2de2",
+  "commonVersion": "0.31.7",
+  "commonRevision": "927a394b803c7c425517e35b532d44037fc279d9",
+  "commonTree": "ddcc9addf26c58c704ffc20709f127e6472c9e88",
+  "publicationReceiptSHA256": "60b301c024f20b72c012fc6c3c10ffb5db33aec7707377f9eb01a492f7c7625b",
+  "lock": {
+    "path": "VoiceInk.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved",
+    "byteExactOriginalCanonicalCommit": "0fef1a4b073ab5cc95ab7d0bb6e04786ffe0cf3c",
+    "sha256": "0591af3250b7733caa9184bc7a29fb32dd276e469f3bafda569ed94c858ff2f8",
+    "originalPinsPreserved": 27,
+    "CommonPinPresent": false,
+    "originalOriginHashPreserved": true,
+    "SDKResolutionPerformed": false
+  },
+  "revisionBinding": {
+    "PBXExactVersion0317": true,
+    "bothMandatoryFirstEveryBuildPhaseRevisions927a": true,
+    "configRevision927a": true,
+    "phaseSemanticsOtherwiseUnchangedFromPriorReviewedHead": true
+  },
+  "actualReadOnlyPublishedGraphResults": {
+    "VoiceInk": {
+      "state": "HOLD",
+      "actualError": "remote package needs exactly one matching Package.resolved pin: https://github.com/ForITLLC/for-iCommon.git"
+    },
+    "VoiceInkRefineXPC": {
+      "state": "HOLD",
+      "actualError": "remote package needs exactly one matching Package.resolved pin: https://github.com/ForITLLC/for-iCommon.git"
+    }
+  },
+  "graphMethod": "Exact 927a source_graph/pbx_project/forit-gate/yamlish Git objects exported to temporary directory; read-only four-argument load_graph calls. No production-root attestation or SDK execution. Actual output recorded in this review turn.",
+  "unchangedPublishedObjectsSHA256": {
+    "Package.swift": "914e05dc866a97b76fbc618f02bce5f6fc17b755266e866a50396f6a8be22bd5",
+    "Sources/ForITCommon/App/ForITBarMark.swift": "4db496ebabd04ee0f151b55989b2c716f8678dd2011ed73a2bf3a35c6e07d8f6",
+    "Sources/ForITCommon/Brand/ForITMark.swift": "2d599b04e7f2aab79df4c7703a582c4134083e4a1b6cc7c5b135c8aae41228ae",
+    "Sources/ForITCommon/Resources/forit-hex.png": "c885ca50c30f5a4fcf55cb8f083d055831ed8878aff39b9fb782bd05a104edd8",
+    "Scripts/brand-export.py": "083db68e0e7f37ae1cc1394146e177fa7d42162d1b7f3b11005c436f23fc3701"
+  },
+  "profileAPI": {
+    "existingDictateCallShapeRetained": true,
+    "oldOmittedSendFeedbackLabelRemainsEnvironmentDriven": true,
+    "newExplicitNilFeedbackOverloadIsOptIn": true,
+    "profileRendererRefactoredIntoProfileCore": true,
+    "macInlineTitleStillNoOpAndLeadingPlacementNavigation": true,
+    "nativeOrPixelCompatibilityProven": false
+  },
+  "consumerFoundationImports": {
+    "paths": [
+      "VoiceInk/App/Lifecycle/AppDelegate.swift",
+      "VoiceInk/App/Windows/WindowManager.swift",
+      "VoiceInk/Features/History/Presentation/QuickHistoryController.swift",
+      "VoiceInk/Features/Onboarding/Components/OnboardingLockedTextEditor.swift"
+    ],
+    "eachDiffExactlyOneLeadingFoundationImport": true,
+    "allRemainingBytesEqualPriorHead": true,
+    "callbacksAndStateLogicUnchanged": true,
+    "compilerSuccessClaimed": false
+  },
+  "foundationContract": {
+    "publishedLocations": [
+      "Scripts/control-guard/README.md:956",
+      "Scripts/control-guard/framework_attribute_contract.py:18"
+    ],
+    "NSObjectRoleRequiresDirectFoundation": true,
+    "CombineIsNotFoundationIngress": true,
+    "unknownAncestryAliasesShadowsRemainRefusals": true
+  },
+  "generatorReview": {
+    "executed": false,
+    "publishedLocation": "Scripts/control-guard/br3_adoption.py:150-168",
+    "knownAppleBindingBlockerFrom0316Superseded": true,
+    "requiredPredicate": [
+      "classification TOOL_GENERATED_ASSET_BINDINGS",
+      "generatorRule com.apple.compilers.assetcatalog",
+      "sourcePolicyAdmitted is true",
+      "authoredSourceExemption is false",
+      "nativeToolIdentity and actualCompilerInputClosure remain UNVERIFIED_PENDING_NATIVE_BUILD",
+      "assetInputSHA256 is a dictionary and each hash agrees with result.manifests"
+    ],
+    "bindingsRetainedInPLAN": true,
+    "customOrUnsupportedGeneratedRequirementsStillRefuse": true,
+    "actualPlanReadinessProven": false
+  },
+  "knownProducerVisualGap": {
+    "source": "producer relay msg_b61b932309d7; no independent screenshot measurement in this source review",
+    "finding": "AX5 Reply-editor/Send overlap 149x16.5pt",
+    "closed": false,
+    "consumerOrWholeAppPixelAcceptance": false
+  },
+  "documentation": {
+    "current0317AndUnresolvedLockExplicit": true,
+    "0314And0316ReportsHistorical": true,
+    "publishedProfileRenderingDeltaAcknowledged": true,
+    "generatorFixAcknowledgedWithoutExecutionClaim": true,
+    "nativePlanUnrun": true
+  },
+  "reviewedFilesSHA256": {
+    "VoiceInk.xcodeproj/project.pbxproj": "ffd4db48f8f52959ce79f5ef55af1b684686b90082d4b994d5f82307d73e2d92",
+    "VoiceInk.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved": "0591af3250b7733caa9184bc7a29fb32dd276e469f3bafda569ed94c858ff2f8",
+    "forit-app.json": "1d6da191b76e2e891ca53acdc8f523973b39bdca91d0eb9c2567fb9d74e0edb6",
+    "forit/control-guard/README.md": "de3cde1e6e7931a5348eef9746ff1b1092a51e628a151e27ca40790f38b9f0a4",
+    "docs/canonical-mark/rollout.md": "9d1fa3b9d7db1ed56cc39991b3e9ec6a384d1dda74f757c34ad5f2c4517f8b37",
+    "docs/canonical-mark/source-checks.json": "e45db510f89560efbf1bbd9fc62ee41d7280c9ba854f4366401e994efc2eec1a",
+    "docs/canonical-mark/native-plan.json": "ef6e07b2df0c806e05bd1de029be5442c4f0a68a975b5e51ed9a38666231abc2",
+    "VoiceInk/App/Lifecycle/AppDelegate.swift": "a2860aadda44ac3500c85295c36925e0c6ff25a2c6318fb14ba7c165ed7b1143",
+    "VoiceInk/App/Windows/WindowManager.swift": "7fd1082e3f94834c76188740fc75a6199d35db9b86d7d3671d6e2023c5836d1b",
+    "VoiceInk/Features/History/Presentation/QuickHistoryController.swift": "7617042e4f4ee1326df2715e7ab32ea25ae5cd4b68cedf49bec99dfd62a5852a",
+    "VoiceInk/Features/Onboarding/Components/OnboardingLockedTextEditor.swift": "dfbaa41cb3994924f88d5e826aa177c6b915e3c6432994112e79ae0fa48c35c6"
+  },
+  "blockingSourceReviewFindings": [],
+  "remainingHolds": [
+    "existing admitted A0 genuine SDK resolution and canonical Common lock evidence",
+    "official exact tool checkout and maintained policy/release pairing",
+    "fresh final-workspace generator plan and guard reports",
+    "consumer compile/native/AX/render/system-tray qualification",
+    "reported producer AX5 visual gap remains open",
+    "actual upload/ASC distribution evidence remains unknown"
+  ],
+  "nativeOrSDKExecuted": false,
+  "productionGuardPASSClaimed": false,
+  "externalSendsPerformed": false,
+  "onlyReviewArtifactWritten": true
+}

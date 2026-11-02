@@ -1,3 +1,4 @@
+import Foundation
 import Cocoa
 import SwiftUI
 import UniformTypeIdentifiers

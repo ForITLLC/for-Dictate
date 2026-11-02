@@ -57,8 +57,8 @@ enum CustomCommandTemplate: String, CaseIterable, Identifiable {
                 """
         case .appendToJournal:
             return """
-                mkdir -p "$HOME/Documents/VoiceInk"
-                journal="$HOME/Documents/VoiceInk/journal.md"
+                mkdir -p "$HOME/Documents/ForIT Dictate"
+                journal="$HOME/Documents/ForIT Dictate/journal.md"
                 timestamp=$(date "+%Y-%m-%d %H:%M")
                 printf -- "- **%s** %s\\n" "$timestamp" "$VOICEINK_TRANSCRIPT" >> "$journal"
                 """

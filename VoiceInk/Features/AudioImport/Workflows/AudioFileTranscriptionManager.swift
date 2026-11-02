@@ -262,6 +262,9 @@ class AudioTranscriptionManager: ObservableObject {
                 )
             }
 
+            // Audio import constructs a pending row, then persists it only after successful work.
+            try Task.checkCancellation()
+            transcription.transcriptionStatus = TranscriptionStatus.completed.rawValue
             modelContext.insert(transcription)
             try modelContext.save()
             NotificationCenter.default.post(name: .transcriptionCreated, object: transcription)

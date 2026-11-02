@@ -8,15 +8,7 @@ class CursorPaster {
     private typealias ClipboardSnapshot = [ClipboardItemSnapshot]
     private static let logger = Logger(subsystem: "io.forit.dictate", category: "CursorPaster")
 
-    enum PasteResult: Equatable {
-        case commandPosted
-        case commandNotPosted
-        case commandPartiallyPosted
-
-        var didPostPasteCommand: Bool {
-            self == .commandPosted
-        }
-    }
+    typealias PasteResult = ClipboardPasteResult
 
     struct PasteOutcome {
         let result: PasteResult
@@ -73,6 +65,7 @@ class CursorPaster {
         let shouldRestoreClipboard = pasteboard != nil
             && UserDefaults.standard.bool(forKey: "restoreClipboardAfterPaste")
         let savedContents: ClipboardSnapshot
+        let clipboardOwnership: ClipboardPasteOwnership?
         if let pasteboard {
             savedContents = shouldRestoreClipboard ? snapshotClipboard(from: pasteboard) : []
 
@@ -80,21 +73,44 @@ class CursorPaster {
                 ClipboardManager.setClipboard(
                     textToDeliver,
                     transient: shouldRestoreClipboard,
-                    sessionID: shouldRestoreClipboard ? sessionID : nil
+                    sessionID: sessionID
                 )
             else {
                 logger.error("Failed to prepare clipboard for paste id=\(sessionID, privacy: .public)")
                 return (PasteOutcome(result: .commandNotPosted, autoLearnGeneration: nil), nil)
             }
 
-            await wait(prePasteDelay)
+            clipboardOwnership = ClipboardPasteOwnership(
+                text: textToDeliver, sessionID: sessionID, changeCount: pasteboard.changeCount
+            )
         } else {
             savedContents = []
+            clipboardOwnership = nil
         }
 
-        let application = NSWorkspace.shared.frontmostApplication
+        var application: NSRunningApplication?
+        let pasteResult = await ClipboardPasteCoordinator.deliver(
+            ownership: clipboardOwnership,
+            current: {
+                guard let pasteboard else { return .init(text: nil, sessionID: nil, changeCount: -1) }
+                return clipboardSnapshot(from: pasteboard)
+            },
+            waitBeforePaste: { await wait(prePasteDelay) },
+            dispatch: {
+                application = NSWorkspace.shared.frontmostApplication
+                return await deliverText(
+                    textToDeliver, method: method, sessionID: sessionID,
+                    clipboardOwnership: clipboardOwnership
+                )
+            }
+        )
+        if pasteResult == .clipboardChanged {
+            NotificationManager.shared.showNotification(
+                title: String(localized: "Clipboard changed during paste. Check the text field. Your dictation is saved in History."),
+                type: .warning
+            )
+        }
         let appIdentifier = application?.bundleIdentifier ?? "unknown"
-        let pasteResult = await deliverText(textToDeliver, method: method, sessionID: sessionID)
         logger.notice(
             "Paste id=\(sessionID, privacy: .public) app=\(appIdentifier, privacy: .public) method=\(method.rawValue, privacy: .public) commandPosted=\(pasteResult.didPostPasteCommand, privacy: .public) queueMs=\(queueWaitMs, privacy: .public) elapsedMs=\(elapsedMilliseconds(since: startedAt), privacy: .public)"
         )
@@ -109,11 +125,10 @@ class CursorPaster {
             autoLearnGeneration = nil
         }
         let clipboardRestoreTask: Task<Void, Never>?
-        if shouldRestoreClipboard, let pasteboard {
+        if shouldRestoreClipboard, let pasteboard, let clipboardOwnership {
             clipboardRestoreTask = scheduleClipboardRestore(
                 savedContents,
-                expectedText: textToDeliver,
-                sessionID: sessionID,
+                ownership: clipboardOwnership,
                 on: pasteboard
             )
         } else {
@@ -138,12 +153,21 @@ class CursorPaster {
     }
 
     @MainActor
-    private static func deliverText(_ text: String, method: PasteMethod, sessionID: String) async -> PasteResult {
+    private static func deliverText(
+        _ text: String, method: PasteMethod, sessionID: String,
+        clipboardOwnership: ClipboardPasteOwnership?
+    ) async -> PasteResult {
         switch method {
         case .appleScript:
-            return pasteUsingAppleScript(sessionID: sessionID) ? .commandPosted : .commandNotPosted
+            guard let clipboardOwnership else { return .commandNotPosted }
+            return ClipboardPasteCoordinator.postAppleScript(
+                ownership: clipboardOwnership,
+                current: { clipboardSnapshot(from: NSPasteboard.general) },
+                post: { pasteUsingAppleScript(sessionID: sessionID) }
+            )
         case .standard:
-            return await pasteFromClipboard(sessionID: sessionID)
+            guard let clipboardOwnership else { return .commandNotPosted }
+            return await pasteFromClipboard(sessionID: sessionID, ownership: clipboardOwnership)
         case .directTyping:
             // Never retry partial typing: a retry could duplicate text.
             let result: PasteResult
@@ -165,8 +189,7 @@ class CursorPaster {
     @MainActor
     private static func scheduleClipboardRestore(
         _ savedContents: ClipboardSnapshot,
-        expectedText: String,
-        sessionID: String,
+        ownership: ClipboardPasteOwnership,
         on pasteboard: NSPasteboard
     ) -> Task<Void, Never> {
         let delay = min(
@@ -178,27 +201,32 @@ class CursorPaster {
         )
         return Task { @MainActor in
             await wait(delay)
-            guard pasteboardStillOwnedByPasteSession(pasteboard, expectedText: expectedText, sessionID: sessionID)
-            else {
-                logger.notice("Clipboard restore skipped: clipboard changed id=\(sessionID, privacy: .public)")
-                return
+            let restored = ClipboardPasteCoordinator.restoreIfOwned(
+                ownership: ownership, current: { clipboardSnapshot(from: pasteboard) },
+                restore: {
+                    pasteboard.clearContents()
+                    if !savedContents.isEmpty, !pasteboard.writeObjects(pasteboardItems(from: savedContents)) {
+                        logger.error("Clipboard restore failed id=\(ownership.sessionID, privacy: .public)")
+                        return
+                    }
+                    logger.notice("Clipboard restored id=\(ownership.sessionID, privacy: .public)")
+                }
+            )
+            if !restored {
+                logger.notice("Clipboard restore skipped: clipboard changed id=\(ownership.sessionID, privacy: .public)")
             }
-            pasteboard.clearContents()
-            if !savedContents.isEmpty, !pasteboard.writeObjects(pasteboardItems(from: savedContents)) {
-                logger.error("Clipboard restore failed id=\(sessionID, privacy: .public)")
-                return
-            }
-            logger.notice("Clipboard restored id=\(sessionID, privacy: .public)")
         }
     }
 
-    private static func pasteboardStillOwnedByPasteSession(
-        _ pasteboard: NSPasteboard,
-        expectedText: String,
-        sessionID: String
-    ) -> Bool {
-        pasteboard.string(forType: .string) == expectedText
-            && pasteboard.string(forType: ClipboardManager.pasteSessionType) == sessionID
+    private static func clipboardSnapshot(from pasteboard: NSPasteboard) -> ClipboardPasteOwnership.Snapshot {
+        let changeCount = pasteboard.changeCount
+        let text = pasteboard.string(forType: .string)
+        let sessionID = pasteboard.string(forType: ClipboardManager.pasteSessionType)
+        // A foreign write during the individual reads cannot become an accepted snapshot.
+        guard pasteboard.changeCount == changeCount else {
+            return .init(text: nil, sessionID: nil, changeCount: changeCount)
+        }
+        return .init(text: text, sessionID: sessionID, changeCount: changeCount)
     }
 
     private static func pasteboardItems(from snapshot: ClipboardSnapshot) -> [NSPasteboardItem] {
@@ -253,7 +281,9 @@ class CursorPaster {
 
     // Posts Cmd+V via CGEvent without modifying the active input source.
     @MainActor
-    private static func pasteFromClipboard(sessionID: String) async -> PasteResult {
+    private static func pasteFromClipboard(
+        sessionID: String, ownership: ClipboardPasteOwnership
+    ) async -> PasteResult {
         guard AXIsProcessTrusted() else {
             logger.error("Accessibility permission is required to paste with simulated key events id=\(sessionID, privacy: .public)")
             return .commandNotPosted
@@ -275,15 +305,19 @@ class CursorPaster {
         vUp.flags = .maskCommand
         cmdUp.flags = []
 
-        cmdDown.post(tap: .cghidEventTap)
-        await wait(pasteShortcutEventDelay)
-        vDown.post(tap: .cghidEventTap)
-        await wait(pasteShortcutEventDelay)
-        vUp.post(tap: .cghidEventTap)
-        await wait(pasteShortcutEventDelay)
-        cmdUp.post(tap: .cghidEventTap)
-
-        return .commandPosted
+        return await ClipboardPasteCoordinator.postShortcut(
+            ownership: ownership,
+            current: { clipboardSnapshot(from: NSPasteboard.general) },
+            waitBetweenEvents: { await wait(pasteShortcutEventDelay) },
+            post: { event in
+                switch event {
+                case .commandDown: cmdDown.post(tap: .cghidEventTap)
+                case .vDown: vDown.post(tap: .cghidEventTap)
+                case .vUp: vUp.post(tap: .cghidEventTap)
+                case .commandUp: cmdUp.post(tap: .cghidEventTap)
+                }
+            }
+        )
     }
 
     private static func elapsedMilliseconds(since start: TimeInterval) -> Int {

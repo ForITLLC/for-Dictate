@@ -1,0 +1,38 @@
+{
+  "schema": "forit.dictate.guard-wiring-observation.v1",
+  "observedUTC": "2026-10-24T07:11:45.162855+00:00",
+  "scope": "OFFLINE_PUBLISHED_SOURCE_ADAPTER_PREPARATION_ONLY",
+  "observation": {
+    "revision": "de99b5701b0287314b3e1d60ebbee495812ea16e",
+    "productionTrustedRootAvailable": false,
+    "targets": {
+      "VoiceInk": {
+        "sourceCount": 351,
+        "supportedCanonicalPrecompilePhases": 1,
+        "generatedRequirements": [],
+        "commonDependencies": [
+          {
+            "repository": "https://github.com/ForITLLC/for-iCommon.git",
+            "revision": "de99b5701b0287314b3e1d60ebbee495812ea16e",
+            "version": "0.31.4",
+            "requirementKind": "exactVersion"
+          }
+        ],
+        "assetBindings": 1,
+        "nativeCompilerClosure": "UNVERIFIED_PENDING_NATIVE_BUILD"
+      },
+      "VoiceInkRefineXPC": {
+        "sourceCount": 4,
+        "supportedCanonicalPrecompilePhases": 1,
+        "generatedRequirements": [],
+        "commonDependencies": [],
+        "assetBindings": 1,
+        "nativeCompilerClosure": "UNVERIFIED_PENDING_NATIVE_BUILD"
+      }
+    },
+    "pbxSHA256": "a24f9cfdcc5976bfb4bbfa9a4f673c7cb6ac5182c54d777060190f1932b0abbb"
+  },
+  "fullNativeCompilerInputClosureProven": false,
+  "productionTrustRootAdmitted": false,
+  "nativeCommandsExecuted": 0
+}
