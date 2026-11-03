@@ -391,8 +391,13 @@ struct VoiceInkApp: App {
                 .environmentObject(aiService)
                 .environmentObject(enhancementService)
         } label: {
-            HStack(spacing: 0) {
+            HStack(spacing: 3) {
                 ForITMark(size: 18)
+                Image(systemName: "mic.fill")
+                    .renderingMode(.template)
+                    .symbolRenderingMode(.monochrome)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.primary)
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("ForIT Dictate")
