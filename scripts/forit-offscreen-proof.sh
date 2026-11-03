@@ -25,7 +25,8 @@ finish() {
 }
 trap finish EXIT
 
-attempt=$(/usr/bin/python3 -I scripts/forit-offscreen-proof.py begin)
+attempt=$(/usr/bin/python3 -I -c 'import uuid; print(uuid.uuid4())')
+/usr/bin/python3 -I scripts/forit-offscreen-proof.py begin --attempt "$attempt"
 output=$(/usr/bin/python3 -I scripts/forit-offscreen-proof.py path --attempt "$attempt")
 source_commit=$(/usr/bin/python3 -I scripts/forit-offscreen-proof.py prepare --attempt "$attempt")
 

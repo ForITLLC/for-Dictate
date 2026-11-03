@@ -6,6 +6,7 @@ read its preferences, touch its Keychain, or access its transcription history.
 """
 import argparse
 import datetime
+import fcntl
 import hashlib
 import json
 import os
@@ -17,6 +18,7 @@ import subprocess
 import textwrap
 import uuid
 import zipfile
+from contextlib import contextmanager
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -55,25 +57,62 @@ def attempt_directory(attempt):
     return OUTPUT / "runs" / str(uuid.UUID(attempt))
 
 
-def begin():
-    attempt = str(uuid.uuid4())
+@contextmanager
+def publication_lock():
+    """Serialize only local artifact aliases; never lock rendering or fleet work."""
+    OUTPUT.mkdir(parents=True, exist_ok=True)
+    with (OUTPUT / ".publication.lock").open("a+b") as stream:
+        fcntl.flock(stream.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
+
+
+def publish_attempt(output, record):
+    attempt = record["attemptID"]
+    with publication_lock():
+        pointer = OUTPUT / "attempt.json"
+        current = None
+        if pointer.exists():
+            current = json.loads(pointer.read_text(encoding="utf-8"))
+        if current is not None and current["attemptID"] != attempt:
+            return
+        # The ownership comparison and every alias replacement share this lock.
+        for name in ["evidence.zip", "receipt.json"]:
+            temporary = OUTPUT / (name + "." + attempt + ".tmp")
+            try:
+                shutil.copyfile(output / name, temporary)
+                os.replace(temporary, OUTPUT / name)
+            finally:
+                temporary.unlink(missing_ok=True)
+        write_json(pointer, record)
+
+
+def begin(attempt):
     output = attempt_directory(attempt)
-    output.mkdir(parents=True)
     record = {"schema": "forit.dictate.offscreen-attempt.v1", "attemptID": attempt,
               "startedUTC": utc(), "output": str(output), "status": "PREPARING"}
-    write_json(output / "attempt.json", record)
-    write_json(OUTPUT / "attempt.json", record)
-    # A new attempt is visibly pending even if its preparation subsequently fails.
-    write_json(OUTPUT / "receipt.json", {**record, "status": "IN_PROGRESS",
-                                        "evidenceArchiveCurrent": False})
-    # Replace a previous top-level archive with an explicitly pending current attempt.
-    # Completed and failed older attempts remain intact under runs/.
-    pending = OUTPUT / ("evidence.zip." + attempt + ".tmp")
-    with zipfile.ZipFile(pending, "w", compression=zipfile.ZIP_DEFLATED) as archive:
-        archive.write(OUTPUT / "receipt.json", "receipt.json")
-        archive.write(output / "attempt.json", "attempt.json")
-    os.replace(pending, OUTPUT / "evidence.zip")
-    return attempt
+    pending = {**record, "status": "IN_PROGRESS", "evidenceArchiveCurrent": False}
+    with publication_lock():
+        # Claim before attempt-directory or archive work can fail. The EXIT
+        # collector may then publish FAILED for this owner, never for a newer one.
+        write_json(OUTPUT / "attempt.json", record)
+        write_json(OUTPUT / "receipt.json", pending)
+        output.mkdir(parents=True)
+        write_json(output / "attempt.json", record)
+        write_json(output / "receipt.json", pending)
+        # Previous archives are explicitly noncurrent until this pending archive
+        # replaces the alias. Every older attempt remains intact under runs/.
+        with zipfile.ZipFile(output / "evidence.zip", "w", compression=zipfile.ZIP_DEFLATED) as archive:
+            archive.write(output / "receipt.json", "receipt.json")
+            archive.write(output / "attempt.json", "attempt.json")
+        temporary = OUTPUT / ("evidence.zip." + attempt + ".tmp")
+        try:
+            shutil.copyfile(output / "evidence.zip", temporary)
+            os.replace(temporary, OUTPUT / "evidence.zip")
+        finally:
+            temporary.unlink(missing_ok=True)
 
 
 def label_expression(source):
@@ -184,7 +223,13 @@ def collect(exit_code, attempt):
     }
     files = []
     failure = None
+    record = {"schema": "forit.dictate.offscreen-attempt.v1", "attemptID": attempt,
+              "output": str(output), "startedUTC": None, "beginRecordRecovered": True}
     try:
+        loaded_record = json.loads((output / "attempt.json").read_text(encoding="utf-8"))
+        if loaded_record["attemptID"] != attempt:
+            raise ValueError("Attempt record belongs to another attempt")
+        record = loaded_record
         provenance = output / "source-provenance.json"
         receipt["source"] = json.loads(provenance.read_text(encoding="utf-8"))
         files.append(provenance)
@@ -250,22 +295,16 @@ def collect(exit_code, attempt):
         if path.is_file() and path not in files:
             files.append(path)
     output.mkdir(parents=True, exist_ok=True)
-    record = json.loads((output / "attempt.json").read_text(encoding="utf-8"))
     record.update(status=receipt["status"], finishedUTC=utc(), exitCode=exit_code)
     write_json(output / "attempt.json", record)
+    if output / "attempt.json" not in files:
+        files.append(output / "attempt.json")
     write_json(output / "receipt.json", receipt)
     with zipfile.ZipFile(output / "evidence.zip", "w", compression=zipfile.ZIP_DEFLATED) as archive:
         archive.write(output / "receipt.json", "receipt.json")
         for path in files:
             archive.write(path, str(path.relative_to(output)))
-    # A concurrent newer attempt keeps its own top-level projection.
-    current = json.loads((OUTPUT / "attempt.json").read_text(encoding="utf-8"))
-    if current["attemptID"] == attempt:
-        for name in ["evidence.zip", "receipt.json"]:
-            temporary = OUTPUT / (name + "." + attempt + ".tmp")
-            shutil.copyfile(output / name, temporary)
-            os.replace(temporary, OUTPUT / name)
-        write_json(OUTPUT / "attempt.json", record)
+    publish_attempt(output, record)
     if failure:
         raise RuntimeError(failure)
 
@@ -276,9 +315,9 @@ if __name__ == "__main__":
     parser.add_argument("--attempt")
     parser.add_argument("--exit-code", type=int)
     args = parser.parse_args()
-    if args.action in ("plan", "begin") and (args.attempt is not None or args.exit_code is not None):
-        parser.error("plan/begin take no options")
-    if args.action in ("path", "prepare", "collect") and args.attempt is None:
+    if args.action == "plan" and (args.attempt is not None or args.exit_code is not None):
+        parser.error("plan takes no options")
+    if args.action in ("begin", "path", "prepare", "collect") and args.attempt is None:
         parser.error("this action requires --attempt UUID")
     if args.action != "collect" and args.exit_code is not None:
         parser.error("only collect accepts --exit-code")
@@ -287,7 +326,7 @@ if __name__ == "__main__":
     if args.action == "plan":
         print(json.dumps(plan(), indent=2))
     elif args.action == "begin":
-        print(begin())
+        begin(args.attempt)
     elif args.action == "path":
         print(attempt_directory(args.attempt))
     elif args.action == "prepare":
