@@ -9,6 +9,7 @@ release runner; the real application compilation remains a separate required ste
 """
 
 import argparse
+import base64
 import hashlib
 import json
 import os
@@ -45,7 +46,7 @@ def write_check_evidence(output, receipt):
         completed = (receipt.get("exitCode") == 0 and receipt.get("testSummaryComplete") is True
                      and receipt.get("timeout_cleanup_delegated") is False
                      and receipt.get("syntheticFixtureValid") is True
-                     and receipt.get("testCount") == receipt.get("expectedTestCount") == 76
+                     and receipt.get("testCount") == receipt.get("expectedTestCount") == 80
                      and receipt.get("failureCount") == 0)
         if not completed:
             raise ValueError("Check evidence requires completed, valid checks before retaining a fixture")
@@ -89,6 +90,12 @@ def main():
     output.mkdir(parents=True, exist_ok=True)
     fixture = output / "synthetic-history-v1.json"
     fixture.unlink(missing_ok=True)
+    preview_log = output / "status-icon-previews.log"
+    preview_log.unlink(missing_ok=True)
+    previews = output / "status-icon-previews"
+    previews.mkdir(exist_ok=True)
+    for name in ("status-light.png", "status-dark.png"):
+        (previews / name).unlink(missing_ok=True)
     log = output / "swift-test.log"
     receipt = {
         "schema": "forit.dictate.integration-tests.v1",
@@ -122,6 +129,8 @@ def main():
         command = ["/usr/bin/xcrun", "swift", "test", "--package-path", str(package), "--jobs", "1"]
         environment = os.environ.copy()
         environment["FORIT_SYNTHETIC_HISTORY_FIXTURE_PATH"] = str(fixture)
+        environment["FORIT_STATUS_ICON_EVIDENCE"] = str(output / "status-icon-previews")
+        environment["FORIT_STATUS_ICON_APPICON"] = str(root / "VoiceInk/Assets.xcassets/AppIcon.appiconset/mac-128.png")
         with log.open("wb") as stream:
             process = subprocess.Popen(command, cwd=package, env=environment, stdout=stream,
                                        stderr=subprocess.STDOUT, start_new_session=False)
@@ -156,7 +165,34 @@ def main():
                              and value["schemaVersion"] == 1 and bool(value["entries"]))
         except (OSError, ValueError, TypeError):
             fixture_valid = False
-    passed = result == 0 and total == expected_count and failures == 0 and fixture_valid
+    # Preserve originals through the existing collector's .log support. Only
+    # current successful native tests can publish this explicit fixture envelope.
+    specimen_images = []
+    if result == 0 and not timed_out:
+        try:
+            for name in ("status-light.png", "status-dark.png"):
+                data = (previews / name).read_bytes()
+                if not (24 <= len(data) <= 2 * 1024 * 1024 and data[:8] == b"\x89PNG\r\n\x1a\n"):
+                    raise ValueError("native icon specimen is not a bounded PNG")
+                specimen_images.append({"file": name, "bytes": len(data),
+                                        "sha256": hashlib.sha256(data).hexdigest(),
+                                        "widthPixels": int.from_bytes(data[16:20], "big"),
+                                        "heightPixels": int.from_bytes(data[20:24], "big"),
+                                        "contentBase64": base64.b64encode(data).decode("ascii")})
+        except (OSError, ValueError):
+            specimen_images = []
+    specimen_valid = len(specimen_images) == 2
+    passed = result == 0 and total == expected_count and failures == 0 and fixture_valid and specimen_valid
+    receipt["statusIconSpecimensValid"] = specimen_valid
+    if passed:
+        preview_log.write_text(json.dumps({"schema": "forit.dictate.status-icon-specimens.v1",
+                                          "sourceCommit": receipt["sourceCommit"],
+                                          "sourceSHA256": receipt["sourceSHA256"],
+                                          "capturedUTC": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                                          "host": platform.node(), "os": platform.platform(),
+                                          "fixture": "engine-state specimens, not a live Dock or menu-bar capture",
+                                          "liveBenMacAcceptance": False,
+                                          "images": specimen_images}, indent=2) + "\n")
     receipt["status"] = "PASS" if passed else "FAIL"
     receipt["syntheticFixtureValid"] = fixture_valid
     (output / "RESULT.json").write_text(json.dumps(receipt, indent=2) + "\n")

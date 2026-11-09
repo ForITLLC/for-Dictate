@@ -391,16 +391,12 @@ struct VoiceInkApp: App {
                 .environmentObject(aiService)
                 .environmentObject(enhancementService)
         } label: {
-            HStack(spacing: 3) {
-                ForITMark(size: 18)
-                Image(systemName: "mic.fill")
-                    .renderingMode(.template)
-                    .symbolRenderingMode(.monochrome)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.primary)
-            }
+            let appearance = DictateStatusAppearance(recordingState: engine.recordingState)
+            Image(nsImage: DictateStatusIcon.image(for: appearance))
+            .renderingMode(.template)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("ForIT Dictate")
+            .accessibilityValue(appearance.accessibilityValue)
             .accessibilityIdentifier("dictate.statusItem")
             .background(MainWindowRequestBridge(menuBarManager: menuBarManager))
         }
