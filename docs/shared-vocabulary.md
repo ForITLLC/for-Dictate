@@ -84,3 +84,23 @@ The Mac test harness must include `SharedVocabulary.swift` and the
 Darwin/Foundation helper `SharedVocabularyCatalogLock.swift`; SwiftData and UI
 adapters require separate app SDK/runtime validation. No native behavior or
 latency result is implied by source inspection.
+
+## Timing observations
+
+The native integration checker includes 90 cases: the previous 76, four menu-bar
+icon cases, two synthetic timing cases and eight company-dictionary DTO cases.
+The timing cases report
+nine numeric observations across 32 shared/32 personal terms, the supported
+1,024 shared/4,096 personal term counts, and maximum 160-byte term inputs.
+Production cache reads and Whisper prompt construction use amortized batch
+samples; the production personal-word refresh uses individual samples against
+an in-memory SwiftData store. Reports include warmup, raw samples, p50/p95/max,
+build configuration, OS, architecture and excluded work in `swift-test.log`
+with the prefix `FORIT_VOCABULARY_TIMING`.
+
+These are observations without a latency pass threshold. The AI case measures
+the personal-refresh component, excluding the singleton wrapper, final string
+join, disk-backed database, model and provider. Cache samples are uncontended.
+Require overall XCTest success before using the numeric rows. Fixture results
+do not establish installed-app use or performance on Ben's Mac. Execution goes
+through the existing native check-only owner and separate build host.
