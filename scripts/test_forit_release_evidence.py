@@ -82,7 +82,7 @@ class ReleaseEvidenceTests(unittest.TestCase):
         })
         self.test_result = {
             "schema": "forit.dictate.integration-tests.v1", "status": "PASS", "exitCode": 0,
-            "testCount": 76, "failureCount": 0, "sourceCommit": self.commit,
+            "testCount": 78, "failureCount": 0, "sourceCommit": self.commit,
             "syntheticFixtureValid": True, "syntheticFixtureSHA256": hashlib.sha256(
                 (self.output / "integration-tests/synthetic-history-v1.json").read_bytes()).hexdigest(),
         }
