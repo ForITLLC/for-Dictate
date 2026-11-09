@@ -21,7 +21,16 @@ final class DictateStatusIconTests: XCTestCase {
             XCTAssertFalse(appearance.accessibilityValue.isEmpty)
             XCTAssertEqual(image.accessibilityDescription, "ForIT Dictate")
             XCTAssertNotNil(NSImage(systemSymbolName: appearance.symbolName, accessibilityDescription: nil))
-            XCTAssertFalse(try XCTUnwrap(image.tiffRepresentation).isEmpty)
+            let pixels = try XCTUnwrap(NSBitmapImageRep(data: try XCTUnwrap(image.tiffRepresentation)))
+            var visiblePixels = 0
+            for y in 0..<pixels.pixelsHigh {
+                for x in 0..<pixels.pixelsWide {
+                    if (pixels.colorAt(x: x, y: y)?.alphaComponent ?? 0) > 0 {
+                        visiblePixels += 1
+                    }
+                }
+            }
+            XCTAssertGreaterThan(visiblePixels, 0, "A valid image container must not hide a blank microphone.")
         }
     }
 
