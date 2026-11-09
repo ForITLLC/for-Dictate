@@ -87,7 +87,8 @@ latency result is implied by source inspection.
 
 ## Timing observations
 
-The native integration checker includes two synthetic timing cases. They report
+The native integration checker includes 82 cases: the previous 76, four menu-bar
+icon cases and two synthetic timing cases. The timing cases report
 nine numeric observations across 32 shared/32 personal terms, the supported
 1,024 shared/4,096 personal term counts, and maximum 160-byte term inputs.
 Production cache reads and Whisper prompt construction use amortized batch

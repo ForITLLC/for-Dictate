@@ -60,8 +60,8 @@ They cover replacement during the pre-paste delay, replacement between Command
 and V, change-away-and-back, missing ownership, AppleScript dispatch, safe
 restoration, key release and clipboard-independent direct typing. The maintained
 integration checker includes them alongside the previous 52 tests and the 13
-Foundation-only recording-device session tests, plus two vocabulary timing
-observation cases (78 total). The recording-device tests cover
+Foundation-only recording-device session tests, four menu-bar icon cases and
+two vocabulary timing observation cases (82 total). The recording-device tests cover
 following macOS input changes, deferred switches and stale-session cancellation
 without opening audio devices.
 
