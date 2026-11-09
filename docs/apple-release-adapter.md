@@ -15,7 +15,7 @@ The app-owned command is:
 
 `BUILD` is a required positive integer. `BUILD --plan` reads source metadata and
 prints a plan without native commands, network requests, credential probes or
-file writes. `BUILD --check-only` runs the 80 synthetic Swift checks through the
+file writes. `BUILD --check-only` runs the 82 synthetic Swift checks through the
 same inherited native job. `--upload` is rejected: Dictate's established channel
 is a Developer ID signed, notarized DMG, not TestFlight or an App Store upload.
 
@@ -83,7 +83,7 @@ This public-source API read does not schedule builds through GitHub Actions.
 
 ## Required checks and retained evidence
 
-The release keeps this sequence: exact 80 synthetic tests and a genuine producer
+The release keeps this sequence: exact 82 synthetic tests and a genuine producer
 fixture; pinned Whisper framework build; SDK package resolution and genuine
 `Package.resolved`; frozen package versions during the app build; zero compiler
 exit plus build-success marker; actual app bundle/version/build and no upstream
