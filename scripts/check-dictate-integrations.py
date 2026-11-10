@@ -94,7 +94,7 @@ def main():
     preview_log.unlink(missing_ok=True)
     previews = output / "status-icon-previews"
     previews.mkdir(exist_ok=True)
-    for name in ("status-light.png", "status-dark.png"):
+    for name in ("status-light.png", "status-dark.png", "status-selected.png"):
         (previews / name).unlink(missing_ok=True)
     log = output / "swift-test.log"
     receipt = {
@@ -170,7 +170,7 @@ def main():
     specimen_images = []
     if result == 0 and not timed_out:
         try:
-            for name in ("status-light.png", "status-dark.png"):
+            for name in ("status-light.png", "status-dark.png", "status-selected.png"):
                 data = (previews / name).read_bytes()
                 if not (24 <= len(data) <= 2 * 1024 * 1024 and data[:8] == b"\x89PNG\r\n\x1a\n"):
                     raise ValueError("native icon specimen is not a bounded PNG")
@@ -181,7 +181,7 @@ def main():
                                         "contentBase64": base64.b64encode(data).decode("ascii")})
         except (OSError, ValueError):
             specimen_images = []
-    specimen_valid = len(specimen_images) == 2
+    specimen_valid = len(specimen_images) == 3
     passed = result == 0 and total == expected_count and failures == 0 and fixture_valid and specimen_valid
     receipt["statusIconSpecimensValid"] = specimen_valid
     if passed:

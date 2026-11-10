@@ -1,134 +1,105 @@
 {
-  "schema": "forit.dictate.app-icon-adoption.v1",
-  "recordedUTCDate": "2026-10-31",
-  "state": "CANONICAL_HEALTH_RECIPE_RENDERED_LOCALLY_AND_ADOPTED_SOURCE_ONLY",
-  "consumer": {
-    "repository": "ForITLLC/for-Dictate",
-    "bundleIdentifier": "io.forit.dictate",
-    "assetFolder": "VoiceInk/Assets.xcassets/AppIcon.appiconset",
-    "appIconBuildSetting": "AppIcon"
+  "schema": "forit.dictate.app-icon-adoption.v2",
+  "state": "RENDERED_PREPARATION_NOT_NATIVE_COMPILE_OR_INSTALL",
+  "productMaster": {
+    "owner": "ForITLLC/for-Dictate",
+    "path": "forit/branding/dictate-glyph.svg",
+    "sha256": "d4ffd10e41f7ae49f7eb1b3eb38cfe66a8a25ba066affb1595e53c424feecbb3",
+    "palette": {
+      "accent": "#FFD071",
+      "ink": "#24180A",
+      "dock-top": "#7A3F11",
+      "dock-bottom": "#2B1607"
+    }
   },
-  "recipeOwner": {
-    "repository": "ForITLLC/for-Health",
-    "revision": "264e03f40dc0fdba818dd6c0aec92dca76b7fa47",
+  "sharedRecipe": {
+    "owner": "ForITLLC/for-Health",
+    "commit": "264e03f40dc0fdba818dd6c0aec92dca76b7fa47",
     "path": "ios/scripts/icon_family.py",
     "sha256": "a26587c4081e1d72206d29647b93aaf146353cfb6d02e34a9a507c40da8072d7",
-    "profile": "dictate"
+    "modified": false,
+    "functions": [
+      "placement",
+      "mark_source",
+      "flat_png",
+      "mac_icon",
+      "write_mac_appiconset"
+    ]
   },
-  "inputs": {
-    "canonicalMark": {
-      "repository": "ForITLLC/forit-Common",
-      "revision": "504b5a9b61606d0f5d4b5f21dafef71ce48544e0",
-      "path": "packages/ui/assets/brand/forit-hex-only.png",
-      "sha256": "a983a6d29f5310df1941e9212b4f4040a9ef33e67c3e7d5437bed89a91b33adc"
+  "canonicalMark": {
+    "owner": "ForITLLC/forit-Common",
+    "commit": "504b5a9b61606d0f5d4b5f21dafef71ce48544e0",
+    "path": "packages/ui/assets/brand/forit-hex-only.png",
+    "sha256": "a983a6d29f5310df1941e9212b4f4040a9ef33e67c3e7d5437bed89a91b33adc"
+  },
+  "consumer": {
+    "bundleIdentifier": "io.forit.dictate",
+    "shippingPlatform": "macOS",
+    "appIcon": "AppIcon.appiconset",
+    "menuGlyph": "DictateGlyphAsset.swift from same SVG/PDF"
+  },
+  "request": "Ben/Dispatch ba-018a751f84d3: distinct from Squelch in shape and colour; change Dictate only",
+  "nativeTests": "unrun",
+  "signedDelivery": "unrun",
+  "twoRunDeterminism": "not established",
+  "files": {
+    "AppIcon.appiconset/Contents.json": {
+      "sha256": "5c297be4fc539d1e5085dbfd569752d96de1741d96b3b359ce3bb8b638a0b40b",
+      "bytes": 1241
     },
-    "glyph": {
-      "package": "@phosphor-icons/core",
-      "version": "2.1.1",
-      "path": "assets/duotone/microphone-duotone.svg",
-      "sha256": "c1bd548c24ecfaaa07054cefd93885537c518234691f9614e144e52aa19eedce"
+    "AppIcon.appiconset/mac-1024.png": {
+      "sha256": "50b745225b8011d1b6eadd35bdd885c77cd7450a31305cf1319812657ec51650",
+      "bytes": 54439
     },
-    "accent": {
-      "token": "forit-300",
-      "color": "#5ECDE5"
+    "AppIcon.appiconset/mac-128.png": {
+      "sha256": "f096582ce0946ba1e1059e03c58934a6513aed6ad00b0af4e584ae39a01e8077",
+      "bytes": 6002
+    },
+    "AppIcon.appiconset/mac-16.png": {
+      "sha256": "e3586d95faf2ed5f8587c66a449a16d988e561e3ad68c547acabcc14841caa13",
+      "bytes": 662
+    },
+    "AppIcon.appiconset/mac-256.png": {
+      "sha256": "570cf3bc290bcbd5f108b48a6aa014a6e5800db8ec7688abd5e1a8b6068f000d",
+      "bytes": 13067
+    },
+    "AppIcon.appiconset/mac-32.png": {
+      "sha256": "b33bfeefe45e6518749e11c53d1f4d500e5de103eac55cc9afb0be9925638dbb",
+      "bytes": 1516
+    },
+    "AppIcon.appiconset/mac-512.png": {
+      "sha256": "0545883ae222bd3c2b709dabe7b2fdb4181c0dc7e5435745f7d1acd16d65d4b2",
+      "bytes": 28870
+    },
+    "AppIcon.appiconset/mac-64.png": {
+      "sha256": "73504729f2b967b8554d16a055d266f61ac46b5b41f1a56a8f18726a12f5c07f",
+      "bytes": 3037
+    },
+    "DictateGlyph.pdf": {
+      "sha256": "edc4d9b1cd45f8843843a794764e1bbe94b2363afce9c43c396115e5131642a7",
+      "bytes": 1249
+    },
+    "DictateGlyphAsset.swift": {
+      "sha256": "8dc50d7896d534e2204b4f999ab245f86688c423dd436086c89fbe2c53e01d9a",
+      "bytes": 2132
+    },
+    "glyph-preview.png": {
+      "sha256": "6d38f696dcae88db0f2b072edaffc8da034ec1f4eeceb7a90fd11fe76ff62ec1",
+      "bytes": 5469
+    },
+    "shared-health-recipe.py": {
+      "sha256": "a26587c4081e1d72206d29647b93aaf146353cfb6d02e34a9a507c40da8072d7",
+      "bytes": 73959
     }
-  },
-  "render": {
-    "operator": "for-Dictate root",
-    "environment": "isolated ephemeral Linux dependency environment",
-    "CairoSVG": "2.8.2",
-    "generatorModified": false,
-    "nativeMacExecution": false,
-    "healthDeliveredRenderedArtifact": false,
-    "determinismCertified": false,
-    "evidence": "handoffs/for-Dictate/voiceink-forit-branding-20261029/icon-canonical-render-20261031/"
   },
   "adoption": {
-    "operation": "Replace complete AppIcon.appiconset with generated folder byte for byte; no PNG bytes modified or regenerated during adoption",
-    "macSlots": 10,
-    "pngFiles": 7,
-    "files": {
-      "Contents.json": {
-        "sha256": "5c297be4fc539d1e5085dbfd569752d96de1741d96b3b359ce3bb8b638a0b40b",
-        "bytes": 1241
-      },
-      "mac-1024.png": {
-        "sha256": "aafa1a60b1f8b9c47af69928357c5908513989421b272c1e303f1c3a5b40ac95",
-        "bytes": 68852,
-        "pixelDimensions": [
-          1024,
-          1024
-        ]
-      },
-      "mac-128.png": {
-        "sha256": "283de6ef2e04662391da84bbead4791462548b899347c1da4b78a8dd9c9e616c",
-        "bytes": 7303,
-        "pixelDimensions": [
-          128,
-          128
-        ]
-      },
-      "mac-16.png": {
-        "sha256": "9601cb6cde30a98a5a9c00dfacebb50cae7d9de5108db71c541907e571803507",
-        "bytes": 659,
-        "pixelDimensions": [
-          16,
-          16
-        ]
-      },
-      "mac-256.png": {
-        "sha256": "35334edad4010eab7ebfb9ced1933ce1679ddbac890ec60f41780082c67aca46",
-        "bytes": 16060,
-        "pixelDimensions": [
-          256,
-          256
-        ]
-      },
-      "mac-32.png": {
-        "sha256": "344ba2bd0e64bd449323aa28a384202549375301f6209c8d447afc5c86719b70",
-        "bytes": 1583,
-        "pixelDimensions": [
-          32,
-          32
-        ]
-      },
-      "mac-512.png": {
-        "sha256": "ed88ed718a763a4aafb11d9bc9df8b113e816d1349db4e46cd5faed739930770",
-        "bytes": 35419,
-        "pixelDimensions": [
-          512,
-          512
-        ]
-      },
-      "mac-64.png": {
-        "sha256": "f90b2361eeb7a357a069283ae1fa9165cadaa0a6ea3c6bbc524e9ea199d9cbe1",
-        "bytes": 3330,
-        "pixelDimensions": [
-          64,
-          64
-        ]
-      }
-    }
-  },
-  "validation": {
-    "allSourceDestinationBytesEqual": true,
-    "allMacSlotPixelDimensionsMatch": true,
-    "noSymlinks": true,
-    "nativeAssetCompilation": false,
-    "applicationBuild": false,
-    "installedAppearance": false,
-    "signedDelivery": false
-  },
-  "supersession": "Health retains icon recipe ownership. This local rendering is not a Health delivery or a new app-owned logo; a later Health folder is adopted whole after provenance review.",
-  "independentReview": {
-    "owner": "for-Health",
-    "message": "msg_d77458228149",
-    "existingRequest": "msg_59dcfa7623a3",
-    "result": "PASS_EXISTING_CONSUMER_RENDER_RECONCILED",
-    "macManifestSHA256": "40cbe9fbeb7b6df4f5c139a10d8228477ef86264f742b0c987596b4796589605",
-    "reviewReceiptSHA256": "59bbbd7351ded2d2982409272b5fb54a1e24b4b4617197d53c07cdf52e638f60",
-    "healthReportedAll28PayloadHashesValid": true,
-    "rootComparedAll8AdoptedMacFilesToHealthManifest": true,
-    "nativeOrTwoRunDeterminismCertified": false
+    "job": "for-Menubar-microphone-20261110T022847Z-708486",
+    "host": "mini-lan",
+    "exit": 0,
+    "baseCommit": "7e7316f987a8c9f5e880f7f80225de5f0d2dfc89",
+    "nativeTests": "unrun",
+    "sourceBytesVerified": true,
+    "allMacSlotsVerified": true,
+    "embeddedPDFMatchesMasterDerivative": true
   }
 }

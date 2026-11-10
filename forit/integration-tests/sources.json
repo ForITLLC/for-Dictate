@@ -13,7 +13,8 @@
     "VoiceInk/Infrastructure/SystemIntegration/Paste/ClipboardPasteSession.swift",
     "VoiceInk/Infrastructure/Audio/Devices/RecordingDeviceSession.swift",
     "VoiceInk/Core/Recording/RecordingState.swift",
-    "VoiceInk/App/MenuBar/DictateStatusIcon.swift"
+    "VoiceInk/App/MenuBar/DictateStatusIcon.swift",
+    "VoiceInk/App/MenuBar/DictateGlyphAsset.swift"
   ],
   "testPatterns": [
     "Tests/VoiceInkTests/TinycastHistory*Tests.swift",

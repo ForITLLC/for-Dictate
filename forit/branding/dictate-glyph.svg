@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"
+     data-accent="#FFD071" data-ink="#24180A"
+     data-dock-top="#7A3F11" data-dock-bottom="#2B1607">
+  <title>ForIT Dictate — speech and waveform</title>
+  <!-- Product glyph master. The canonical ForIT mark remains a separate shared input. -->
+  <path d="M56 34h144c19.9 0 36 16.1 36 36v100c0 19.9-16.1 36-36 36H91l-45 26v-31c-15.1-4.4-26-18.3-26-35V70c0-19.9 16.1-36 36-36Z"
+        fill="#FFD071" stroke="#24180A" stroke-width="12" stroke-linejoin="round"/>
+  <g fill="none" stroke="#24180A" stroke-width="13" stroke-linecap="round">
+    <path d="M70 108v28M108 82v80M146 94v56M184 112v20"/>
+  </g>
+</svg>
