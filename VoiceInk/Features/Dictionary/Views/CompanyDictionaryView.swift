@@ -9,8 +9,12 @@ enum CompanyDictionaryWindow {
 @MainActor
 struct CompanyDictionaryView: View {
     @EnvironmentObject private var connection: CompanyDictionaryConnectionModel
-    @ObservedObject private var vocabulary = SharedVocabularyService.shared
+    @ObservedObject private var vocabulary: SharedVocabularyService
     @State private var search = ""
+
+    init(vocabulary: SharedVocabularyService = .shared) {
+        _vocabulary = ObservedObject(wrappedValue: vocabulary)
+    }
 
     private var matchingTerms: [CompanyDictionarySnapshot.Term] {
         (connection.client.snapshot?.terms ?? []).filter { term in
@@ -34,9 +38,13 @@ struct CompanyDictionaryView: View {
                 }
                 if connection.client.needsSignIn {
                     Button("Connect company dictionary", action: connection.presentSignIn)
+                        .buttonStyle(.forITPrimary)
+                        .accessibilityIdentifier("dictate.companyDictionary.connect")
                         .disabled(connection.client.isBusy)
                 } else {
                     Button("Check now") { Task { await connection.client.refresh(force: true) } }
+                        .buttonStyle(.forITPrimary)
+                        .accessibilityIdentifier("dictate.companyDictionary.refresh")
                         .disabled(connection.client.isBusy)
                 }
                 if connection.client.isBusy { ProgressView().controlSize(.small) }
@@ -46,6 +54,7 @@ struct CompanyDictionaryView: View {
                 Section {
                     TextField("Search company names, aliases and meanings", text: $search)
                         .accessibilityLabel("Search company dictionary")
+                        .accessibilityIdentifier("dictate.companyDictionary.search")
                     Text("\(snapshot.terms.count) company terms")
                         .font(.caption).foregroundStyle(.secondary)
                     if snapshot.terms.isEmpty {
@@ -56,6 +65,7 @@ struct CompanyDictionaryView: View {
                     ForEach(Array(matchingTerms.prefix(100)), id: \.id) { term in
                         VStack(alignment: .leading, spacing: 4) {
                             Text(term.canonicalSpelling).textSelection(.enabled)
+                                .accessibilityIdentifier("dictate.companyDictionary.term." + term.id)
                             Text(term.kind.rawValue.capitalized).font(.caption).foregroundStyle(.secondary)
                             if !term.spokenForms.isEmpty {
                                 Text("Also spoken as: \(term.spokenForms.joined(separator: ", "))")
@@ -82,7 +92,7 @@ struct CompanyDictionaryView: View {
                     Text("\(coverage.includedTermCount) company spellings added to your dictation vocabulary.")
                         .accessibilityIdentifier("dictate.companyDictionary.coverage")
                     if coverage.omittedTermCount > 0 {
-                        Text("\(coverage.omittedTermCount) spellings are already covered by your choices or fall outside the supported limits.")
+                        Text("\(coverage.omittedTermCount) spellings are excluded by your choices or the supported limits.")
                             .font(.caption).foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -97,12 +107,13 @@ struct CompanyDictionaryView: View {
                 }
             }
             if connection.client.isSignedIn {
-                ForITAccountSection(account: connection.client.profile?.email) {
+                ForITAccountSection(account: connection.client.profile?.email, expiresAt: connection.client.expiresAt) {
                     connection.signOut()
                 }
             }
         }
         .formStyle(.grouped)
+        .forITTint()
         .task { await connection.client.refresh() }
         .sheet(isPresented: $connection.isSignInPresented) {
             VStack(spacing: 0) {
@@ -113,10 +124,13 @@ struct CompanyDictionaryView: View {
                     isBusy: connection.client.isBusy,
                     action: connection.signIn
                 )
-                Button("Cancel", action: connection.cancelSignIn)
+                Button("Close", action: connection.cancelSignIn)
+                    .buttonStyle(.forITSecondary)
+                    .accessibilityIdentifier("dictate.companyDictionary.closeSignIn")
                     .keyboardShortcut(.cancelAction)
                     .padding()
             }
+            .forITTint()
             .frame(minWidth: 420, idealWidth: 480, minHeight: 480)
             .onDisappear { connection.cancelSignIn() }
         }
@@ -134,6 +148,7 @@ struct CompanyDictionarySummaryView: View {
             Text(connection.client.statusText).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             Button("Open company dictionary…") { openWindow(id: CompanyDictionaryWindow.id) }
+                .buttonStyle(.forITSecondary)
         }
     }
 }

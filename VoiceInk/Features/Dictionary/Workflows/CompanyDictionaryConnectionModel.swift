@@ -13,21 +13,36 @@ final class CompanyDictionaryConnectionModel: ObservableObject {
     @Published private(set) var signInMessage: String?
 
     private let bundleID: String
+    private let openAuthorizationURL: BrowserSignIn.Opener
     private var operationID: UUID?
     private var activeAttempt: UUID?
     private var signInTask: Task<Void, Never>?
     private var subscriptions = Set<AnyCancellable>()
 
-    init() {
-        bundleID = Bundle.main.bundleIdentifier ?? "io.forit.dictate"
+    convenience init() {
+        let bundleID = Bundle.main.bundleIdentifier ?? "io.forit.dictate"
         let redirect = URL(string: "\(bundleID)://oauth/callback")!
-        browser = BrowserSignIn(configuration: .forIT(redirectURI: redirect))
-        client = CompanyDictionaryClient { snapshot, expiresAt in
+        let browser = BrowserSignIn(configuration: .forIT(redirectURI: redirect))
+        let client = CompanyDictionaryClient { snapshot, expiresAt in
             SharedVocabularyService.shared.setCompanySnapshot(snapshot, validUntil: expiresAt)
         }
+        self.init(client: client, browser: browser, bundleID: bundleID,
+                  openAuthorizationURL: { NSWorkspace.shared.open($0) })
+    }
+
+    /// Production uses the convenience initializer. Native fixtures can supply
+    /// isolated services and a non-opening browser action without constructing
+    /// a production credential store or subscribing to host lifecycle events.
+    init(client: CompanyDictionaryClient, browser: BrowserSignIn, bundleID: String,
+         observeLifecycle: Bool = true, openAuthorizationURL: @escaping BrowserSignIn.Opener) {
+        self.client = client
+        self.browser = browser
+        self.bundleID = bundleID
+        self.openAuthorizationURL = openAuthorizationURL
         client.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() }
             .store(in: &subscriptions)
 
+        guard observeLifecycle else { return }
         NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)
             .sink { [weak self] _ in
                 Task { @MainActor [weak self] in await self?.client.refresh() }
@@ -84,7 +99,7 @@ final class CompanyDictionaryConnectionModel: ObservableObject {
             do {
                 let identity = try await self.browser.signIn { [weak self] url in
                     guard let self, self.operationID == operation, !Task.isCancelled else { return false }
-                    return NSWorkspace.shared.open(url)
+                    return await self.openAuthorizationURL(url)
                 }
                 // Common cancellation cannot cancel an exchange already in flight.
                 // This fence prevents its late result from minting any Support session.

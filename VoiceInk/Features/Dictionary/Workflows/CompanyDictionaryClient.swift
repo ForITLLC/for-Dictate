@@ -16,6 +16,9 @@ final class CompanyDictionaryClient: ObservableObject {
     @Published private(set) var message: String?
     @Published private(set) var revocationWarning: String?
 
+    /// The expiry returned by Support, for the shared native account section.
+    var expiresAt: Date? { credential?.expiresAt }
+
     var statusText: String {
         let primary: String
         if let message { primary = message }
