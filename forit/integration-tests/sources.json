@@ -14,7 +14,13 @@
     "VoiceInk/Infrastructure/Audio/Devices/RecordingDeviceSession.swift",
     "VoiceInk/Core/Recording/RecordingState.swift",
     "VoiceInk/App/MenuBar/DictateStatusIcon.swift",
-    "VoiceInk/Features/Dictionary/Workflows/CompanyDictionarySnapshot.swift"
+    "VoiceInk/Features/Dictionary/Workflows/CompanyDictionarySnapshot.swift",
+    "VoiceInk/Features/Dictionary/Workflows/CompanyDictionaryCallbackRoute.swift",
+    "VoiceInk/Features/Dictionary/Workflows/CompanyDictionaryClient.swift",
+    "VoiceInk/Features/Dictionary/Workflows/CompanyDictionaryStore.swift",
+    "VoiceInk/Features/Dictionary/Workflows/CompanyDictionaryTransport.swift",
+    "VoiceInk/Features/Dictionary/Workflows/CompanyDictionaryKeychainStore.swift",
+    "VoiceInk/Infrastructure/Credentials/KeychainService.swift"
   ],
   "testPatterns": [
     "Tests/VoiceInkTests/TinycastHistory*Tests.swift",
@@ -22,6 +28,10 @@
     "Tests/VoiceInkTests/ClipboardPasteSessionTests.swift",
     "Tests/VoiceInkTests/RecordingDeviceSessionTests.swift",
     "Tests/VoiceInkTests/DictateStatusIconTests.swift",
-    "Tests/VoiceInkTests/CompanyDictionarySnapshotTests.swift"
+    "Tests/VoiceInkTests/CompanyDictionarySnapshotTests.swift",
+    "Tests/VoiceInkTests/CompanyDictionaryCallbackRouteTests.swift",
+    "Tests/VoiceInkTests/CompanyDictionaryClientTests.swift",
+    "Tests/VoiceInkTests/CompanyDictionaryStoreTests.swift",
+    "Tests/VoiceInkTests/CompanyVocabularyProjectionTests.swift"
   ]
 }

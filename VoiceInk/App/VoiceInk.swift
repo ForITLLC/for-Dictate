@@ -23,6 +23,7 @@ struct VoiceInkApp: App {
     @StateObject private var aiService = AIService()
     @StateObject private var enhancementService: AIEnhancementService
     @StateObject private var activeWindowService = ActiveWindowService.shared
+    @StateObject private var companyDictionary: CompanyDictionaryConnectionModel
     @AppStorage(OnboardingSettings.completedV2Key) private var hasCompletedOnboardingV2 = false
     @State private var showMenuBarIcon = true
     @State private var didShowLaunchReminders = false
@@ -92,6 +93,8 @@ struct VoiceInkApp: App {
         container = resolvedContainer
         DictionaryService.cleanUpDictionaryContent(context: resolvedContainer.mainContext, source: "launch")
         SharedVocabularyService.shared.configure(context: resolvedContainer.mainContext)
+        let companyDictionary = CompanyDictionaryConnectionModel()
+        _companyDictionary = StateObject(wrappedValue: companyDictionary)
         TinycastHistoryExporter.shared.start(container: resolvedContainer)
 
         // Initialize services with proper sharing of instances
@@ -171,6 +174,10 @@ struct VoiceInkApp: App {
         _prewarmService = StateObject(wrappedValue: prewarmService)
 
         appDelegate.menuBarManager = menuBarManager
+        appDelegate.companyDictionaryCallback = { [weak companyDictionary] url in
+            companyDictionary?.handleCallback(url) ?? false
+        }
+        companyDictionary.start()
 
         // Ensure no lingering recording state from previous runs
         Task {
@@ -288,6 +295,7 @@ struct VoiceInkApp: App {
             .environmentObject(recorderUIManager)
             .environmentObject(transcriptionModelManager)
             .environmentObject(enhancementService)
+            .environmentObject(companyDictionary)
             .modelContainer(container)
             .onAppear {
                 menuBarManager.activateForPresentedWindow()
@@ -363,9 +371,10 @@ struct VoiceInkApp: App {
                     }
                 }
                 .navigationTitle("ForIT Dictate")
-                .forITProfileMenu(account: nil) {
-                    dictateSettings
-                }
+                .environmentObject(companyDictionary)
+                .forITProfileMenu(account: companyDictionary.profileAccount,
+                                  items: { CompanyDictionaryMenuItem() },
+                                  settings: { dictateSettings })
             }
         }
         .defaultSize(width: AppWindowLayout.width, height: AppWindowLayout.minimumHeight)
@@ -377,6 +386,18 @@ struct VoiceInkApp: App {
         Settings {
             dictateSettings
         }
+
+        Window("Company Dictionary", id: CompanyDictionaryWindow.id) {
+            NavigationStack {
+                CompanyDictionaryView()
+                    .environmentObject(companyDictionary)
+                    .navigationTitle("Company Dictionary")
+                    .forITProfileMenu(account: companyDictionary.profileAccount,
+                                      settings: { dictateSettings })
+            }
+        }
+        .defaultSize(width: 620, height: 660)
+        .defaultLaunchBehavior(.suppressed)
 
         MenuBarExtra(isInserted: $showMenuBarIcon) {
             MenuBarView()
