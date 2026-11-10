@@ -13,24 +13,30 @@ final class DictateStatusIconTests: XCTestCase {
         }
     }
 
-    func testEveryStateIsTemplateSizedAndAccessible() throws {
+    func testEveryStateIsColoredSizedAndAccessible() throws {
         for appearance in DictateStatusAppearance.allCases {
             let image = DictateStatusIcon.image(for: appearance)
-            XCTAssertTrue(image.isTemplate)
+            XCTAssertFalse(image.isTemplate, "Template tint would erase Dictate's distinguishing gold colour.")
             XCTAssertEqual(image.size, NSSize(width: 24, height: 18))
             XCTAssertFalse(appearance.accessibilityValue.isEmpty)
             XCTAssertEqual(image.accessibilityDescription, "ForIT Dictate")
-            XCTAssertNotNil(NSImage(systemSymbolName: appearance.symbolName, accessibilityDescription: nil))
             let pixels = try XCTUnwrap(NSBitmapImageRep(data: try XCTUnwrap(image.tiffRepresentation)))
             var visiblePixels = 0
+            var goldPixels = 0
             for y in 0..<pixels.pixelsHigh {
                 for x in 0..<pixels.pixelsWide {
                     if (pixels.colorAt(x: x, y: y)?.alphaComponent ?? 0) > 0 {
                         visiblePixels += 1
                     }
+                    if let color = pixels.colorAt(x: x, y: y)?.usingColorSpace(.sRGB),
+                       color.alphaComponent > 0.9, color.redComponent > 0.9,
+                       color.greenComponent > 0.65, color.blueComponent < 0.65 {
+                        goldPixels += 1
+                    }
                 }
             }
-            XCTAssertGreaterThan(visiblePixels, 0, "A valid image container must not hide a blank microphone.")
+            XCTAssertGreaterThan(visiblePixels, 0, "A valid image container must not hide a blank glyph.")
+            XCTAssertGreaterThan(goldPixels, 8, "Every state must retain the shared gold speech glyph.")
         }
     }
 
@@ -39,8 +45,6 @@ final class DictateStatusIconTests: XCTestCase {
             try XCTUnwrap(DictateStatusIcon.image(for: $0).tiffRepresentation)
         }
         XCTAssertEqual(Set(data).count, 4, "Recording, preparing and processing must not look idle.")
-        XCTAssertEqual(DictateStatusAppearance.recording.symbolName, "mic.fill")
-        XCTAssertEqual(DictateStatusAppearance.idle.symbolName, "mic")
     }
 
     func testRenderNativeLightAndDarkSpecimens() throws {
@@ -54,31 +58,25 @@ final class DictateStatusIconTests: XCTestCase {
         let dock = try XCTUnwrap(NSImage(contentsOfFile: iconPath))
         let folder = URL(fileURLWithPath: output, isDirectory: true)
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        for dark in [false, true] {
+        for variant in ["light", "dark", "selected"] {
+            let dark = variant == "dark"
             let nativeAppearance = try XCTUnwrap(NSAppearance(named: dark ? .darkAqua : .aqua))
             let sheet = NSImage(size: NSSize(width: 680, height: 220), flipped: false) { rect in
                 nativeAppearance.performAsCurrentDrawingAppearance {
-                    (dark ? NSColor.black : .white).setFill()
+                    (variant == "selected" ? NSColor.selectedContentBackgroundColor : dark ? .black : .white).setFill()
                     rect.fill()
-                    let ink = dark ? NSColor.white : .black
+                    let ink = dark || variant == "selected" ? NSColor.white : .black
                     let attributes: [NSAttributedString.Key: Any] = [.font: NSFont.systemFont(ofSize: 12), .foregroundColor: ink]
-                    ("ForIT Dictate - native template specimens (not Ben's desktop)" as NSString)
+                    ("ForIT Dictate - native colour specimens (not Ben's desktop)" as NSString)
                         .draw(at: NSPoint(x: 20, y: 192), withAttributes: attributes)
                     for (index, appearance) in DictateStatusAppearance.allCases.enumerated() {
                         let x = CGFloat(20 + index * 125)
                         let target = NSRect(x: x, y: 145, width: 24, height: 18)
                         let image = DictateStatusIcon.image(for: appearance)
-                        // Source-in applies the system's semantic template ink.
-                        let tinted = NSImage(size: image.size, flipped: false) { bounds in
-                            image.draw(in: bounds)
-                            ink.setFill()
-                            bounds.fill(using: .sourceIn)
-                            return true
-                        }
-                        tinted.draw(in: target)
+                        image.draw(in: target)
                         (appearance.rawValue as NSString).draw(at: NSPoint(x: x, y: 120), withAttributes: attributes)
                         // Enlarged alpha view supplements the actual 24x18 point image.
-                        tinted.draw(in: NSRect(x: x, y: 48, width: 72, height: 54))
+                        image.draw(in: NSRect(x: x, y: 48, width: 72, height: 54))
                     }
                     dock.draw(in: NSRect(x: 550, y: 90, width: 80, height: 80))
                     ("Shared app icon" as NSString).draw(at: NSPoint(x: 535, y: 67), withAttributes: attributes)
@@ -89,8 +87,8 @@ final class DictateStatusIconTests: XCTestCase {
             }
             let bitmap = try XCTUnwrap(NSBitmapImageRep(data: try XCTUnwrap(sheet.tiffRepresentation)))
             let png = try XCTUnwrap(bitmap.representation(using: .png, properties: [:]))
-            try png.write(to: folder.appendingPathComponent(dark ? "status-dark.png" : "status-light.png"), options: .atomic)
+            try png.write(to: folder.appendingPathComponent("status-\(variant).png"), options: .atomic)
         }
-        print("FORIT_STATUS_ICON_SPECIMENS: status-light.png,status-dark.png; template24x18pt; synthetic states; no live desktop capture")
+        print("FORIT_STATUS_ICON_SPECIMENS: status-light.png,status-dark.png,status-selected.png; colour24x18pt; synthetic states; no live desktop capture")
     }
 }
