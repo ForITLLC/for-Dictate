@@ -43,7 +43,7 @@ class CheckEvidenceTests(unittest.TestCase):
             "schema": "forit.dictate.integration-tests.v1", "status": "PASS", "exitCode": 0,
             "sourceCommit": "a" * 40, "sourceSHA256": {"synthetic/source.swift": "b" * 64},
             "jobs": 1, "processGroup": "inherited", "timeoutSeconds": 600,
-            "expectedTestCount": 137, "testCount": 137, "failureCount": 0,
+            "expectedTestCount": 141, "testCount": 141, "failureCount": 0,
             "testSummaryComplete": True, "timeout_cleanup_delegated": False,
             "retained_package_relative_path": None, "syntheticFixtureValid": True,
             "syntheticFixtureSHA256": hashlib.sha256(self.data).hexdigest(),
@@ -63,7 +63,7 @@ class CheckEvidenceTests(unittest.TestCase):
         self.assertEqual(fixture["sha256"], self.receipt["syntheticFixtureSHA256"])
         self.assertEqual(fixture["byteCount"], len(self.data))
         self.assertEqual(self.destination.stat().st_mode & 0o777, 0o600)
-        for expected, actual in ((63, 63), (137, 82), (82, 137), (76, 76), (78, 78), (80, 80), (82, 82), (89, 89), (91, 91)):
+        for expected, actual in ((63, 63), (141, 82), (82, 141), (76, 76), (78, 78), (80, 80), (82, 82), (89, 89), (91, 91)):
             with self.subTest(expected=expected, actual=actual):
                 self.destination.write_text('{"status":"PASS","stale":true}', encoding="utf-8")
                 receipt = dict(self.receipt, expectedTestCount=expected, testCount=actual)

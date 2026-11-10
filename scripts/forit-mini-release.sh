@@ -46,7 +46,7 @@ print(json.dumps({
     "channel": "Developer ID notarized DMG", "nativeExecution": False, "upload": False,
     "requiredEnvironment": ["FORIT_GATE_RUN", "FORIT_CODESIGN_KEYCHAIN"],
     "outerOwner": "published for-dev mini-build.py; existing whole-job slot and Common lifecycle",
-    "tests": 137, "receipt": "build/forit-release/release-evidence.log",
+    "tests": 141, "receipt": "build/forit-release/release-evidence.log",
     "executionRequires": "reviewed common publication and current host capacity; no execution authorized by this plan"
 }, indent=2))
 PY

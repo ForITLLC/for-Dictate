@@ -348,6 +348,105 @@ final class CompanyDictionaryClientTests: XCTestCase {
         XCTFail("Retirement did not publish immediate local exclusion.")
     }
 
+    private func completeFailedStartup(_ subject: CompanyDictionaryClient, store: SyntheticCompanyStore) async -> Bool {
+        let startup = Task { await subject.restore() }
+        guard await waitForStartup(store) else {
+            startup.cancel()
+            await store.releaseStartup(failing: true)
+            return false
+        }
+        await store.releaseStartup(failing: true)
+        // The failure handler and its defer must finish before the user action.
+        // These cases deliberately have no pending restoration at retirement.
+        await startup.value
+        return true
+    }
+
+    func testCompletedFailedStartupThenSignOutRecoversAndRevokesOldKey() async throws {
+        let transport = SyntheticCompanyTransport([.response(.init(status: 204, headers: [:], body: Data()))])
+        let store = SyntheticCompanyStore()
+        let previous = try await suspendedStartup(store)
+        var publications: [CompanyDictionarySnapshot?] = []
+        let subject = client(transport, store: store) { value, _ in publications.append(value) }
+        guard await completeFailedStartup(subject, store: store) else { return }
+        XCTAssertNil(subject.snapshot)
+        XCTAssertNotNil(subject.message)
+        await subject.signOut()
+        let reads = await store.restoreCount
+        XCTAssertEqual(reads, 2)
+        XCTAssertTrue(publications.allSatisfy { $0 == nil })
+        XCTAssertFalse(subject.isSignedIn)
+        XCTAssertNil(subject.revocationWarning)
+        let requests = await transport.requests
+        XCTAssertEqual(requests.map(\.endpoint.method), ["DELETE"])
+        XCTAssertEqual(requests.first?.credential, previous.credential?.key)
+    }
+
+    func testCompletedFailedStartupThenReplacementRecoversOldKeyWithoutPublishingIt() async throws {
+        let nextUser = "00000000-0000-0000-0000-000000000008"
+        let transport = SyntheticCompanyTransport([.response(.init(status: 503, headers: [:], body: Data())),
+            .response(try mint("b")), .response(try identity(nextUser)),
+            .response(try dictionary(["NewCompanyTerm"], version: "\"new-read-active\""))])
+        let store = SyntheticCompanyStore()
+        let previous = try await suspendedStartup(store)
+        var publications: [CompanyDictionarySnapshot?] = []
+        let subject = client(transport, store: store) { value, _ in publications.append(value) }
+        guard await completeFailedStartup(subject, store: store) else { return }
+        let returnedAttempt = await subject.beginConnection()
+        let attempt = try XCTUnwrap(returnedAttempt)
+        await subject.finishConnection(idToken: "synthetic-new-id-token", attempt: attempt)
+        let reads = await store.restoreCount
+        XCTAssertEqual(reads, 2)
+        XCTAssertEqual(subject.profile?.userID, nextUser)
+        XCTAssertEqual(subject.snapshot?.terms.first?.canonicalSpelling, "NewCompanyTerm")
+        XCTAssertFalse(publications.compactMap { $0 }.flatMap(\.terms).contains { $0.canonicalSpelling == "OldCompanyTerm" })
+        XCTAssertNotNil(subject.revocationWarning)
+        XCTAssertTrue(subject.statusText.contains("revocation"))
+        let requests = await transport.requests
+        XCTAssertEqual(requests.map(\.endpoint.method), ["DELETE", "POST", "GET", "GET"])
+        XCTAssertEqual(requests.first?.credential, previous.credential?.key)
+    }
+
+    func testCompletedFailedStartupThenSignOutRetainsUncertaintyWhenRecoveryFails() async throws {
+        let transport = SyntheticCompanyTransport([])
+        let store = SyntheticCompanyStore()
+        _ = try await suspendedStartup(store)
+        var publications: [CompanyDictionarySnapshot?] = []
+        let subject = client(transport, store: store) { value, _ in publications.append(value) }
+        guard await completeFailedStartup(subject, store: store) else { return }
+        await store.setRestorationFailure(true)
+        await subject.signOut()
+        let reads = await store.restoreCount
+        XCTAssertEqual(reads, 2)
+        XCTAssertTrue(publications.allSatisfy { $0 == nil })
+        XCTAssertFalse(subject.isSignedIn)
+        XCTAssertNotNil(subject.revocationWarning)
+        let requests = await transport.requests
+        XCTAssertTrue(requests.isEmpty)
+    }
+
+    func testCompletedFailedStartupThenReplacementKeepsUnknownOldSessionWarningWhenNoKeyRemains() async throws {
+        let nextUser = "00000000-0000-0000-0000-000000000008"
+        let transport = SyntheticCompanyTransport([.response(try mint("b")), .response(try identity(nextUser)),
+            .response(try dictionary(["NewCompanyTerm"], version: "\"new-read-active\""))])
+        let store = SyntheticCompanyStore()
+        _ = try await suspendedStartup(store)
+        let subject = client(transport, store: store)
+        guard await completeFailedStartup(subject, store: store) else { return }
+        await store.clearSavedSession()
+        let returnedAttempt = await subject.beginConnection()
+        let attempt = try XCTUnwrap(returnedAttempt)
+        await subject.finishConnection(idToken: "synthetic-new-id-token", attempt: attempt)
+        let reads = await store.restoreCount
+        XCTAssertEqual(reads, 2)
+        XCTAssertEqual(subject.profile?.userID, nextUser)
+        XCTAssertEqual(subject.snapshot?.terms.first?.canonicalSpelling, "NewCompanyTerm")
+        XCTAssertNotNil(subject.revocationWarning)
+        XCTAssertTrue(subject.statusText.contains("revocation"))
+        let methods = await transport.requests.map(\.endpoint.method)
+        XCTAssertEqual(methods, ["POST", "GET", "GET"])
+    }
+
     func testSignOutDuringStartupRevokesReturnedOldKeyBeforeDiscardingIt() async throws {
         let transport = SyntheticCompanyTransport([.response(.init(status: 204, headers: [:], body: Data()))])
         let store = SyntheticCompanyStore()
@@ -529,11 +628,13 @@ private actor SyntheticCompanyStore: CompanyDictionaryStore {
     private var credentialFailure = false
     private var snapshotFailure = false
     private var resetFailure = false
+    private var restorationFailure = false
     private var latestResetOrder: UInt64 = 0
     private var startupValue: CompanyDictionaryRestoration?
     private var startupSuspended = false
     private var pendingStartup: CheckedContinuation<CompanyDictionaryRestoration, Error>?
     private(set) var resetCount = 0
+    private(set) var restoreCount = 0
     var isStartupPending: Bool { pendingStartup != nil }
     func suspendStartup(_ value: CompanyDictionaryRestoration) {
         startupValue = value
@@ -552,7 +653,15 @@ private actor SyntheticCompanyStore: CompanyDictionaryStore {
     func setCredentialFailure(_ value: Bool) { credentialFailure = value }
     func setSnapshotFailure(_ value: Bool) { snapshotFailure = value }
     func setResetFailure(_ value: Bool) { resetFailure = value }
+    func setRestorationFailure(_ value: Bool) { restorationFailure = value }
+    func clearSavedSession() {
+        credential = nil
+        sessionID = nil
+        value = nil
+    }
     func restore() async throws -> CompanyDictionaryRestoration {
+        restoreCount += 1
+        if restorationFailure { throw CompanyDictionaryStoreError.unavailable }
         if startupSuspended {
             return try await withCheckedThrowingContinuation { pendingStartup = $0 }
         }

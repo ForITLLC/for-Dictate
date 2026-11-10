@@ -45,15 +45,22 @@ final class CompanyDictionaryClient: ObservableObject {
     private var serverRetryAt: Date?
     private var failureCount = 0
     private var restorationWork: RestorationWork?
+    // Outlives the completed task: a failed read is not proof that the previous
+    // session/key was absent. Retirement must recover it or report uncertainty.
+    private var failedStartupRead = false
 
     /// Shared only by overlapping startup/retirement calls. It retains no key
     /// after these calls finish; the bounded revocation task returns only Bool.
     @MainActor
     private final class RestorationWork {
         let task: Task<CompanyDictionaryRestoration, Error>
+        let followsFailedRead: Bool
         var retiring = false
         var revocation: (sessionID: UUID, task: Task<Bool, Never>)?
-        init(task: Task<CompanyDictionaryRestoration, Error>) { self.task = task }
+        init(task: Task<CompanyDictionaryRestoration, Error>, followsFailedRead: Bool = false) {
+            self.task = task
+            self.followsFailedRead = followsFailedRead
+        }
     }
 
     convenience init(onPublication: @escaping @MainActor (CompanyDictionarySnapshot?, Date?) -> Void) {
@@ -85,7 +92,7 @@ final class CompanyDictionaryClient: ObservableObject {
         restored = true
         let operation = sessionID
         let store = store
-        let work = RestorationWork(task: Task { try await store.restore() })
+        let work = RestorationWork(task: Task { try await store.restore() }, followsFailedRead: failedStartupRead)
         restorationWork = work
         defer {
             if restorationWork === work && !work.retiring { restorationWork = nil }
@@ -102,6 +109,7 @@ final class CompanyDictionaryClient: ObservableObject {
                 return
             }
             sessionID = candidate.sessionID
+            failedStartupRead = false
             credential = candidate
             profile = candidate.profile
             isSignedIn = true
@@ -121,6 +129,7 @@ final class CompanyDictionaryClient: ObservableObject {
             }
         } catch {
             guard sessionID == operation else { return }
+            failedStartupRead = true
             // Keep disk/Keychain material on unavailable storage. Nothing is
             // published until the known lifecycle and credential can be read.
             message = String(localized: "Company sign-in storage could not be read. Your personal and local vocabulary are still available.")
@@ -411,7 +420,9 @@ final class CompanyDictionaryClient: ObservableObject {
     @discardableResult
     private func retireCurrentSession(nextID: UUID, revoke shouldRevoke: Bool) async -> Bool {
         var previous = credential
-        let pendingRestoration = restorationWork
+        var pendingRestoration = restorationWork
+        let recoverFailedRead = failedStartupRead
+        failedStartupRead = false
         pendingRestoration?.retiring = true
         storageTransitionOrder += 1
         let transition = storageTransitionOrder
@@ -438,14 +449,27 @@ final class CompanyDictionaryClient: ObservableObject {
         isBusy = true
         // This happens before any Keychain, filesystem or remote operation.
         onPublication(nil, nil)
+        if pendingRestoration == nil, recoverFailedRead, previous == nil {
+            // The first read already failed and its task was released. Try the
+            // existing store again before reset can delete a now-readable key.
+            // This work is retirement-only: its snapshot is never published.
+            let store = store
+            let recovery = RestorationWork(task: Task { try await store.restore() }, followsFailedRead: true)
+            recovery.retiring = true
+            restorationWork = recovery
+            pendingRestoration = recovery
+        }
         // The startup read may already hold the old key without having returned
         // it to the UI executor. Await only after local exclusion, and before
         // deletion, so it can be revoked instead of silently orphaned.
-        var unknownPreviousSession = false
+        var unknownPreviousSession = recoverFailedRead && previous == nil
         if let pendingRestoration {
             do {
                 let result = try await pendingRestoration.task.value
                 if previous == nil { previous = result.credential }
+                // A nil result after an earlier failure cannot establish that
+                // no old server session existed (the store may have no key left).
+                unknownPreviousSession = previous == nil && pendingRestoration.followsFailedRead
             } catch {
                 unknownPreviousSession = previous == nil
             }

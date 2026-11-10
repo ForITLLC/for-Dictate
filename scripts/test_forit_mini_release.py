@@ -261,7 +261,7 @@ class MiniReleaseContractTests(unittest.TestCase):
         plan = json.loads(result.stdout)
         self.assertIs(plan["nativeExecution"], False)
         self.assertIs(plan["upload"], False)
-        self.assertEqual(plan["tests"], 137)
+        self.assertEqual(plan["tests"], 141)
         self.assertEqual(plan["channel"], "Developer ID notarized DMG")
         self.assertEqual(plan["requiredEnvironment"], ["FORIT_GATE_RUN", "FORIT_CODESIGN_KEYCHAIN"])
         self.assertEqual([record["command"] for record in records], ["dirname", "git", "python3"])
@@ -365,7 +365,7 @@ class MiniReleaseContractTests(unittest.TestCase):
     def test_explicit_non_actions_plan_is_allowed(self):
         result, _ = self.invoke("1901", "--plan", actions="false")
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(json.loads(result.stdout)["tests"], 137)
+        self.assertEqual(json.loads(result.stdout)["tests"], 141)
 
 
 if __name__ == "__main__":

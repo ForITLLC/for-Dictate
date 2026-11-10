@@ -46,7 +46,7 @@ def write_check_evidence(output, receipt):
         completed = (receipt.get("exitCode") == 0 and receipt.get("testSummaryComplete") is True
                      and receipt.get("timeout_cleanup_delegated") is False
                      and receipt.get("syntheticFixtureValid") is True
-                     and receipt.get("testCount") == receipt.get("expectedTestCount") == 137
+                     and receipt.get("testCount") == receipt.get("expectedTestCount") == 141
                      and receipt.get("failureCount") == 0)
         if not completed:
             raise ValueError("Check evidence requires completed, valid checks before retaining a fixture")
