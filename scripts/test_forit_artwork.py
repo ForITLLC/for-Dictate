@@ -31,6 +31,14 @@ class ArtworkContractTests(unittest.TestCase):
         palette = ET.fromstring(master).attrib
         self.assertIn("0x" + palette["data-accent"][1:], source)
         self.assertIn("0x" + palette["data-ink"][1:], source)
+        self.assertIn("0x" + palette["data-recording"][1:], source)
+        self.assertEqual(palette["data-accent"], "#FFFFFF")
+        self.assertEqual(palette["data-recording"], "#FF453A")
+        images = list(ET.fromstring(master).iter("{http://www.w3.org/2000/svg}image"))
+        self.assertEqual(len(images), 1)
+        embedded = base64.b64decode(images[0].attrib["href"].removeprefix("data:image/png;base64,"), validate=True)
+        self.assertEqual(hashlib.sha256(embedded).hexdigest(), receipt["canonicalMark"]["sha256"])
+        self.assertLess(float(images[0].attrib["y"]), 40, "Ben requested the canonical mark at the top.")
 
     def test_every_mac_asset_slot_has_the_declared_pixel_dimensions(self):
         folder = ROOT / "VoiceInk/Assets.xcassets/AppIcon.appiconset"

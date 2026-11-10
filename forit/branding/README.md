@@ -4,15 +4,19 @@
 and the menu-bar glyph. Ben requested a different shape and colour from
 Squelch on November 10, 2026 (Dispatch `ba-018a751f84d3`). Squelch stays unchanged.
 
-The gold speech bubble and waveform replace the microphone silhouette. The
-native menu image preserves its colours and adds the real engine-state marks;
-it remains distinguishable by shape. The same SVG produces the embedded menu
-PDF and the app icon. Edit the master and regenerate all derivatives together.
+Ben rejected the yellow/gold artwork and requested the ForIT logo on top, with
+colour changing when engaged (`ba-ee58ec51afeb`, `ba-60ba975ab71f`). The master now
+embeds the exact canonical ForIT mark above a small dictation waveform on the
+shared navy background. The menu image is neutral white with a navy keyline at
+rest and turns red only while the real engine state is recording. Starting and
+processing retain their distinct state marks. The same SVG produces the menu
+PDF and app icon; regenerate every derivative together.
 
 Run `scripts/render-dictate-artwork.py --output <new-directory>` on the existing
 build server. It reads the exact published Health renderer and canonical Common
-mark, verifies their hashes and reuses the shared optical placement, footer,
-Mac mask/shadow and asset-slot generation. An existing local copy can be passed
+mark, verifies their hashes and reuses shared optical placement, Mac mask/shadow
+and asset-slot generation. Ben's explicit top-mark placement is inside the master;
+the old footer is omitted to avoid a duplicate logo. An existing local copy can be passed
 with `--health-recipe`; its exact hash is still required. The `FORIT_HEX` local
 mark option also retains the shared byte/dimension checks. No shared recipe,
 profile validator or ForIT mark is replaced.

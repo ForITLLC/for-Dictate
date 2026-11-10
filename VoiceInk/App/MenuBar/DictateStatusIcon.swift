@@ -1,7 +1,7 @@
 import AppKit
 
-/// The same speech/waveform master used by the app icon, with real engine-state marks.
-/// Gold fill and dark structure keep the silhouette distinct from Squelch in every theme.
+/// The canonical ForIT mark above a waveform, shared with the app icon.
+/// Neutral white with a navy keyline at rest; red only during actual recording.
 enum DictateStatusAppearance: String, CaseIterable {
     case idle, starting, recording, processing
 
@@ -29,8 +29,11 @@ enum DictateStatusAppearance: String, CaseIterable {
 enum DictateStatusIcon {
     static let size = NSSize(width: 24, height: 18)
     private static let glyph = NSImage(data: DictateGlyphAsset.pdfData)!
-    private static let gold = color(DictateGlyphAsset.accentRGB)
+    private static let neutral = color(DictateGlyphAsset.accentRGB)
+    private static let recording = color(DictateGlyphAsset.recordingRGB)
     private static let outline = color(DictateGlyphAsset.inkRGB)
+    private static let glyphSize = NSSize(width: 17.6, height: 16.6)
+    private static let keylineGlyph = tintedGlyph(outline)
     private static let images: [DictateStatusAppearance: NSImage] =
         Dictionary(uniqueKeysWithValues: DictateStatusAppearance.allCases.map { ($0, makeImage($0)) })
 
@@ -45,10 +48,27 @@ enum DictateStatusIcon {
                 blue: CGFloat(rgb & 255) / 255, alpha: 1)
     }
 
+    /// Tint the exact shared alpha, never redraw or substitute the ForIT logo.
+    private static func tintedGlyph(_ color: NSColor) -> NSImage {
+        NSImage(size: glyphSize, flipped: false) { rect in
+            glyph.draw(in: rect, from: .zero, operation: .sourceOver, fraction: 1)
+            color.setFill()
+            rect.fill(using: .sourceAtop)
+            return true
+        }
+    }
+
     private static func makeImage(_ appearance: DictateStatusAppearance) -> NSImage {
+        let ink = appearance == .recording ? recording : neutral
+        let foreground = tintedGlyph(ink)
         let image = NSImage(size: size, flipped: false) { _ in
-            glyph.draw(in: NSRect(x: 0, y: 0, width: 19, height: 18),
-                       from: .zero, operation: .sourceOver, fraction: 1)
+            let target = NSRect(origin: NSPoint(x: 0.7, y: 0.7), size: glyphSize)
+            for direction in 0..<8 {
+                let angle = Double(direction) * .pi / 4
+                keylineGlyph.draw(in: target.offsetBy(dx: CGFloat(cos(angle)) * 0.35,
+                                                      dy: CGFloat(sin(angle)) * 0.35))
+            }
+            foreground.draw(in: target)
             switch appearance {
             case .idle:
                 break
@@ -58,19 +78,19 @@ enum DictateStatusIcon {
                 outline.setStroke()
                 ring.lineWidth = 1.5
                 ring.stroke()
-                gold.setStroke()
+                NSColor.systemTeal.setStroke()
                 ring.lineWidth = 0.6
                 ring.stroke()
             case .recording:
                 outline.setFill()
                 NSBezierPath(ovalIn: NSRect(x: 18, y: 10, width: 5, height: 5)).fill()
-                gold.setFill()
+                recording.setFill()
                 NSBezierPath(ovalIn: NSRect(x: 19, y: 11, width: 3, height: 3)).fill()
             case .processing:
                 for y in [6.0, 10.0, 14.0] {
                     outline.setFill()
                     NSBezierPath(ovalIn: NSRect(x: 20, y: y, width: 3, height: 3)).fill()
-                    gold.setFill()
+                    NSColor.systemTeal.setFill()
                     NSBezierPath(ovalIn: NSRect(x: 20.75, y: y + 0.75, width: 1.5, height: 1.5)).fill()
                 }
             }
