@@ -4,12 +4,13 @@
   "productMaster": {
     "owner": "ForITLLC/for-Dictate",
     "path": "forit/branding/dictate-glyph.svg",
-    "sha256": "d4ffd10e41f7ae49f7eb1b3eb38cfe66a8a25ba066affb1595e53c424feecbb3",
+    "sha256": "8663c008b2c1b3a37490270d3bf29cd407f0970e05b574bd8de6dee07fbc245d",
     "palette": {
-      "accent": "#FFD071",
-      "ink": "#24180A",
-      "dock-top": "#7A3F11",
-      "dock-bottom": "#2B1607"
+      "accent": "#FFFFFF",
+      "ink": "#071827",
+      "recording": "#FF453A",
+      "dock-top": "#1A3348",
+      "dock-bottom": "#070F18"
     }
   },
   "sharedRecipe": {
@@ -30,7 +31,8 @@
     "owner": "ForITLLC/forit-Common",
     "commit": "504b5a9b61606d0f5d4b5f21dafef71ce48544e0",
     "path": "packages/ui/assets/brand/forit-hex-only.png",
-    "sha256": "a983a6d29f5310df1941e9212b4f4040a9ef33e67c3e7d5437bed89a91b33adc"
+    "sha256": "a983a6d29f5310df1941e9212b4f4040a9ef33e67c3e7d5437bed89a91b33adc",
+    "placement": "top inside shared product master; no duplicate footer (Ben ba-60ba975ab71f)"
   },
   "consumer": {
     "bundleIdentifier": "io.forit.dictate",
@@ -38,7 +40,7 @@
     "appIcon": "AppIcon.appiconset",
     "menuGlyph": "DictateGlyphAsset.swift from same SVG/PDF"
   },
-  "request": "Ben/Dispatch ba-018a751f84d3: distinct from Squelch in shape and colour; change Dictate only",
+  "request": "Ben ba-ee58ec51afeb/ba-60ba975ab71f: remove yellow; ForIT logo on top, colour changes when engaged. Squelch unchanged.",
   "nativeTests": "unrun",
   "signedDelivery": "unrun",
   "twoRunDeterminism": "not established",
@@ -48,58 +50,48 @@
       "bytes": 1241
     },
     "AppIcon.appiconset/mac-1024.png": {
-      "sha256": "50b745225b8011d1b6eadd35bdd885c77cd7450a31305cf1319812657ec51650",
-      "bytes": 54439
+      "sha256": "fefea4cc9015bf5548752fbe62da4585228b009f0ffac5c3a05ecb699939ba69",
+      "bytes": 50855
     },
     "AppIcon.appiconset/mac-128.png": {
-      "sha256": "f096582ce0946ba1e1059e03c58934a6513aed6ad00b0af4e584ae39a01e8077",
-      "bytes": 6002
+      "sha256": "67b9deae5c32f1f9ad8a010cdc1943564f193388c17f85c4a8015ea768993ef7",
+      "bytes": 6177
     },
     "AppIcon.appiconset/mac-16.png": {
-      "sha256": "e3586d95faf2ed5f8587c66a449a16d988e561e3ad68c547acabcc14841caa13",
-      "bytes": 662
+      "sha256": "f6ce32abcc0ecedd5d3668a5f49078727b1216c8c59df56636c39d76466cfd87",
+      "bytes": 615
     },
     "AppIcon.appiconset/mac-256.png": {
-      "sha256": "570cf3bc290bcbd5f108b48a6aa014a6e5800db8ec7688abd5e1a8b6068f000d",
-      "bytes": 13067
+      "sha256": "c673bede3007b3b637dbf9ecc5bbf60b8cbb219033e550383b213ed8765e0c34",
+      "bytes": 12728
     },
     "AppIcon.appiconset/mac-32.png": {
-      "sha256": "b33bfeefe45e6518749e11c53d1f4d500e5de103eac55cc9afb0be9925638dbb",
-      "bytes": 1516
+      "sha256": "e3adc7e91a623a93685963400a5cbad6fd82fec430e9047e1a4fff3767103b57",
+      "bytes": 1368
     },
     "AppIcon.appiconset/mac-512.png": {
-      "sha256": "0545883ae222bd3c2b709dabe7b2fdb4181c0dc7e5435745f7d1acd16d65d4b2",
-      "bytes": 28870
+      "sha256": "cd057515d66c42f939ba87cf1a71d39d4dc0a1e7a9a790ffda525501e03e8a95",
+      "bytes": 27141
     },
     "AppIcon.appiconset/mac-64.png": {
-      "sha256": "73504729f2b967b8554d16a055d266f61ac46b5b41f1a56a8f18726a12f5c07f",
-      "bytes": 3037
+      "sha256": "12e46d4458f4bba6d91c5d2705bec4cc9a6f2a2b3202f981e8696ad9e1a2e87e",
+      "bytes": 2921
     },
     "DictateGlyph.pdf": {
-      "sha256": "edc4d9b1cd45f8843843a794764e1bbe94b2363afce9c43c396115e5131642a7",
-      "bytes": 1249
+      "sha256": "e9d0749b8293f49e03169591ec2824e91ad108415fb424e9f03eb98a9bb3f2ed",
+      "bytes": 41150
     },
     "DictateGlyphAsset.swift": {
-      "sha256": "8dc50d7896d534e2204b4f999ab245f86688c423dd436086c89fbe2c53e01d9a",
-      "bytes": 2132
+      "sha256": "3c7471288fe4c8d024dd545aa449de5556806268c3e52b7a1a332f448872e3a1",
+      "bytes": 55379
     },
     "glyph-preview.png": {
-      "sha256": "6d38f696dcae88db0f2b072edaffc8da034ec1f4eeceb7a90fd11fe76ff62ec1",
-      "bytes": 5469
+      "sha256": "f61aa658724420341f4a97f532cf7fcc3e644d4885bc4bf3fbb58931e01abfd7",
+      "bytes": 9425
     },
     "shared-health-recipe.py": {
       "sha256": "a26587c4081e1d72206d29647b93aaf146353cfb6d02e34a9a507c40da8072d7",
       "bytes": 73959
     }
-  },
-  "adoption": {
-    "job": "for-Menubar-microphone-20261110T022847Z-708486",
-    "host": "mini-lan",
-    "exit": 0,
-    "baseCommit": "7e7316f987a8c9f5e880f7f80225de5f0d2dfc89",
-    "nativeTests": "unrun",
-    "sourceBytesVerified": true,
-    "allMacSlotsVerified": true,
-    "embeddedPDFMatchesMasterDerivative": true
   }
 }

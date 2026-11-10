@@ -16,27 +16,37 @@ final class DictateStatusIconTests: XCTestCase {
     func testEveryStateIsColoredSizedAndAccessible() throws {
         for appearance in DictateStatusAppearance.allCases {
             let image = DictateStatusIcon.image(for: appearance)
-            XCTAssertFalse(image.isTemplate, "Template tint would erase Dictate's distinguishing gold colour.")
+            XCTAssertFalse(image.isTemplate, "Template tint would erase the recording colour.")
             XCTAssertEqual(image.size, NSSize(width: 24, height: 18))
             XCTAssertFalse(appearance.accessibilityValue.isEmpty)
             XCTAssertEqual(image.accessibilityDescription, "ForIT Dictate")
             let pixels = try XCTUnwrap(NSBitmapImageRep(data: try XCTUnwrap(image.tiffRepresentation)))
             var visiblePixels = 0
-            var goldPixels = 0
+            var redPixels = 0
+            var neutralPixels = 0
             for y in 0..<pixels.pixelsHigh {
                 for x in 0..<pixels.pixelsWide {
                     if (pixels.colorAt(x: x, y: y)?.alphaComponent ?? 0) > 0 {
                         visiblePixels += 1
                     }
                     if let color = pixels.colorAt(x: x, y: y)?.usingColorSpace(.sRGB),
-                       color.alphaComponent > 0.9, color.redComponent > 0.9,
-                       color.greenComponent > 0.65, color.blueComponent < 0.65 {
-                        goldPixels += 1
+                       color.alphaComponent > 0.9 {
+                        if color.redComponent > 0.8, color.greenComponent < 0.5, color.blueComponent < 0.5 {
+                            redPixels += 1
+                        }
+                        if color.redComponent > 0.9, color.greenComponent > 0.9, color.blueComponent > 0.9 {
+                            neutralPixels += 1
+                        }
                     }
                 }
             }
             XCTAssertGreaterThan(visiblePixels, 0, "A valid image container must not hide a blank glyph.")
-            XCTAssertGreaterThan(goldPixels, 8, "Every state must retain the shared gold speech glyph.")
+            if appearance == .recording {
+                XCTAssertGreaterThan(redPixels, 8, "The actual recording state must turn the glyph red.")
+            } else {
+                XCTAssertEqual(redPixels, 0, "Preparing and processing must not claim live recording.")
+                XCTAssertGreaterThan(neutralPixels, 8, "The idle ForIT mark and waveform stay neutral.")
+            }
         }
     }
 

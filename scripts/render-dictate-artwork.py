@@ -36,14 +36,14 @@ def main():
     if document.attrib.get("viewBox") != "0 0 256 256":
         parser.error("the canonical product glyph must retain its 256-unit canvas")
     colours = {name: document.attrib[f"data-{name}"]
-               for name in ("accent", "ink", "dock-top", "dock-bottom")}
+               for name in ("accent", "ink", "recording", "dock-top", "dock-bottom")}
     if any(len(value) != 7 or value[0] != "#" for value in colours.values()):
         parser.error("each master colour must be a six-digit RGB value")
     for value in colours.values():
         int(value[1:], 16)
     actual_colours = {value for element in document.iter()
                       for key, value in element.attrib.items() if key in ("fill", "stroke") and value != "none"}
-    if actual_colours != {colours["accent"], colours["ink"]}:
+    if actual_colours != {colours["accent"]}:
         parser.error("master geometry and declared menu palette diverged")
     # Refuse an existing output instead of deleting a tree or silently overwriting a prior render.
     args.output.mkdir(parents=True, exist_ok=False)
@@ -60,8 +60,19 @@ def main():
     sys.modules[spec.name] = recipe
     spec.loader.exec_module(recipe)
 
-    # Preserve the shared optical placement, exact canonical-mark validation,
-    # Mac mask/shadow and all ten Mac asset slots. Do not modify APPS or bypass its validators.
+    # Preserve shared optical placement, canonical-mark validation, Mac mask and
+    # ten slots. Ben explicitly requested the mark on TOP, so the exact shared
+    # PNG is inside the master and no duplicate footer mark is added.
+    mark = recipe.mark_source()
+    images = list(document.iter("{http://www.w3.org/2000/svg}image"))
+    if len(images) != 1:
+        raise ValueError("the master must contain exactly one canonical ForIT mark")
+    prefix = "data:image/png;base64,"
+    href = images[0].attrib.get("href", "")
+    embedded_mark = base64.b64decode(href.removeprefix(prefix), validate=True)
+    if (not href.startswith(prefix) or sha(embedded_mark) != recipe.MARK_SHA256
+            or document.attrib.get("data-canonical-mark-sha256") != recipe.MARK_SHA256):
+        raise ValueError("embedded top mark differs from canonical ForIT source")
     geometry = "".join(ET.tostring(child, encoding="unicode") for child in document
                        if not child.tag.endswith("title"))
     transform = recipe.placement(geometry, "")
@@ -71,8 +82,7 @@ def main():
                f'<stop offset="1" stop-color="{colours["dock-bottom"]}"/></linearGradient></defs>'
                '<rect width="1024" height="1024" fill="url(#bg)"/>'
                f'<g transform="{transform}">{geometry}</g></svg>')
-    mark = recipe.mark_source()
-    icon = recipe.mac_icon(recipe.flat_png(artwork, mark))
+    icon = recipe.mac_icon(recipe.flat_png(artwork))
     recipe.write_mac_appiconset(icon, args.output / "AppIcon.appiconset")
 
     pdf = recipe.cairosvg.svg2pdf(bytestring=master)
@@ -86,6 +96,7 @@ def main():
              f'    static let pdfSHA256 = "{sha(pdf)}"\n'
              f'    static let accentRGB: UInt32 = 0x{colours["accent"][1:]}\n'
              f'    static let inkRGB: UInt32 = 0x{colours["ink"][1:]}\n'
+             f'    static let recordingRGB: UInt32 = 0x{colours["recording"][1:]}\n'
              f'    static let pdfData = Data(base64Encoded: "{encoded}")!\n' + "}\n")
     (args.output / "DictateGlyphAsset.swift").write_text(swift)
     outputs = {str(p.relative_to(args.output)): {"sha256": sha(p.read_bytes()), "bytes": p.stat().st_size}
@@ -99,10 +110,11 @@ def main():
                          "path": RECIPE_PATH, "sha256": RECIPE_SHA256, "modified": False,
                          "functions": ["placement", "mark_source", "flat_png", "mac_icon", "write_mac_appiconset"]},
         "canonicalMark": {"owner": recipe.MARK_REPO, "commit": recipe.MARK_COMMIT,
-                          "path": recipe.MARK_PATH, "sha256": recipe.MARK_SHA256},
+                          "path": recipe.MARK_PATH, "sha256": recipe.MARK_SHA256,
+                          "placement": "top inside shared product master; no duplicate footer (Ben ba-60ba975ab71f)"},
         "consumer": {"bundleIdentifier": "io.forit.dictate", "shippingPlatform": "macOS",
                      "appIcon": "AppIcon.appiconset", "menuGlyph": "DictateGlyphAsset.swift from same SVG/PDF"},
-        "request": "Ben/Dispatch ba-018a751f84d3: distinct from Squelch in shape and colour; change Dictate only",
+        "request": "Ben ba-ee58ec51afeb/ba-60ba975ab71f: remove yellow; ForIT logo on top, colour changes when engaged. Squelch unchanged.",
         "nativeTests": "unrun", "signedDelivery": "unrun", "twoRunDeterminism": "not established",
         "files": outputs,
     }
