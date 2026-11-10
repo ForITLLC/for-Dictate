@@ -14,15 +14,17 @@ final class CompanyDictionaryClient: ObservableObject {
     @Published private(set) var isStale = false
     @Published private(set) var checkedAt: Date?
     @Published private(set) var message: String?
+    @Published private(set) var revocationWarning: String?
 
     var statusText: String {
-        if let message { return message }
-        if isBusy { return String(localized: "Checking company dictionary…") }
-        if let snapshot {
-            return String(localized: "\(snapshot.total) company terms available")
-        }
-        if isSignedIn { return String(localized: "Company dictionary has not been loaded.") }
-        return String(localized: "Sign in to use your company dictionary.")
+        let primary: String
+        if let message { primary = message }
+        else if isBusy { primary = String(localized: "Checking company dictionary…") }
+        else if let snapshot { primary = String(localized: "\(snapshot.total) company terms available") }
+        else if isSignedIn { primary = String(localized: "Company dictionary has not been loaded.") }
+        else { primary = String(localized: "Sign in to use your company dictionary.") }
+        if let revocationWarning, revocationWarning != primary { return primary + "\n" + revocationWarning }
+        return primary
     }
 
     private let transport: any CompanyDictionaryTransport
@@ -42,6 +44,17 @@ final class CompanyDictionaryClient: ObservableObject {
     private var nextAttemptAt: Date?
     private var serverRetryAt: Date?
     private var failureCount = 0
+    private var restorationWork: RestorationWork?
+
+    /// Shared only by overlapping startup/retirement calls. It retains no key
+    /// after these calls finish; the bounded revocation task returns only Bool.
+    @MainActor
+    private final class RestorationWork {
+        let task: Task<CompanyDictionaryRestoration, Error>
+        var retiring = false
+        var revocation: (sessionID: UUID, task: Task<Bool, Never>)?
+        init(task: Task<CompanyDictionaryRestoration, Error>) { self.task = task }
+    }
 
     convenience init(onPublication: @escaping @MainActor (CompanyDictionarySnapshot?, Date?) -> Void) {
         let bundleID = Bundle.main.bundleIdentifier ?? "io.forit.dictate"
@@ -71,8 +84,14 @@ final class CompanyDictionaryClient: ObservableObject {
         guard !restored else { return }
         restored = true
         let operation = sessionID
+        let store = store
+        let work = RestorationWork(task: Task { try await store.restore() })
+        restorationWork = work
+        defer {
+            if restorationWork === work && !work.retiring { restorationWork = nil }
+        }
         do {
-            let result = try await store.restore()
+            let result = try await work.task.value
             guard sessionID == operation else { return }
             guard let candidate = result.credential else { return }
             guard CompanyDictionaryCredential.validKey(candidate.key), candidate.expiresAt > now() else {
@@ -391,7 +410,9 @@ final class CompanyDictionaryClient: ObservableObject {
 
     @discardableResult
     private func retireCurrentSession(nextID: UUID, revoke shouldRevoke: Bool) async -> Bool {
-        let previous = credential
+        var previous = credential
+        let pendingRestoration = restorationWork
+        pendingRestoration?.retiring = true
         storageTransitionOrder += 1
         let transition = storageTransitionOrder
         restored = true
@@ -417,32 +438,64 @@ final class CompanyDictionaryClient: ObservableObject {
         isBusy = true
         // This happens before any Keychain, filesystem or remote operation.
         onPublication(nil, nil)
+        // The startup read may already hold the old key without having returned
+        // it to the UI executor. Await only after local exclusion, and before
+        // deletion, so it can be revoked instead of silently orphaned.
+        var unknownPreviousSession = false
+        if let pendingRestoration {
+            do {
+                let result = try await pendingRestoration.task.value
+                if previous == nil { previous = result.credential }
+            } catch {
+                unknownPreviousSession = previous == nil
+            }
+        }
         var durable = true
         do { try await store.reset(to: nextID, order: transition) }
         catch { durable = false }
         let revoked: Bool
-        if shouldRevoke, let previous, previous.expiresAt > now() { revoked = await revoke(previous) }
-        else { revoked = true }
+        if shouldRevoke, let previous, previous.expiresAt > now() {
+            if let pendingRestoration {
+                // Two retirements can await the same startup read. They share
+                // exactly one cleanup attempt for the returned old session.
+                if pendingRestoration.revocation == nil {
+                    pendingRestoration.revocation = (previous.sessionID, startRevocation(previous))
+                }
+                if let shared = pendingRestoration.revocation, shared.sessionID == previous.sessionID {
+                    revoked = await shared.task.value
+                } else { revoked = await revoke(previous) }
+            } else { revoked = await revoke(previous) }
+        } else { revoked = !(shouldRevoke && unknownPreviousSession) }
+        if restorationWork === pendingRestoration { restorationWork = nil }
         guard sessionID == nextID else { return false }
         isBusy = false
+        if !revoked {
+            // Retain this secret-free warning across a replacement sign-in: a
+            // successful new session says nothing about revoking the old one.
+            revocationWarning = String(localized: "Server revocation of the previous sign-in could not be confirmed; it ends by its server expiry.")
+        }
         if !durable {
             message = String(localized: "Company terms are off for this run, but sign-out could not be saved completely. Storage needs repair before durable sign-out can be confirmed.")
         } else if !revoked {
-            message = String(localized: "Signed out on this Mac. Server revocation could not be confirmed; the previous session ends by its expiry.")
+            message = revocationWarning
         } else { message = nil }
         return durable
     }
 
     private func revoke(_ candidate: CompanyDictionaryCredential) async -> Bool {
+        await startRevocation(candidate).value
+    }
+
+    private func startRevocation(_ candidate: CompanyDictionaryCredential) -> Task<Bool, Never> {
         let transport = transport
         let request = CompanyDictionaryRequest(endpoint: .revoke, credential: candidate.key)
         // A late successful mint can arrive after its browser task was cancelled.
         // Give this one bounded cleanup attempt its own cancellation scope; no
         // durable queue, token replay or automatic mint is created.
-        return await Task.detached(priority: .utility) {
+        return Task.detached(priority: .utility) {
             do { return try await transport.send(request).status == 204 }
             catch { return false }
-        }.value
+        }
     }
 
     private func abandonMint(_ candidate: CompanyDictionaryCredential, attempt: UUID) async {
