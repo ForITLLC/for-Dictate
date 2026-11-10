@@ -65,8 +65,8 @@ enum DictateStatusIcon {
             let target = NSRect(origin: NSPoint(x: 0.7, y: 0.7), size: glyphSize)
             for direction in 0..<8 {
                 let angle = Double(direction) * .pi / 4
-                keylineGlyph.draw(in: target.offsetBy(dx: CGFloat(cos(angle)) * 0.6,
-                                                      dy: CGFloat(sin(angle)) * 0.6))
+                keylineGlyph.draw(in: target.offsetBy(dx: CGFloat(cos(angle)) * 0.35,
+                                                      dy: CGFloat(sin(angle)) * 0.35))
             }
             foreground.draw(in: target)
             switch appearance {
