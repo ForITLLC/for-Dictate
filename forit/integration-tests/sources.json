@@ -20,7 +20,8 @@
     "VoiceInk/Features/Dictionary/Workflows/CompanyDictionaryStore.swift",
     "VoiceInk/Features/Dictionary/Workflows/CompanyDictionaryTransport.swift",
     "VoiceInk/Features/Dictionary/Workflows/CompanyDictionaryKeychainStore.swift",
-    "VoiceInk/Infrastructure/Credentials/KeychainService.swift"
+    "VoiceInk/Infrastructure/Credentials/KeychainService.swift",
+    "VoiceInk/App/MenuBar/DictateGlyphAsset.swift"
   ],
   "testPatterns": [
     "Tests/VoiceInkTests/TinycastHistory*Tests.swift",

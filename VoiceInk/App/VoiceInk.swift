@@ -414,7 +414,7 @@ struct VoiceInkApp: App {
         } label: {
             let appearance = DictateStatusAppearance(recordingState: engine.recordingState)
             Image(nsImage: DictateStatusIcon.image(for: appearance))
-            .renderingMode(.template)
+            .renderingMode(.original)
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("ForIT Dictate")
             .accessibilityValue(appearance.accessibilityValue)
