@@ -490,7 +490,7 @@ private enum CompanyDictionaryUIFixtureMain {
     static func main() {
         guard Bundle.main.bundleIdentifier == "io.forit.dictate.ui-fixture" else { exit(64) }
         // Volatile process preferences only; production io.forit.dictate is never opened.
-        UserDefaults.standard.setVolatileDomain(["AppleLanguages": ["en"], "AppleLocale": "en_US"], forName: NSArgumentDomain)
+        UserDefaults.standard.setVolatileDomain(["AppleLanguages": ["en"], "AppleLocale": "en_US"], forName: UserDefaults.argumentDomain)
         let app = NSApplication.shared
         let delegate = FixtureDelegate()
         app.delegate = delegate

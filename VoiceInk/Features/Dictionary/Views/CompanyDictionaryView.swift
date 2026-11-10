@@ -12,7 +12,12 @@ struct CompanyDictionaryView: View {
     @ObservedObject private var vocabulary: SharedVocabularyService
     @State private var search = ""
 
-    init(vocabulary: SharedVocabularyService = .shared) {
+    @MainActor
+    init() {
+        self.init(vocabulary: SharedVocabularyService.shared)
+    }
+
+    init(vocabulary: SharedVocabularyService) {
         _vocabulary = ObservedObject(wrappedValue: vocabulary)
     }
 

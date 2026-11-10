@@ -3,10 +3,43 @@
 This is app-owned source preparation under work
 [9A177608](https://tasks.forit.io/?task=9A177608-8178-4CD2-9972-420533BF6D3C).
 The UI source/seam checkpoint is `aecf716002d42e0f1b9d64ad3d84ce9aaeaeca03`.
-The executable, shared API calls, captures and interactions below are **native
-UNRUN** until the build owner executes the final committed fixture source.
+The corrected fixture source below has not had a native retry. The first actual
+attempt failed during compilation, before captures or interactions; those checks
+remain **native UNRUN** until a qualified owner-pinned retry succeeds.
 The earlier 141 core tests belong to `77274cf`; full-app compile PASS belongs to
 `164b025`, not this check.
+
+## First native attempt
+
+Job `apple-for-Dictate-b4330cf379cb-d8235cefdbe3` ran exact source
+`b4330cf379cba60eeadf1878f0787fd6e23072e3` and ended with exit 1 in compilation.
+Its retained compile-phase receipt spans 2026-11-10 08:13:20Z–08:13:41Z.
+The concrete fixture error was the SDK rename from `NSArgumentDomain` to
+`UserDefaults.argumentDomain`. The same log recorded the actor-isolated `.shared`
+default-argument warning in `CompanyDictionaryView.init` and the tools-6 manifest
+deprecation of `swiftLanguageVersions`. This correction uses an explicit
+main-actor zero-argument initializer forwarding to the injected initializer,
+the renamed defaults constant and `swiftLanguageModes: [.v5]`. It preserves
+Swift 5 and every fixture/isolation/assertion boundary.
+
+The retained receipt has zero completed cells and `acceptanceComplete: false`.
+The owner's terminal receipt reports source/process/gate/simulator cleanup true.
+This is compiler execution evidence only, with no pixels or interaction proof.
+The owner must commit and repin the corrected exact source before the sole retry;
+this document is not a retry or runtime-acceptance claim.
+
+The retained compiler invocation also references Xcode 27.2 SwiftPM backend
+products under `package/.build/out/Products/Debug`. The first attempt never reached
+product collection, so existence of a `.build/debug` alias was not established
+and this is not a confirmed second failure. After a successful build the driver
+now runs supported `xcrun swift build --package-path PACKAGE --configuration debug
+--show-bin-path` through the same owned process group with a 30-second timeout.
+Path stdout and stderr diagnostics have separate owned `.log` files. Accepted
+stdout is at most 4096 bytes and contains exactly one absolute path; the products
+directory and executable are strictly resolved and must remain inside the owned
+package. There is no global/inherited product location or hardcoded backend
+fallback. Binary/resource copying uses the discovered directory, and the receipt
+records `nativeProductsRelativePath` and `nativeExecutableRelativePath`.
 
 ## Existing owner route
 
@@ -36,9 +69,10 @@ There are no native builds on forit-orca, detached runners or new schedules.
 All descendants stay in the existing launcher-owned process group. A timeout
 returns 124 with `timeoutCleanupDelegated: true`; collection/cleanup must wait
 until the launcher has reaped that group. The adapter never deletes or replaces
-pre-existing outputs. Proposed job budget is 45 minutes (20-minute compile plus
-32 cells bounded at 45 seconds each, with collection overhead); the owner must
-admit the actual timeout and existing UI-session availability.
+pre-existing outputs. The owner job budget is **3300 seconds (55 minutes)**:
+20-minute compile and 32 cells bounded at 45 seconds each, with toolchain and
+collection headroom. The owner must retain that actual timeout and qualify the
+existing UI-session availability.
 
 ## Product view and isolated state
 

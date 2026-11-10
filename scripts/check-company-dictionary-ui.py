@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Finite synthetic native UI check; --plan is deliberately the default."""
 import argparse
+from contextlib import ExitStack
 import hashlib
 import json
 import os
@@ -88,10 +89,14 @@ def archive_evidence(output, receipt):
                    encodedScreenshotBytes=total_png)
 
 
-def run(command, root, log, *, timeout, environment=None):
+def run(command, root, log, *, timeout, environment=None, stdout_path=None):
     # No detached group: the maintained Apple launcher owns every descendant.
-    with log.open("wb") as stream:
-        process = subprocess.Popen(command, cwd=root, env=environment, stdout=stream, stderr=subprocess.STDOUT,
+    with ExitStack() as stack:
+        stream = stack.enter_context(log.open("wb"))
+        separate_stdout = stack.enter_context(stdout_path.open("xb")) if stdout_path is not None else None
+        process = subprocess.Popen(command, cwd=root, env=environment,
+                                   stdout=separate_stdout if separate_stdout is not None else stream,
+                                   stderr=stream if separate_stdout is not None else subprocess.STDOUT,
                                    start_new_session=False)
         try:
             result = process.wait(timeout=timeout)
@@ -99,6 +104,8 @@ def run(command, root, log, *, timeout, environment=None):
             raise TimeoutError("Owned process group must be reaped by the Apple launcher before collection")
     if result:
         raise RuntimeError(f"Native phase failed ({result}); inspect {log.name}")
+    if stdout_path is not None and stdout_path.stat().st_size > 4096:
+        raise RuntimeError("Native product-path stdout exceeds its 4096-byte acceptance bound")
 
 
 def preflight(root, commit):
@@ -186,7 +193,7 @@ import PackageDescription
 let package = Package(name: "DictateCompanyUIFixture", platforms: [.macOS(.v15)],
     dependencies: [.package(path: {dependency})],
     targets: [.executableTarget(name: "DictateCompanyUIFixture", dependencies: [
-        .product(name: "ForITCommon", package: {identity})])], swiftLanguageVersions: [.v5])
+        .product(name: "ForITCommon", package: {identity})])], swiftLanguageModes: [.v5])
 '''
         (package / "Package.swift").write_text(manifest, encoding="utf-8")
         phase = "toolchain"
@@ -195,17 +202,39 @@ let package = Package(name: "DictateCompanyUIFixture", platforms: [.macOS(.v15)]
         phase = "compile"
         run(["/usr/bin/xcrun", "swift", "build", "--package-path", str(package), "--configuration", "debug",
              "--product", "DictateCompanyUIFixture", "--jobs", "1"], root, output / "compile.log", timeout=1200)
-        executable = package / ".build" / "debug" / "DictateCompanyUIFixture"
-        if not executable.is_file() or not executable.resolve().is_relative_to(package):
-            raise RuntimeError("Missing owned native executable")
+        phase = "discover-product"
+        product_stdout = output / "show-bin-path.stdout.log"
+        run(["/usr/bin/xcrun", "swift", "build", "--package-path", str(package),
+             "--configuration", "debug", "--show-bin-path"], root,
+            output / "show-bin-path.stderr.log", timeout=30, stdout_path=product_stdout)
+        with product_stdout.open("rb") as stream:
+            product_bytes = stream.read(4097)
+        if not product_bytes or len(product_bytes) > 4096 or product_stdout.stat().st_size != len(product_bytes):
+            raise RuntimeError("Native product-path stdout is empty, oversized or changed during its bounded read")
+        product_lines = product_bytes.decode("utf-8").splitlines()
+        if len(product_lines) != 1 or not product_lines[0] or any(ord(c) < 32 or ord(c) == 127 for c in product_lines[0]):
+            raise RuntimeError("Native product-path stdout must contain exactly one absolute path")
+        reported_products = Path(product_lines[0])
+        if not reported_products.is_absolute():
+            raise RuntimeError("Native product path is not absolute")
+        owned_package = package.resolve(strict=True)
+        products = reported_products.resolve(strict=True)
+        if not products.is_dir() or not products.is_relative_to(owned_package):
+            raise RuntimeError("Native products directory is outside the owned fixture package")
+        executable = (products / "DictateCompanyUIFixture").resolve(strict=True)
+        if not executable.is_file() or not executable.is_relative_to(owned_package):
+            raise RuntimeError("Native executable is outside the owned fixture package")
+        receipt["nativeProductsRelativePath"] = str(products.relative_to(owned_package))
+        receipt["nativeExecutableRelativePath"] = str(executable.relative_to(owned_package))
+        receipt["productDiscoveryStdoutSHA256"] = hashlib.sha256(product_bytes).hexdigest()
         app = output / "ForIT Dictate UI Fixture.app" / "Contents"
         (app / "MacOS").mkdir(parents=True)
         binary = app / "MacOS" / "DictateCompanyUIFixture"
         shutil.copy2(executable, binary)
         # Preserve genuine SwiftPM resource bundles at Bundle.main.bundleURL;
         # the original compiler inputs/build-path fallback also remain retained.
-        for bundle in executable.resolve().parent.glob("*.bundle"):
-            if bundle.is_symlink():
+        for bundle in products.glob("*.bundle"):
+            if bundle.is_symlink() or not bundle.is_dir():
                 raise RuntimeError("Unexpected symlinked resource bundle")
             shutil.copytree(bundle, app.parent / bundle.name)
         (app / "Info.plist").write_bytes(plistlib.dumps({
