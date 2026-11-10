@@ -1,5 +1,5 @@
 {
-  "expectedTestCount": 90,
+  "expectedTestCount": 133,
   "sources": [
     "VoiceInk/Features/History/Models/HistorySuccessPolicy.swift",
     "VoiceInk/Features/History/Integrations/TinycastHistorySnapshot.swift",
