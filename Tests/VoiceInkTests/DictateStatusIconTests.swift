@@ -24,6 +24,7 @@ final class DictateStatusIconTests: XCTestCase {
             var visiblePixels = 0
             var redPixels = 0
             var neutralPixels = 0
+            var palette: [String: Int] = [:]
             for y in 0..<pixels.pixelsHigh {
                 for x in 0..<pixels.pixelsWide {
                     if (pixels.colorAt(x: x, y: y)?.alphaComponent ?? 0) > 0 {
@@ -31,6 +32,9 @@ final class DictateStatusIconTests: XCTestCase {
                     }
                     if let color = pixels.colorAt(x: x, y: y)?.usingColorSpace(.sRGB),
                        color.alphaComponent > 0.9 {
+                        let rgb = String(format: "%02X%02X%02X", Int((color.redComponent * 255).rounded()),
+                                         Int((color.greenComponent * 255).rounded()), Int((color.blueComponent * 255).rounded()))
+                        palette[rgb, default: 0] += 1
                         if color.redComponent > 0.8, color.greenComponent < 0.5, color.blueComponent < 0.5 {
                             redPixels += 1
                         }
@@ -41,6 +45,12 @@ final class DictateStatusIconTests: XCTestCase {
                 }
             }
             XCTAssertGreaterThan(visiblePixels, 0, "A valid image container must not hide a blank glyph.")
+            if appearance != .recording, neutralPixels <= 8 {
+                let common = palette.sorted { $0.value > $1.value }.prefix(8)
+                print("FORIT_ICON_NEUTRAL_DIAGNOSTIC \(appearance.rawValue): \(common)")
+                let png = try XCTUnwrap(pixels.representation(using: .png, properties: [:]))
+                print("FORIT_ICON_FAILED_PNG \(appearance.rawValue): \(png.base64EncodedString())")
+            }
             if appearance == .recording {
                 XCTAssertGreaterThan(redPixels, 8, "The actual recording state must turn the glyph red.")
             } else {
