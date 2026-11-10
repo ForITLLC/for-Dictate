@@ -36,8 +36,11 @@ final class DictateStatusIconTests: XCTestCase {
                             let rgb = String(format: "%02X%02X%02X", Int((color.redComponent * 255).rounded()),
                                              Int((color.greenComponent * 255).rounded()), Int((color.blueComponent * 255).rounded()))
                             palette[rgb, default: 0] += 1
-                            if x < 18 * scale, color.redComponent > 0.8,
-                               color.greenComponent < 0.5, color.blueComponent < 0.5 {
+                            // Measure red chroma after coverage/keyline blending,
+                            // excluding the separate recording-state dot.
+                            if x < 18 * scale, color.redComponent > 0.45,
+                               color.greenComponent < color.redComponent * 0.7,
+                               color.blueComponent < color.redComponent * 0.7 {
                                 redPixels += 1
                             }
                             // Thin neutral strokes blend with the navy keyline at
@@ -51,7 +54,8 @@ final class DictateStatusIconTests: XCTestCase {
                     }
                 }
                 XCTAssertGreaterThan(visiblePixels, 0, "A valid image container must not hide a blank glyph.")
-                if appearance != .recording, neutralPixels <= 8 {
+                if (appearance != .recording && neutralPixels <= 8)
+                    || (appearance == .recording && redPixels <= 8) {
                     let common = palette.sorted { $0.value > $1.value }.prefix(8)
                     print("FORIT_ICON_NEUTRAL_DIAGNOSTIC \(appearance.rawValue)@\(scale)x: \(common)")
                     let png = try XCTUnwrap(pixels.representation(using: .png, properties: [:]))
