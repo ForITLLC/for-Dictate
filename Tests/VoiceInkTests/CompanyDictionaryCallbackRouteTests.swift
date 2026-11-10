@@ -22,7 +22,8 @@ final class CompanyDictionaryCallbackRouteTests: XCTestCase {
 
     func testRejectsWrongAuthorityPathAndCredentialBearingURLs() throws {
         for address in ["io.forit.dictate://other/callback", "io.forit.dictate://oauth/Callback",
-                        "io.forit.dictate://oauth/callback/", "io.forit.dictate://oauth:443/callback",
+                        "io.forit.dictate://oauth/callback/", "io.forit.dictate://oauth/callback/.",
+                        "io.forit.dictate://oauth/%63allback", "io.forit.dictate://oauth:443/callback",
                         "io.forit.dictate://user@oauth/callback", "io.forit.dictate://user:password@oauth/callback",
                         "https://oauth/callback", "io.forit.dictate:/oauth/callback"] {
             let url = try XCTUnwrap(URL(string: address))

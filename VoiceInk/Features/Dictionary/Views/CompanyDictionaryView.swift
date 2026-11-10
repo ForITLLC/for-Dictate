@@ -9,6 +9,7 @@ enum CompanyDictionaryWindow {
 @MainActor
 struct CompanyDictionaryView: View {
     @EnvironmentObject private var connection: CompanyDictionaryConnectionModel
+    @ObservedObject private var vocabulary = SharedVocabularyService.shared
     @State private var search = ""
 
     private var matchingTerms: [CompanyDictionarySnapshot.Term] {
@@ -76,6 +77,16 @@ struct CompanyDictionaryView: View {
             }
 
             Section {
+                if connection.client.snapshot != nil {
+                    let coverage = vocabulary.companyCoverage
+                    Text("\(coverage.includedTermCount) company spellings added to your dictation vocabulary.")
+                        .accessibilityIdentifier("dictate.companyDictionary.coverage")
+                    if coverage.omittedTermCount > 0 {
+                        Text("\(coverage.omittedTermCount) spellings are already covered by your choices or fall outside the supported limits.")
+                            .font(.caption).foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
                 Text("Company vocabulary currently feeds Whisper and AI cleanup. Parakeet recognition support is still being validated; connecting does not change your engine or enable cleanup.")
                     .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                 Text("Recognition engines use a limited subset. Your personal words and existing spelling choices take precedence.")
