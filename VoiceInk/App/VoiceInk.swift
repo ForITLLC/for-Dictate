@@ -11,6 +11,8 @@ struct VoiceInkApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     let container: ModelContainer
 
+    // ForIT: the menu bar label below reads engine.recordingState to turn the glyph red,
+    // so the scene must observe the engine. Upstream holds it in @State to skip that.
     @StateObject private var engine: VoiceInkEngine
     // Retain managers without subscribing the entire scene to download progress.
     @State private var whisperModelManager: WhisperModelManager
@@ -44,6 +46,7 @@ struct VoiceInkApp: App {
         URLCache.shared = URLCache(memoryCapacity: 0, diskCapacity: 0)
 
         AppDefaults.registerDefaults()
+        StreamingKeysMigration.migrateSonioxV6()
         AppLanguagePreference.applyStored()
         AppAppearancePreference.applyStored()
         OnboardingV2Migration.prepareIfNeeded()
@@ -104,12 +107,10 @@ struct VoiceInkApp: App {
 
         let enhancementService = AIEnhancementService(aiService: aiService, modelContext: resolvedContainer.mainContext)
         _enhancementService = StateObject(wrappedValue: enhancementService)
-        let autoLearnReviewer = AutoLearnAIReviewer(enhancementService: enhancementService)
         Task {
-            await AutoLearnService.shared.configure(
-                modelContainer: resolvedContainer,
-                reviewer: autoLearnReviewer
-            )
+            await AutoLearnService.shared.configure(modelContainer: resolvedContainer) { suggestions in
+                AutoLearnSuggestionController.shared.update(suggestions)
+            }
         }
 
         // 1. Create modelsDirectory URL

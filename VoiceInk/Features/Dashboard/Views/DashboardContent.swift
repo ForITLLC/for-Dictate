@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import SwiftData
 import SwiftUI
@@ -13,7 +14,6 @@ struct DashboardContent: View {
     private static let displayNameHorizontalPadding: CGFloat = 8
     private static let insightsUnlockDuration: TimeInterval = 30 * 60
     private static let peakHoursUnlockDuration: TimeInterval = 30 * 60
-    private static let reviewBacklogActionThreshold = 50
     // Above this count, skip live auto-refresh (full reload is expensive); tab reopen still refreshes.
     private static let automaticStatsRefreshMetricLimit = 2_000
     private static let statsRefreshDebounceNanoseconds: UInt64 = 750_000_000
@@ -27,11 +27,6 @@ struct DashboardContent: View {
     @State private var dashboardStatsLoadGeneration = 0
     @State private var isModelPerformancePanelPresented = false
     @State private var isModelUsagePanelPresented = false
-    @State private var isAutoLearnFailurePanelPresented = false
-    @State private var isAutoLearnReviewPanelPresented = false
-    @State private var autoLearnReviewBacklogCount = 0
-    @State private var autoLearnBacklogRefreshGeneration = 0
-    @State private var autoLearnFailurePresentationTask: Task<Void, Never>?
     @State private var isInsightsViewPresented = false
     @State private var selectedInsightPeriod: DashboardInsightPeriod = .allTime
     @State private var isAccessibilityEnabled = AXIsProcessTrusted()
@@ -42,9 +37,9 @@ struct DashboardContent: View {
     @AppStorage("dashboardDisplayName") private var dashboardDisplayName: String = ""
     @AppStorage(AutoLearnSettings.isEnabledKey) private var isAutoLearnEnabled = true
     @AppStorage(AutoLearnSettings.hasFailureKey) private var hasAutoLearnFailure = false
-    @AppStorage(AutoLearnSettings.failureAcknowledgedKey) private var isAutoLearnFailureAcknowledged = false
     @FocusState private var isNameFieldFocused: Bool
     @Query(Self.recentTranscriptionsDescriptor()) private var recentTranscriptionCandidates: [Transcription]
+    @State private var isWindowVisible = false
 
     private static func recentTranscriptionsDescriptor() -> FetchDescriptor<Transcription> {
         var descriptor = FetchDescriptor<Transcription>(
@@ -98,29 +93,10 @@ struct DashboardContent: View {
         .task {
             scheduleDashboardStatsRefresh(allowSkipWhenFresh: hasLoadedStatsSnapshot)
         }
-        .task {
-            await refreshAutoLearnReviewBacklogCount()
-        }
         .onAppear {
             refreshAccessibilityStatus()
-            if shouldAutomaticallyPresentAutoLearnFailure {
-                scheduleAutoLearnFailurePresentation()
-            }
         }
-        .onChange(of: hasAutoLearnFailure) { _, _ in
-            updateAutoLearnFailurePresentation()
-        }
-        .onChange(of: isAutoLearnEnabled) { _, _ in
-            updateAutoLearnFailurePresentation()
-        }
-        .onChange(of: isAutoLearnFailureAcknowledged) { _, _ in
-            updateAutoLearnFailurePresentation()
-        }
-        .onChange(of: isAutoLearnFailurePanelPresented) { wasPresented, isPresented in
-            if wasPresented, !isPresented, hasAutoLearnFailure, isAutoLearnEnabled {
-                AutoLearnSettings.acknowledgeCurrentFailure()
-            }
-        }
+        .background(DashboardWindowVisibilityReader(isVisible: $isWindowVisible))
         .onReceive(LifecycleObserver.shared.publisher(for: .applicationDidBecomeActive)) { _ in
             refreshAccessibilityStatus()
         }
@@ -131,21 +107,11 @@ struct DashboardContent: View {
                 scheduleDashboardStatsRefresh(debounce: true, allowSkipWhenFresh: false)
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .autoLearnQueueDidChange)) { _ in
-            scheduleAutoLearnReviewBacklogRefresh()
-        }
-        .onReceive(
-            NotificationCenter.default.publisher(for: .autoLearnReviewProposalsDidChange)
-        ) { _ in
-            scheduleAutoLearnReviewBacklogRefresh()
-        }
         .onDisappear {
             dashboardStatsTask?.cancel()
             dashboardStatsTask = nil
             dashboardStatsLoadGeneration += 1
             isDashboardStatsRefreshing = false
-            autoLearnFailurePresentationTask?.cancel()
-            autoLearnFailurePresentationTask = nil
         }
         .sidePanel(isPresented: $isModelPerformancePanelPresented) {
             ModelPerformancePanel(
@@ -161,63 +127,6 @@ struct DashboardContent: View {
                 isModelUsagePanelPresented = false
             }
         }
-        .sidePanel(isPresented: $isAutoLearnFailurePanelPresented) {
-            AutoLearnFailurePanel {
-                isAutoLearnFailurePanelPresented = false
-            }
-        }
-        .sidePanel(isPresented: $isAutoLearnReviewPanelPresented) {
-            AutoLearnReviewPanel {
-                isAutoLearnReviewPanelPresented = false
-            }
-        }
-    }
-
-    private func scheduleAutoLearnFailurePresentation() {
-        autoLearnFailurePresentationTask?.cancel()
-        autoLearnFailurePresentationTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 2_500_000_000)
-            guard !Task.isCancelled, shouldAutomaticallyPresentAutoLearnFailure else { return }
-            isAutoLearnFailurePanelPresented = true
-            autoLearnFailurePresentationTask = nil
-        }
-    }
-
-    private var shouldAutomaticallyPresentAutoLearnFailure: Bool {
-        hasAutoLearnFailure && isAutoLearnEnabled && !isAutoLearnFailureAcknowledged
-    }
-
-    private var dashboardReviewCorrectionCount: Int? {
-        guard isAutoLearnEnabled,
-            autoLearnReviewBacklogCount > Self.reviewBacklogActionThreshold
-        else {
-            return nil
-        }
-        return autoLearnReviewBacklogCount
-    }
-
-    @MainActor
-    private func refreshAutoLearnReviewBacklogCount() async {
-        let generation = autoLearnBacklogRefreshGeneration
-        let queuedCount = (try? await AutoLearnService.shared.outstandingReviewCount()) ?? 0
-        let proposalCount = (try? await AutoLearnService.shared.reviewProposalCount()) ?? 0
-        guard generation == autoLearnBacklogRefreshGeneration else { return }
-        autoLearnReviewBacklogCount = queuedCount + proposalCount
-    }
-
-    private func scheduleAutoLearnReviewBacklogRefresh() {
-        autoLearnBacklogRefreshGeneration += 1
-        Task { await refreshAutoLearnReviewBacklogCount() }
-    }
-
-    private func updateAutoLearnFailurePresentation() {
-        if shouldAutomaticallyPresentAutoLearnFailure {
-            scheduleAutoLearnFailurePresentation()
-        } else {
-            autoLearnFailurePresentationTask?.cancel()
-            autoLearnFailurePresentationTask = nil
-            isAutoLearnFailurePanelPresented = false
-        }
     }
 
     private func dashboardMainContent(availableWidth: CGFloat) -> some View {
@@ -226,6 +135,15 @@ struct DashboardContent: View {
 
             nameEditorDismissArea {
                 heroSection
+            }
+
+            if hasAutoLearnFailure, isAutoLearnEnabled {
+                Button {
+                    MainWindowNavigation.shared.openDictionarySettings()
+                } label: {
+                    Label("Auto-Learn needs attention. Open Dictionary Settings.", systemImage: "exclamationmark.triangle")
+                }
+                .buttonStyle(.link)
             }
 
             if !isAccessibilityEnabled {
@@ -260,7 +178,11 @@ struct DashboardContent: View {
     }
 
     private var recentDashboardTranscriptions: [Transcription] {
-        Array(
+        // In menu bar mode the main window stays alive while hidden, and this query re-runs after
+        // every save. Without a timestamp index each run reads every transcription row, so only
+        // read it while some part of the window is actually visible.
+        guard isWindowVisible else { return [] }
+        return Array(
             recentTranscriptionCandidates
                 .filter { transcription in
                     isRecentDashboardTranscription(transcription)
@@ -466,10 +388,6 @@ struct DashboardContent: View {
         isModelUsagePanelPresented = true
     }
 
-    private func openAutoLearnReviewPanel() {
-        isAutoLearnReviewPanelPresented = true
-    }
-
     @MainActor
     private func scheduleDashboardStatsRefresh(
         debounce: Bool = false,
@@ -597,9 +515,7 @@ struct DashboardContent: View {
             canViewInsights: canViewInsights,
             actionHelp: insightsActionHelp,
             actionAccessibilityLabel: insightsActionAccessibilityLabel,
-            reviewCorrectionCount: dashboardReviewCorrectionCount,
-            onViewInsights: openInsightsIfAvailable,
-            onReviewCorrections: openAutoLearnReviewPanel
+            onViewInsights: openInsightsIfAvailable
         )
     }
 
@@ -934,6 +850,51 @@ private struct DashboardNoModesReminder: View {
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(AppCardBackground(cornerRadius: 16))
+    }
+}
+
+private struct DashboardWindowVisibilityReader: NSViewRepresentable {
+    @Binding var isVisible: Bool
+
+    func makeNSView(context: Context) -> VisibilityView {
+        let view = VisibilityView()
+        view.visibility = $isVisible
+        return view
+    }
+
+    func updateNSView(_ view: VisibilityView, context: Context) {
+        view.visibility = $isVisible
+    }
+
+    final class VisibilityView: NSView {
+        var visibility: Binding<Bool>?
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            let center = NotificationCenter.default
+            let name = NSWindow.didChangeOcclusionStateNotification
+            center.removeObserver(self, name: name, object: nil)
+            if let window {
+                center.addObserver(self, selector: #selector(occlusionDidChange(_:)), name: name, object: window)
+            }
+
+            // AppKit can attach this view during a SwiftUI update.
+            DispatchQueue.main.async { [weak self] in
+                self?.updateVisibility()
+            }
+        }
+
+        @objc private func occlusionDidChange(_ notification: Notification) {
+            updateVisibility()
+        }
+
+        private func updateVisibility() {
+            guard let visibility else { return }
+            let isVisible = window?.occlusionState.contains(.visible) ?? false
+            if visibility.wrappedValue != isVisible {
+                visibility.wrappedValue = isVisible
+            }
+        }
     }
 }
 

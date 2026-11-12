@@ -1298,6 +1298,20 @@ enum CoreAudioRecorderError: LocalizedError {
     case failedToStart(status: OSStatus)
     case failedToStop(status: OSStatus)
 
+    var status: OSStatus? {
+        switch self {
+        case .audioUnitNotFound, .audioUnitNotInitialized, .deviceNotAvailable:
+            return nil
+        case .failedToCreateAudioUnit(let status), .failedToEnableInput(let status),
+            .failedToDisableOutput(let status), .failedToSetDevice(let status),
+            .failedToGetDeviceFormat(let status), .failedToSetFormat(let status),
+            .failedToSetCallback(let status), .failedToCreateFile(let status),
+            .failedToSetFileFormat(let status), .failedToInitialize(let status),
+            .failedToStart(let status), .failedToStop(let status):
+            return status
+        }
+    }
+
     var errorDescription: String? {
         switch self {
         case .audioUnitNotFound:
