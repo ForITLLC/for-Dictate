@@ -96,6 +96,8 @@ struct VocabularyView: View {
             }
 
             Divider().padding(.vertical, 8)
+            CompanyDictionarySummaryView()
+            Divider().padding(.vertical, 8)
             SharedVocabularyView()
         }
         .frame(maxWidth: .infinity, alignment: .leading)

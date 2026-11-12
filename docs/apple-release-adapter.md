@@ -15,7 +15,7 @@ The app-owned command is:
 
 `BUILD` is a required positive integer. `BUILD --plan` reads source metadata and
 prints a plan without native commands, network requests, credential probes or
-file writes. `BUILD --check-only` runs the 82 synthetic Swift checks through the
+file writes. `BUILD --check-only` runs the 141 synthetic Swift checks through the
 same inherited native job. `--upload` is rejected: Dictate's established channel
 is a Developer ID signed, notarized DMG, not TestFlight or an App Store upload.
 
@@ -83,7 +83,7 @@ This public-source API read does not schedule builds through GitHub Actions.
 
 ## Required checks and retained evidence
 
-The release keeps this sequence: exact 82 synthetic tests and a genuine producer
+The release keeps this sequence: exact 141 synthetic tests and a genuine producer
 fixture; pinned Whisper framework build; SDK package resolution and genuine
 `Package.resolved`; frozen package versions during the app build; zero compiler
 exit plus build-success marker; actual app bundle/version/build and no upstream
@@ -126,3 +126,21 @@ do not repurpose or reactivate them as a build wake without separate authority.
 The common source publication, exact merged commit, native proof, actual Apple
 receipts, old workflow retirement and automation readback are all separate required
 evidence. Until then this is prepared source, with execution pending.
+
+## Unsigned full-app compile
+
+`/bin/bash scripts/forit-mini-compile.sh` (or `--plan`) only prints a plan. The
+owner-registered, exact-source `macos-compile` route runs it with `--execute` in
+the existing slot/Common job, using Xcode 27.2 Release, both arm64 and x86_64,
+the committed package lock/netrc resolver and existing pinned Whisper helper.
+It allocates no build number and performs no signing, packaging, install or app
+launch. It requests error continuation with the installed IDEFoundation setting
+`-IDEBuildingContinueBuildingAfterErrors=YES`; a read-only Xcode27.2/27B52 probe
+found that key and accepted its argument, while the similarly named
+`-continueBuildingAfterErrors` option was rejected. Actual continuation after a
+compiler failure is unrun, and dependency failures can prevent later diagnostics.
+Full logs and `build/forit-compile/receipt.json` retain actual exits, all observed
+error lines, exact source/pin hashes and genuine `lipo` architecture output.
+Missing evidence, any error or nonzero exit fails; timeout leaves process exit
+unknown and cleanup to the shared launcher. Only its owner registers/repins the
+route after the script, evidence helper and `scripts/forit-whisper.sh` are committed.

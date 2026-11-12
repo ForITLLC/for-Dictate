@@ -31,9 +31,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     // Stash URL when app cold-starts to avoid spawning a new window/tab
     var pendingOpenFileURL: URL?
+    var companyDictionaryCallback: ((URL) -> Bool)?
 
     func application(_ application: NSApplication, open urls: [URL]) {
-        guard let url = urls.first(where: { SupportedMedia.isSupported(url: $0) }) else {
+        let mediaURLs = urls.filter { companyDictionaryCallback?($0) != true }
+        guard let url = mediaURLs.first(where: { SupportedMedia.isSupported(url: $0) }) else {
             return
         }
 

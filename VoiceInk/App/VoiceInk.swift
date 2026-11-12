@@ -11,6 +11,8 @@ struct VoiceInkApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     let container: ModelContainer
 
+    // ForIT: the menu bar label below reads engine.recordingState to turn the glyph red,
+    // so the scene must observe the engine. Upstream holds it in @State to skip that.
     @StateObject private var engine: VoiceInkEngine
     // Retain managers without subscribing the entire scene to download progress.
     @State private var whisperModelManager: WhisperModelManager
@@ -23,6 +25,7 @@ struct VoiceInkApp: App {
     @StateObject private var aiService = AIService()
     @StateObject private var enhancementService: AIEnhancementService
     @StateObject private var activeWindowService = ActiveWindowService.shared
+    @StateObject private var companyDictionary: CompanyDictionaryConnectionModel
     @AppStorage(OnboardingSettings.completedV2Key) private var hasCompletedOnboardingV2 = false
     @State private var showMenuBarIcon = true
     @State private var didShowLaunchReminders = false
@@ -43,6 +46,7 @@ struct VoiceInkApp: App {
         URLCache.shared = URLCache(memoryCapacity: 0, diskCapacity: 0)
 
         AppDefaults.registerDefaults()
+        StreamingKeysMigration.migrateSonioxV6()
         AppLanguagePreference.applyStored()
         AppAppearancePreference.applyStored()
         OnboardingV2Migration.prepareIfNeeded()
@@ -92,6 +96,8 @@ struct VoiceInkApp: App {
         container = resolvedContainer
         DictionaryService.cleanUpDictionaryContent(context: resolvedContainer.mainContext, source: "launch")
         SharedVocabularyService.shared.configure(context: resolvedContainer.mainContext)
+        let companyDictionary = CompanyDictionaryConnectionModel()
+        _companyDictionary = StateObject(wrappedValue: companyDictionary)
         TinycastHistoryExporter.shared.start(container: resolvedContainer)
 
         // Initialize services with proper sharing of instances
@@ -101,12 +107,10 @@ struct VoiceInkApp: App {
 
         let enhancementService = AIEnhancementService(aiService: aiService, modelContext: resolvedContainer.mainContext)
         _enhancementService = StateObject(wrappedValue: enhancementService)
-        let autoLearnReviewer = AutoLearnAIReviewer(enhancementService: enhancementService)
         Task {
-            await AutoLearnService.shared.configure(
-                modelContainer: resolvedContainer,
-                reviewer: autoLearnReviewer
-            )
+            await AutoLearnService.shared.configure(modelContainer: resolvedContainer) { suggestions in
+                AutoLearnSuggestionController.shared.update(suggestions)
+            }
         }
 
         // 1. Create modelsDirectory URL
@@ -171,6 +175,10 @@ struct VoiceInkApp: App {
         _prewarmService = StateObject(wrappedValue: prewarmService)
 
         appDelegate.menuBarManager = menuBarManager
+        appDelegate.companyDictionaryCallback = { [weak companyDictionary] url in
+            companyDictionary?.handleCallback(url) ?? false
+        }
+        companyDictionary.start()
 
         // Ensure no lingering recording state from previous runs
         Task {
@@ -288,6 +296,7 @@ struct VoiceInkApp: App {
             .environmentObject(recorderUIManager)
             .environmentObject(transcriptionModelManager)
             .environmentObject(enhancementService)
+            .environmentObject(companyDictionary)
             .modelContainer(container)
             .onAppear {
                 menuBarManager.activateForPresentedWindow()
@@ -363,9 +372,10 @@ struct VoiceInkApp: App {
                     }
                 }
                 .navigationTitle("ForIT Dictate")
-                .forITProfileMenu(account: nil) {
-                    dictateSettings
-                }
+                .environmentObject(companyDictionary)
+                .forITProfileMenu(account: companyDictionary.profileAccount,
+                                  items: { CompanyDictionaryMenuItem() },
+                                  settings: { dictateSettings })
             }
         }
         .defaultSize(width: AppWindowLayout.width, height: AppWindowLayout.minimumHeight)
@@ -377,6 +387,18 @@ struct VoiceInkApp: App {
         Settings {
             dictateSettings
         }
+
+        Window("Company Dictionary", id: CompanyDictionaryWindow.id) {
+            NavigationStack {
+                CompanyDictionaryView()
+                    .environmentObject(companyDictionary)
+                    .navigationTitle("Company Dictionary")
+                    .forITProfileMenu(account: companyDictionary.profileAccount,
+                                      settings: { dictateSettings })
+            }
+        }
+        .defaultSize(width: 620, height: 660)
+        .defaultLaunchBehavior(.suppressed)
 
         MenuBarExtra(isInserted: $showMenuBarIcon) {
             MenuBarView()
