@@ -228,7 +228,7 @@ final class SharedVocabularyTimingTests: XCTestCase {
     }
 
     func testObserveProductionAICleanupPersonalRefreshTiming() async throws {
-        // CustomVocabularyService.getCustomVocabulary calls this exact production
+        // CustomVocabularyService.loadSavedVocabulary calls this exact production
         // refresh before reading its cache. That wrapper is singleton-only and
         // would touch standard user files, so it is deliberately NOT instantiated.
         // This observes the real refresh component, not a copied fetch/resolver,

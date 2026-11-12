@@ -28,6 +28,12 @@
             "state" : "translated",
             "value" : "ForIT Dictate"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoiceInk"
+          }
         }
       }
     },
@@ -58,6 +64,12 @@
             "state" : "translated",
             "value" : "ForIT Dictate"
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoiceInk"
+          }
         }
       }
     },
@@ -86,6 +98,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fichier audio/vidéo"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音声/動画ファイル"
           }
         }
       }
@@ -117,6 +135,12 @@
             "state" : "translated",
             "value" : "ForIT Dictate doit interagir avec votre navigateur pour détecter le site Web actuel afin d'appliquer des configurations spécifiques au site Web."
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoiceInkは、開いているウェブサイトに応じた設定を適用するためにブラウザと連携する必要があります。"
+          }
         }
       }
     },
@@ -146,6 +170,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ForIT Dictate is built from VoiceInk by Prakash Joshi Pax. GNU GPL v3; source at github.com/ForITLLC/for-Dictate."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : ""
           }
         }
       }
@@ -177,6 +207,12 @@
             "state" : "translated",
             "value" : "ForIT Dictate a besoin d'accéder à votre microphone pour enregistrer l'audio à des fins de transcription."
           }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoiceInkは、文字起こし用の音声を録音するためにマイクへのアクセスが必要です。"
+          }
         }
       }
     },
@@ -205,6 +241,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "ForIT Dictate a besoin d'un accès à l'enregistrement d'écran pour comprendre le contexte de votre écran afin d'améliorer la précision de la transcription."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoiceInkは、文字起こしの精度を高めるために画面の内容を理解する画面収録アクセス権が必要です。"
           }
         }
       }
