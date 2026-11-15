@@ -12,14 +12,19 @@ final class RecordingVocabularyPreparation {
     }
 
     /// Called only after OCR completes. A finished run never starts new extraction.
-    func prepareScreenNames(in text: String, language: String?) {
+    func prepareScreenNames(
+        in text: String, language: String?,
+        extract: @escaping @Sendable (String, String?) async -> [String] = {
+            RecordingVocabulary.screenNames(in: $0, language: $1)
+        }
+    ) {
         guard !isFinished, preparationTask == nil else { return }
         let saved = current
         let extraction = Task.detached(priority: .userInitiated) {
             guard !Task.isCancelled else { return saved }
-            let names = RecordingVocabulary.screenNames(in: text, language: language)
+            let names = await extract(text, language)
             guard !Task.isCancelled else { return saved }
-            return RecordingVocabulary(savedTerms: saved.terms, screenNames: names)
+            return saved.addingScreenNames(names)
         }
 
         preparationTask = Task {
@@ -31,6 +36,11 @@ final class RecordingVocabularyPreparation {
             guard !Task.isCancelled, !isFinished else { return }
             current = prepared
         }
+    }
+
+    /// Await only from deterministic tests; recording startup/finalization never waits.
+    func waitForPreparation() async {
+        await preparationTask?.value
     }
 
     /// Freeze whatever is ready and cancel unfinished work, without waiting for it.

@@ -11,6 +11,6 @@ final class CustomVocabularyService {
     /// as resolved and bounded by SharedVocabularyResolver.
     func loadSavedVocabulary(from context: ModelContext) -> RecordingVocabulary {
         SharedVocabularyService.shared.refreshPersonalWords(from: context)
-        return RecordingVocabulary(savedTerms: SharedVocabularyCache.shared.snapshot.words)
+        return RecordingVocabulary(savedSnapshot: SharedVocabularyCache.shared.snapshot)
     }
 }

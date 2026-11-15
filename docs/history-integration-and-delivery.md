@@ -62,7 +62,8 @@ restoration, key release and clipboard-independent direct typing. The maintained
 integration checker includes them alongside the previous 52 tests and the 13
 Foundation-only recording-device session tests, four menu-bar icon cases and
 two vocabulary timing observation cases and eight company-dictionary DTO cases
-(141 total). The recording-device tests cover
+and 14 recording-vocabulary lifetime/cancellation cases (155 total). The
+recording-device tests cover
 following macOS input changes, deferred switches and stale-session cancellation
 without opening audio devices.
 
