@@ -246,28 +246,27 @@ private enum OwnUI {
         try queueClick(frame: frame, in: window)
     }
 
-    static func clickSignOutConfirmation(_ node: AXNode, of parent: NSWindow) throws {
-        guard node.role == "AXButton", node.label == "Sign out",
-              node.inDialog || node.window != parent.windowNumber,
-              let frame = node.frame, !frame.isEmpty else {
-            throw FixtureFailure.actionUnavailable("Measured Sign out confirmation button")
+    static func clickSignOutConfirmation(of parent: NSWindow, findButton: () -> AXNode?) async throws {
+        var target: (window: NSWindow, frame: NSRect)?
+        try await wait("the real Sign out alert to attach to the dictionary window", details: {
+            let attachment = parent.attachedSheet
+            let visible = NSApp.windows.filter(\.isVisible).prefix(8).map {
+                "\($0.windowNumber): frame \($0.frame), sheet parent \($0.sheetParent?.windowNumber ?? 0)"
+            }.joined(separator: "; ")
+            return "parent \(parent.windowNumber), attachment \(attachment?.windowNumber ?? 0), own visible windows [\(visible)]"
+        }) {
+            guard let sheet = parent.attachedSheet, sheet.sheetParent === parent,
+                  sheet.isVisible, NSApp.windows.contains(where: { $0 === sheet }),
+                  let button = findButton(), button.role == "AXButton", button.label == "Sign out",
+                  button.inDialog || button.window == sheet.windowNumber,
+                  let frame = button.frame, !frame.isEmpty, sheet.frame.contains(frame) else {
+                return false
+            }
+            target = (sheet, frame)
+            return true
         }
-        let candidates = NSApp.windows.filter { $0.isVisible && $0.frame.contains(frame) }
-        let transient = candidates.filter { $0 !== parent }
-        let target: NSWindow
-        if let reported = object(node.element, "accessibilityWindow") as? NSWindow,
-           transient.contains(where: { $0 === reported }) {
-            target = reported
-        } else if let recorded = transient.first(where: { $0.windowNumber == node.window }) {
-            target = recorded
-        } else if transient.count == 1, let only = transient.first {
-            target = only
-        } else if transient.isEmpty, node.inDialog, candidates.contains(where: { $0 === parent }) {
-            target = parent
-        } else {
-            throw FixtureFailure.actionUnavailable("Unambiguous fixture window for Sign out confirmation")
-        }
-        try queueClick(frame: frame, in: target)
+        guard let target else { throw FixtureFailure.actionUnavailable("Attached Sign out confirmation") }
+        try queueClick(frame: target.frame, in: target.window)
     }
 
     private static func queueClick(frame: NSRect, in window: NSWindow) throws {
@@ -568,13 +567,12 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
             let signOutAgain = try await OwnUI.signOutRow(in: window)
             try OwnUI.click(signOutAgain, in: window)
             try await OwnUI.wait("second sign-out confirmation") { confirmation() != nil }
-            guard let confirm = confirmation() else { throw FixtureFailure.actionUnavailable("Shared sign-out confirmation action") }
             let captured = cache.snapshot
             guard captured.companyCoverage.includedTermCount > 0 else {
                 throw FixtureFailure.assertion("Sign-out fixture had no company contribution to revoke")
             }
             signOutStep = "click the confirmation button inside its fixture window"
-            try OwnUI.clickSignOutConfirmation(confirm, of: window)
+            try await OwnUI.clickSignOutConfirmation(of: window, findButton: confirmation)
             try await OwnUI.wait("sign-out completion") { !client.isSignedIn && !client.isBusy }
             guard !(await store.hasCredential), captured.companyCoverage == .none else {
                 throw FixtureFailure.assertion("Shared sign-out did not remove synthetic credential/company hints")
