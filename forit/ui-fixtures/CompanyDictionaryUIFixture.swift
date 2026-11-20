@@ -251,7 +251,7 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
     private var openedBrowserRequests = 0
     private var interactions: [[String: String]] = []
     private var snapshotTask: Task<Void, Never>?
-    private var captureDirectoryDiagnostic: [String: Any]?
+    private var ownedOutput: URL?
 
     private func prepareSurface(parent: NSWindow, size: CGSize, appearance: NSAppearance,
                                 dark: Bool) async throws -> NSWindow {
@@ -297,37 +297,18 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
               ["light", "dark"].contains(look), let sizeText = options["-forit-window"],
               ["900x600", "1600x1000"].contains(sizeText), options["-forit-shot"] == "screen.png",
               options["-forit-settle"] == "3" else { throw FixtureFailure.invalidInput }
-        let capture = URL(fileURLWithPath: captureText, isDirectory: true).standardizedFileURL.resolvingSymlinksInPath()
-        let actualTemporaryText = NSTemporaryDirectory()
-        let actualTemporary = URL(fileURLWithPath: actualTemporaryText, isDirectory: true)
-            .standardizedFileURL.resolvingSymlinksInPath()
-        guard actualTemporary.path == capture.path else {
-            // Private operator metadata only; never enumerate or adopt another directory.
-            let path: (String?) -> [String: Any] = { value in
-                guard let value else {
-                    return ["present": false, "value": NSNull(), "utf8ByteCount": 0, "truncated": false]
-                }
-                let bytes = value.utf8
-                // Leave room for UTF-8 decoding's replacement character at a split boundary.
-                let bounded = bytes.count <= 4096 ? value : String(decoding: bytes.prefix(4093), as: UTF8.self)
-                return ["present": true, "value": bounded, "utf8ByteCount": bytes.count,
-                        "truncated": bytes.count > 4096, "hasTrailingSlash": value.hasSuffix("/")]
-            }
-            let ownedOutput = URL(fileURLWithPath: outputText, isDirectory: true)
-                .standardizedFileURL.resolvingSymlinksInPath()
-            captureDirectoryDiagnostic = [
-                "stage": "capture-directory-guard", "maximumPathUTF8Bytes": 4096,
-                "actualTemp": path(actualTemporaryText), "actualTempCanonical": path(actualTemporary.path),
-                "expectedCapture": path(captureText), "expectedCaptureCanonical": path(capture.path),
-                "envTMPDIR": path(ProcessInfo.processInfo.environment["TMPDIR"]),
-                "ownedOutput": path(outputText), "ownedOutputCanonical": path(ownedOutput.path),
-                "actualMatchesExpectedCapture": actualTemporary.path == capture.path,
-                "actualTempInsideOwnedOutput": actualTemporary.pathComponents.starts(with: ownedOutput.pathComponents),
-                "expectedCaptureInsideOwnedOutput": capture.pathComponents.starts(with: ownedOutput.pathComponents),
-                "actualTempInsideExpectedCapture": actualTemporary.pathComponents.starts(with: capture.pathComponents),
-                "expectedCaptureIsDirectNativeChild": capture.path == ownedOutput.appendingPathComponent("native", isDirectory: true).path,
-            ]
-            throw FixtureFailure.assertion("Shared native capture directory is not the owned cell temporary directory")
+        let output = URL(fileURLWithPath: outputText, isDirectory: true)
+        guard output.path == outputText,
+              output.resolvingSymlinksInPath().path == outputText,
+              try output.resourceValues(forKeys: [.isDirectoryKey]).isDirectory == true else {
+            throw FixtureFailure.assertion("Fixture output must be an existing canonical cell directory")
+        }
+        ownedOutput = output
+        let capture = output.appendingPathComponent("native", isDirectory: true)
+        guard capture.path == captureText,
+              capture.resolvingSymlinksInPath().path == captureText,
+              try capture.resourceValues(forKeys: [.isDirectoryKey]).isDirectory == true else {
+            throw FixtureFailure.assertion("Native capture must be the owned cell's canonical native directory")
         }
         let dimensions = sizeText.split(separator: "x").compactMap { Double($0) }
         let requestedSize = CGSize(width: dimensions[0], height: dimensions[1])
@@ -338,7 +319,6 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
         let allowed = ["signedout", "empty", "full", "stale", "error", "loading", "search", "longnames",
                        "signin", "browser-wait", "keyboard-close", "close", "cancel", "signout"]
         guard allowed.contains(fixture) else { throw FixtureFailure.invalidInput }
-        let output = URL(fileURLWithPath: outputText, isDirectory: true)
         let now = Date()
         let body = try FixtureData.body(empty: fixture == "empty", long: fixture == "longnames", now: now)
         let dto = try JSONDecoder().decode(CompanyDictionarySnapshot.self, from: body)
@@ -471,13 +451,13 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
         let evidence: [String: Any] = [
             "schema": "forit.dictate.company-ui-fixture.v1", "fixture": fixture,
             "sourceCommit": ProcessInfo.processInfo.environment["FORIT_SOURCE_COMMIT"] ?? "",
-            "commonRevision": "352f567e839b8faf61b6df5840c5275b016addce", "pid": ProcessInfo.processInfo.processIdentifier,
+            "commonRevision": "8263a8da050265bb1736bdd601efd253fda03030", "pid": ProcessInfo.processInfo.processIdentifier,
             "windowNumber": capturedSurface.windowNumber, "parentWindowNumber": window.windowNumber,
             "surfaceIsAttachedSheet": capturedSurface.sheetParent != nil, "productionView": "CompanyDictionaryView",
             "requestedWindow": sizeText, "appearance": look,
             "contentWidthPoints": Double(capturedSurface.contentView?.frame.width ?? 0),
             "contentHeightPoints": Double(capturedSurface.contentView?.frame.height ?? 0),
-            "nativeCaptureDirectory": actualTemporary.path,
+            "nativeCaptureDirectory": capture.path,
             "syntheticOnly": true, "realBrowserOpened": false, "browserOpenerCalls": openedBrowserRequests,
             "browserNetworkRequests": NoNetworkProtocol.count, "syntheticTransportCounts": ledger,
             "hostKeychainAdapter": "fail-closed fixture replacement; production adapter not compiled",
@@ -493,22 +473,21 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
         try JSONSerialization.data(withJSONObject: evidence, options: [.prettyPrinted, .sortedKeys])
             .write(to: output.appendingPathComponent("fixture-result.json"), options: .atomic)
         let fixtures = Dictionary(uniqueKeysWithValues: allowed.map { ($0, ForITStandaloneMacHarness.SurfaceKind.ordinaryWindow) })
-        guard try ForITStandaloneMacHarness.runIfRequested(allowedFixtures: fixtures,
+        guard try ForITStandaloneMacHarness.runIfRequested(allowedFixtures: fixtures, outputDirectory: capture,
             makeSurface: { _ in .ordinaryWindow(capturedSurface) }) else {
             throw FixtureFailure.assertion("Published Debug harness did not handle the finite request")
         }
     }
 
     private func writeFailure(_ error: Error) {
-        guard let directory = ProcessInfo.processInfo.environment["FORIT_COMPANY_UI_OUTPUT"] else { return }
-        var value: [String: Any] = ["schema": "forit.dictate.company-ui-fixture-failure.v1",
+        fputs("Company UI fixture failed; inspect retained fixture-failure.json when available.\n", stderr)
+        guard let ownedOutput else { return }
+        let value: [String: Any] = ["schema": "forit.dictate.company-ui-fixture-failure.v1",
                                    "status": "FAIL", "error": String(describing: error),
                                    "hierarchy": OwnUI.nodes().map(\.record)]
-        if let captureDirectoryDiagnostic { value["captureDirectoryDiagnostic"] = captureDirectoryDiagnostic }
         if let data = try? JSONSerialization.data(withJSONObject: value, options: [.prettyPrinted, .sortedKeys]) {
-            try? data.write(to: URL(fileURLWithPath: directory).appendingPathComponent("fixture-failure.json"), options: .atomic)
+            try? data.write(to: ownedOutput.appendingPathComponent("fixture-failure.json"), options: .atomic)
         }
-        fputs("Company UI fixture failed; inspect retained fixture-failure.json.\n", stderr)
     }
 }
 

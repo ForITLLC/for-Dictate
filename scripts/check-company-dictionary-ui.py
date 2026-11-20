@@ -14,7 +14,7 @@ import sys
 import time
 import zipfile
 
-COMMON_REVISION = "352f567e839b8faf61b6df5840c5275b016addce"
+COMMON_REVISION = "8263a8da050265bb1736bdd601efd253fda03030"
 FIXTURES = ("signedout", "empty", "full", "stale", "error", "loading", "search", "longnames",
             "signin", "browser-wait", "keyboard-close", "close", "cancel", "signout")
 SOURCES = (
@@ -55,7 +55,7 @@ def cells():
 
 def archive_evidence(output, receipt):
     """Whitelist finite outputs, including partial failure evidence. Never ZIP
-    arbitrary AppKit TMPDIR contents or overwrite another invocation's archive.
+    unrelated temporary files or overwrite another invocation's archive.
     """
     archive = output / "evidence.zip"
     total_png = 0
@@ -63,8 +63,8 @@ def archive_evidence(output, receipt):
                "native/screen.png.receipt.json", "native/screen.png.mark")
     with zipfile.ZipFile(archive, "x", compression=zipfile.ZIP_DEFLATED) as zipped:
         for cell in sorted((output / "cells").glob("*")):
-            if cell.is_symlink() or not cell.is_dir():
-                raise RuntimeError("Unexpected cell path")
+            if cell.is_symlink() or not cell.is_dir() or (cell / "native").is_symlink():
+                raise RuntimeError("Unexpected cell or native capture path")
             for relative in allowed:
                 path = cell / relative
                 if not path.exists():
@@ -123,7 +123,7 @@ def preflight(root, commit):
     if not common.is_absolute() or common.is_symlink() or common.resolve() != common:
         raise RuntimeError("Owner must supply the qualified canonical FORIT_COMMON_ROOT")
     if git(common, "rev-parse", "HEAD") != COMMON_REVISION or git(common, "status", "--porcelain", "--untracked-files=all"):
-        raise RuntimeError("Common must be a clean exact 0.31.9 checkout")
+        raise RuntimeError("Common must be a clean exact 0.33.0 checkout")
     origin = git(common, "config", "--get", "remote.origin.url").lower().removesuffix(".git")
     if origin not in ("https://github.com/foritllc/for-icommon", "git@github.com:foritllc/for-icommon"):
         raise RuntimeError("Common checkout must retain its official existing origin")
@@ -250,18 +250,20 @@ let package = Package(name: "DictateCompanyUIFixture", platforms: [.macOS(.v15)]
             cell = output / "cells" / name
             cell.mkdir(parents=True)
             native_directory = cell / "native"
-            native_directory.mkdir()
+            native_directory.mkdir(mode=0o700)
             env = os.environ.copy()
             env["FORIT_COMPANY_UI_OUTPUT"] = str(cell)
             env["FORIT_COMPANY_UI_CAPTURE"] = str(native_directory)
-            env["TMPDIR"] = str(native_directory) + os.sep
             command = [str(binary), "-forit-fixture", fixture, "-forit-shot", "screen.png",
                        "-forit-appearance", appearance, "-forit-window", size, "-forit-settle", "3"]
             run(command, cell, output / f"{name}.log", timeout=45, environment=env)
             png = native_directory / "screen.png"
             native = native_directory / "screen.png.receipt.json"
+            mark = native_directory / "screen.png.mark"
             result = cell / "fixture-result.json"
-            if any(p.is_symlink() or not p.is_file() for p in (png, native, result)):
+            if native_directory.resolve(strict=True) != native_directory or any(
+                p.is_symlink() or not p.is_file() for p in (png, native, mark, result)
+            ):
                 raise RuntimeError(f"Missing genuine native evidence for {name}")
             if not 24 <= png.stat().st_size <= MAX_PNG:
                 raise RuntimeError(f"PNG size exceeds its finite input bound for {name}")

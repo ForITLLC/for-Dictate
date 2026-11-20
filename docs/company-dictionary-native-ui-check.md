@@ -2,12 +2,12 @@
 
 This is app-owned source preparation under work
 [9A177608](https://tasks.forit.io/?task=9A177608-8178-4CD2-9972-420533BF6D3C).
-The UI source/seam checkpoint is `aecf716002d42e0f1b9d64ad3d84ce9aaeaeca03`.
-The corrected fixture source below has not had a native retry. The first actual
-attempt failed during compilation, before captures or interactions; those checks
-remain **native UNRUN** until a qualified owner-pinned retry succeeds.
-The earlier 141 core tests belong to `77274cf`; full-app compile PASS belongs to
-`164b025`, not this check.
+The earlier native run built the fixture and reached capture. The first cell
+stopped when Foundation returned the ordinary user temporary directory despite
+receiving a cell-specific `TMPDIR`. The recorded comparison at `5de41303` had
+zero completed cells. This fixture uses the published 0.33.0 private capture
+API to pass its destination explicitly. The 32 cells await a run at this pin.
+The 155 core tests and universal app compilation belong to `e605c019`.
 
 ## First native attempt
 
@@ -25,8 +25,8 @@ Swift 5 and every fixture/isolation/assertion boundary.
 The retained receipt has zero completed cells and `acceptanceComplete: false`.
 The owner's terminal receipt reports source/process/gate/simulator cleanup true.
 This is compiler execution evidence only, with no pixels or interaction proof.
-The owner must commit and repin the corrected exact source before the sole retry;
-this document is not a retry or runtime-acceptance claim.
+These historical results established the compiler failure and the correction
+that allowed the later capture attempt to start.
 
 The retained compiler invocation also references Xcode 27.2 SwiftPM backend
 products under `package/.build/out/Products/Debug`. The first attempt never reached
@@ -43,22 +43,22 @@ records `nativeProductsRelativePath` and `nativeExecutableRelativePath`.
 
 ## Existing owner route
 
-The new owner-pinned Apple platform is `macos-ui-check`. The app adapter is
+The owner-pinned Apple platform is `macos-ui-check`. The app adapter is
 `/bin/bash scripts/forit-mini-ui-check.sh`; no argument means `--plan`.
 `--plan` prints JSON and performs no native/toolchain, host, credential or
 environment readiness probes and writes no files. Only the maintained shared
 Apple launcher supplies `--execute` after the route is registered and qualified.
 The adapter itself neither creates a slot nor starts/replaces a Common gate.
 The owner route declares
-`common_commit=352f567e839b8faf61b6df5840c5275b016addce`: the existing shared
+`common_commit=8263a8da050265bb1736bdd601efd253fda03030`: the existing shared
 launcher then clones the clean official Common source, exports
 `FORIT_COMMON_ROOT`, and cleans it after the job. No new rail mechanism is needed.
 
 Execution requires Darwin, exact clean `FORIT_SOURCE_COMMIT`, the inherited
 `FORIT_GATE_RUN` with its lane marker, and the existing qualified
 `FORIT_COMMON_ROOT`. That root must be a clean canonical checkout of the official
-`ForITLLC/for-iCommon` source at published 0.31.9 /
-`352f567e839b8faf61b6df5840c5275b016addce`. It is used as a local SwiftPM dependency;
+`ForITLLC/for-iCommon` source at published 0.33.0 /
+`8263a8da050265bb1736bdd601efd253fda03030`. It is used as a local SwiftPM dependency;
 no app pin, package lock, Common implementation, macro/plugin policy or global
 configuration is changed. Compile uses Debug/Swift 5 and one SwiftPM build job.
 The dependency has no external package dependencies at this pin. The driver
@@ -150,7 +150,7 @@ view-model method and pretending the control worked. Already-created provider
 payload erasure, full Tab order and real VoiceOver operation remain unexercised.
 
 Captures use the actual published `ForITStandaloneMacHarness.runIfRequested`
-ordinary-window source at 0.31.9 and its own-PID window-server capture. They are
+ordinary-window source at 0.33.0 and its own-PID window-server capture. They are
 not ImageRenderer, cacheDisplay or repainted UI. Its genuine native qualification
 and permission behavior remain unverified here. If capture would prompt or the
 own-window route fails, retain the refusal; do not enable permissions, capture
@@ -159,14 +159,16 @@ accepts only 900×600/1600×1000; the shipping 620×660 default still needs sepa
 qualified inspection. AppKit toolbar/profile presence must be checked in actual
 pixels and hierarchy; applying the modifier is not a visible-top-bar witness.
 
-Each child receives a newly created owned `TMPDIR` at its cell's `native/`
-directory before process launch. The fixture compares actual
-`NSTemporaryDirectory()` with that canonical path before any UI/capture work;
-an ignored override fails rather than overwriting inherited temporary output.
-The driver reads the shared harness's PNG/receipt/mark from this native directory
-and joins it to the recorded actual capture surface and geometry. Only the named
-native outputs and fixture result/failure JSON are eligible for the archive;
-unrelated AppKit temporary files are excluded.
+The driver creates a private mode-0700 `native/` directory under each cell.
+The fixture verifies that it is the cell's canonical direct child and passes
+it to the harness's explicit `outputDirectory:` overload. It never depends on
+a process temporary-directory override. The driver requires the original
+PNG, receipt and mark in that directory and joins them to the captured
+surface and geometry. The archive includes only named outputs and fixture
+result/failure JSON, and refuses a symlinked capture directory.
+
+The 0.33.0 pin applies to the fixture route. The installed app must be checked
+separately against the shipping dependency recorded in its build receipt.
 
 ## Evidence contract and acceptance
 
