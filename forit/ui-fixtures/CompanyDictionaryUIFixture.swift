@@ -151,13 +151,16 @@ private struct AXNode {
     let label: String
     let identifier: String
     let inDialog: Bool
+    var frame: NSRect? {
+        guard element.responds(to: NSSelectorFromString("accessibilityFrame")),
+              let boxed = element.value(forKey: "accessibilityFrame") as? NSValue else { return nil }
+        return boxed.rectValue
+    }
     var record: [String: Any] {
         var value: [String: Any] = ["window": window, "role": role, "label": String(label.prefix(512)),
                                     "identifier": identifier, "inDialog": inDialog]
-        if element.responds(to: NSSelectorFromString("accessibilityFrame")),
-           let boxed = element.value(forKey: "accessibilityFrame") as? NSValue {
-            let rect = boxed.rectValue
-            value["framePoints"] = [Double(rect.origin.x), Double(rect.origin.y), Double(rect.width), Double(rect.height)]
+        if let frame {
+            value["framePoints"] = [Double(frame.origin.x), Double(frame.origin.y), Double(frame.width), Double(frame.height)]
         } else { value["framePointsUnavailable"] = true }
         return value
     }
@@ -234,6 +237,40 @@ private enum OwnUI {
         try key("a", code: 0, modifiers: .command)
         for character in text { try key(String(character), code: 0) }
     }
+    static func signOutRow(in window: NSWindow) async throws -> AXNode {
+        func rowAndViewport() -> (AXNode, NSRect, NSRect)? {
+            let ownNodes = nodes().filter { $0.window == window.windowNumber && !$0.inDialog }
+            let scrollAreas = ownNodes.filter { $0.role == "AXScrollArea" }
+            guard scrollAreas.count == 1, let viewport = scrollAreas.first?.frame,
+                  let row = ownNodes.first(where: { $0.role == "AXButton" && $0.label == "Sign out" }),
+                  let frame = row.frame, !frame.isEmpty else { return nil }
+            return (row, frame, viewport)
+        }
+        guard let (_, frame, viewport) = rowAndViewport() else {
+            throw FixtureFailure.actionUnavailable("Shared Sign out row or dictionary scroll area")
+        }
+        if !viewport.contains(frame) {
+            func scrollViews(in view: NSView) -> [NSScrollView] {
+                if let scroll = view as? NSScrollView { return [scroll] }
+                return view.subviews.flatMap { scrollViews(in: $0) }
+            }
+            let documents = window.contentView.map { scrollViews(in: $0) }?.compactMap(\.documentView) ?? []
+            guard documents.count == 1, let document = documents.first else {
+                throw FixtureFailure.actionUnavailable("Dictionary form scroll document")
+            }
+            let rect = document.convert(window.convertFromScreen(frame), from: nil)
+            _ = document.scrollToVisible(rect)
+        }
+        var visibleRow: AXNode?
+        try await wait("Sign out row visible inside the dictionary form") {
+            guard let (row, frame, viewport) = rowAndViewport(), viewport.contains(frame) else { return false }
+            visibleRow = row
+            return true
+        }
+        guard let visibleRow else { throw FixtureFailure.actionUnavailable("Visible Sign out row") }
+        return visibleRow
+    }
+
     static func wait(_ transition: String, details: (() -> String)? = nil,
                      _ condition: @MainActor () -> Bool) async throws {
         let deadline = ContinuousClock.now.advanced(by: .seconds(3))
@@ -452,29 +489,32 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
             }
         }
         if fixture == "signout" {
-            guard let signout = OwnUI.nodes().first(where: { $0.label == "Sign out" && $0.role == "AXButton" }) else {
-                throw FixtureFailure.actionUnavailable("Shared Sign out")
+            func confirmation() -> AXNode? {
+                OwnUI.nodes().first {
+                    $0.label == "Sign out" && $0.role == "AXButton" && ($0.inDialog || $0.window != window.windowNumber)
+                }
             }
-            try OwnUI.press(signout)
-            try await OwnUI.wait("first sign-out confirmation") { OwnUI.nodes().contains {
-                $0.label == "Sign out" && $0.role == "AXButton" && ($0.inDialog || $0.window != window.windowNumber)
-            } }
+            let signOut = try await OwnUI.signOutRow(in: window)
+            try OwnUI.press(signOut)
+            try await OwnUI.wait("first sign-out confirmation") { confirmation() != nil }
             try OwnUI.key("\u{1B}", code: 53)
-            try await OwnUI.wait("sign-out cancellation") { !OwnUI.nodes().contains {
-                $0.label == "Sign out" && $0.role == "AXButton" && ($0.inDialog || $0.window != window.windowNumber)
-            } }
+            var dismissedSince: ContinuousClock.Instant?
+            try await OwnUI.wait("sign-out cancellation and focus returned to the dictionary") {
+                guard confirmation() == nil, window.attachedSheet == nil, NSApp.keyWindow === window else {
+                    dismissedSince = nil
+                    return false
+                }
+                let now = ContinuousClock.now
+                if let dismissedSince { return dismissedSince.duration(to: now) >= .milliseconds(150) }
+                dismissedSince = now
+                return false
+            }
             guard client.isSignedIn else { throw FixtureFailure.assertion("Sign-out Cancel changed the session") }
             interactions.append(["name": "shared sign-out confirmation Cancel preserves session", "status": "observed"])
-            guard let signoutAgain = OwnUI.nodes().first(where: { $0.label == "Sign out" && $0.role == "AXButton" }) else {
-                throw FixtureFailure.actionUnavailable("Shared Sign out after Cancel")
-            }
-            try OwnUI.press(signoutAgain)
-            try await OwnUI.wait("second sign-out confirmation") { OwnUI.nodes().contains {
-                $0.label == "Sign out" && $0.role == "AXButton" && ($0.inDialog || $0.window != window.windowNumber)
-            } }
-            guard let confirm = OwnUI.nodes().first(where: {
-                $0.label == "Sign out" && $0.role == "AXButton" && ($0.inDialog || $0.window != window.windowNumber)
-            }) else { throw FixtureFailure.actionUnavailable("Shared sign-out confirmation action") }
+            let signOutAgain = try await OwnUI.signOutRow(in: window)
+            try OwnUI.press(signOutAgain)
+            try await OwnUI.wait("second sign-out confirmation") { confirmation() != nil }
+            guard let confirm = confirmation() else { throw FixtureFailure.actionUnavailable("Shared sign-out confirmation action") }
             let captured = cache.snapshot
             guard captured.companyCoverage.includedTermCount > 0 else {
                 throw FixtureFailure.assertion("Sign-out fixture had no company contribution to revoke")
