@@ -3,15 +3,13 @@ import Foundation
 struct TranscriptionRequestContext {
     let language: String?
     let prompt: String?
-    let vocabulary: ResolvedVocabularySnapshot
+    var vocabulary: RecordingVocabulary? = nil
 
-    init(language: String?, prompt: String?, vocabulary: ResolvedVocabularySnapshot = SharedVocabularyCache.shared.snapshot) {
-        self.language = language
-        self.prompt = prompt
-        self.vocabulary = vocabulary
+    /// The Whisper prompt with a bounded vocabulary hint after the person's own prompt.
+    var whisperPrompt: String? {
+        ResolvedVocabularySnapshot(revision: 0, words: vocabulary?.terms ?? [], omittedCount: 0)
+            .whisperPrompt(preserving: prompt)
     }
-
-    var whisperPrompt: String? { vocabulary.whisperPrompt(preserving: prompt) }
 
     static var currentDefaults: TranscriptionRequestContext {
         let language = UserDefaults.standard.string(forKey: "SelectedLanguage") ?? "auto"
@@ -19,6 +17,12 @@ struct TranscriptionRequestContext {
             language: language,
             prompt: WhisperPrompt.resolvedPrompt(for: language)
         )
+    }
+
+    func withVocabulary(_ vocabulary: RecordingVocabulary) -> TranscriptionRequestContext {
+        var context = self
+        context.vocabulary = vocabulary
+        return context
     }
 
     func scoped(to model: any TranscriptionModel) -> TranscriptionRequestContext {

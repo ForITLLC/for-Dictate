@@ -81,17 +81,120 @@ enum SharedVocabularyLimits {
     static let whisperHintBytes = 768
 }
 
+/// One publication's revocable eligibility, shared by its captured snapshots.
+/// The sole mutable value is guarded by this lock; no file, actor hop or network
+/// work occurs when a decoder checks it. Equality is publication identity, not
+/// the changing valid flag, so snapshot equality remains stable and reflexive.
+final class CompanyVocabularyLease: Equatable, @unchecked Sendable {
+    private let lock = NSLock()
+    private var valid = true
+
+    var isValid: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return valid
+    }
+
+    func invalidate() {
+        lock.lock()
+        defer { lock.unlock() }
+        valid = false
+    }
+
+    static func == (lhs: CompanyVocabularyLease, rhs: CompanyVocabularyLease) -> Bool { lhs === rhs }
+}
+
+/// Counts in this app's resolved hint list, not engine consumption or accuracy.
+/// Eligible candidates have survived spelling validation, existing user choices
+/// and source/output collisions; included candidates also survived the resolved
+/// count/byte budget. Whisper applies its own smaller budget afterwards.
+struct CompanyVocabularyCoverage: Equatable, Sendable {
+    let activeTermCount: Int
+    let unsupportedTermCount: Int
+    let eligibleTermCount: Int
+    let includedTermCount: Int
+
+    static let none = Self(activeTermCount: 0, unsupportedTermCount: 0, eligibleTermCount: 0, includedTermCount: 0)
+    /// All active terms absent from the resolved company-derived hint tier,
+    /// including unsupported text, choices/collisions and budget exclusion.
+    var omittedTermCount: Int { activeTermCount - includedTermCount }
+    var budgetOmittedTermCount: Int { eligibleTermCount - includedTermCount }
+    var choiceOrCollisionExcludedTermCount: Int { activeTermCount - unsupportedTermCount - eligibleTermCount }
+}
+
 struct ResolvedVocabularySnapshot: Equatable, Sendable {
     let revision: Int
-    /// Personal entries first, then shared entries, each in deterministic order.
-    let words: [String]
-    let omittedCount: Int
+    private let resolvedWords: [String]
+    private let resolvedOmittedCount: Int
+    private let companyValidUntil: Date?
+    private let wordsWithoutCompany: [String]?
+    private let omittedWithoutCompany: Int?
+    private let companyLease: CompanyVocabularyLease?
+    private let resolvedCompanyCoverage: CompanyVocabularyCoverage
 
-    func whisperPrompt(preserving original: String?) -> String? {
+    init(
+        revision: Int, words: [String], omittedCount: Int,
+        companyValidUntil: Date? = nil, wordsWithoutCompany: [String]? = nil,
+        omittedWithoutCompany: Int? = nil, companyLease: CompanyVocabularyLease? = nil,
+        companyCoverage: CompanyVocabularyCoverage = .none
+    ) {
+        self.revision = revision
+        resolvedWords = words
+        resolvedOmittedCount = omittedCount
+        self.companyValidUntil = companyValidUntil
+        self.wordsWithoutCompany = wordsWithoutCompany
+        self.omittedWithoutCompany = omittedWithoutCompany
+        self.companyLease = companyValidUntil == nil ? nil : (companyLease ?? CompanyVocabularyLease())
+        resolvedCompanyCoverage = companyCoverage
+    }
+
+    /// A previously captured request loses company hints at expiry or publication
+    /// invalidation. The fallback was resolved when published, never on a decoder
+    /// thread. Already materialized arrays/strings/provider payloads are separate
+    /// copies and cannot be retroactively erased by invalidating this lease.
+    var words: [String] {
+        guard companyValidUntil != nil else { return resolvedWords }
+        return words(at: Date())
+    }
+    var omittedCount: Int {
+        guard companyValidUntil != nil else { return resolvedOmittedCount }
+        return omittedCount(at: Date())
+    }
+    var companyCoverage: CompanyVocabularyCoverage {
+        guard companyValidUntil != nil else { return .none }
+        return companyCoverage(at: Date())
+    }
+
+    func words(at date: Date) -> [String] {
+        guard let companyValidUntil else { return resolvedWords }
+        guard companyValidUntil.timeIntervalSinceReferenceDate.isFinite,
+            date < companyValidUntil, companyLease?.isValid == true
+        else { return wordsWithoutCompany ?? [] }
+        return resolvedWords
+    }
+
+    func omittedCount(at date: Date) -> Int {
+        guard let companyValidUntil else { return resolvedOmittedCount }
+        guard companyValidUntil.timeIntervalSinceReferenceDate.isFinite,
+            date < companyValidUntil, companyLease?.isValid == true
+        else { return omittedWithoutCompany ?? 0 }
+        return resolvedOmittedCount
+    }
+
+    func companyCoverage(at date: Date) -> CompanyVocabularyCoverage {
+        guard let companyValidUntil, companyValidUntil.timeIntervalSinceReferenceDate.isFinite,
+            date < companyValidUntil, companyLease?.isValid == true
+        else { return .none }
+        return resolvedCompanyCoverage
+    }
+
+    func whisperPrompt(preserving original: String?, at date: Date? = nil) -> String? {
         let prefix = "Important vocabulary: "
         var selected: [String] = []
         var bytes = prefix.utf8.count
-        for word in words {
+        let hintWords: [String]
+        if let date { hintWords = words(at: date) } else { hintWords = words }
+        for word in hintWords {
             let cost = word.utf8.count + (selected.isEmpty ? 0 : 2)
             guard selected.count < SharedVocabularyLimits.whisperTerms,
                 bytes + cost <= SharedVocabularyLimits.whisperHintBytes
@@ -104,6 +207,37 @@ struct ResolvedVocabularySnapshot: Equatable, Sendable {
         guard let original, !original.isEmpty else { return hint }
         // Never truncate, rewrite, persist, or replace the user's language prompt.
         return original + "\n\n" + hint
+    }
+}
+
+/// Recognition-only projection. Full Support metadata stays with the company
+/// client; this service does not retain aliases, meanings or a second catalog.
+struct CompanyVocabularyProjection: Equatable, Sendable {
+    struct Term: Equatable, Sendable {
+        let id: String
+        let spelling: String
+    }
+
+    let terms: [Term]
+    let validUntil: Date
+    let activeTermCount: Int
+    let unsupportedTermCount: Int
+    let lease = CompanyVocabularyLease()
+
+    init?(snapshot: CompanyDictionarySnapshot?, validUntil: Date?) {
+        guard let snapshot, let validUntil,
+            validUntil.timeIntervalSinceReferenceDate.isFinite
+        else { return nil }
+        let active = snapshot.terms.filter(\.isActive)
+        terms = active.compactMap { term in
+            guard let spelling = try? SharedVocabularyResolver.validatedTerm(term.canonicalSpelling) else {
+                return nil
+            }
+            return Term(id: term.id, spelling: spelling)
+        }
+        self.validUntil = validUntil
+        activeTermCount = active.count
+        unsupportedTermCount = active.count - terms.count
     }
 }
 
@@ -124,7 +258,21 @@ enum SharedVocabularyResolver {
     static func resolve(
         catalog: SharedVocabularyCatalog,
         preferences: SharedVocabularyPreferences,
-        personalWords: [String]
+        personalWords: [String],
+        companySnapshot: CompanyDictionarySnapshot? = nil,
+        companyValidUntil: Date? = nil
+    ) -> ResolvedVocabularySnapshot {
+        resolve(
+            catalog: catalog, preferences: preferences, personalWords: personalWords,
+            company: CompanyVocabularyProjection(snapshot: companySnapshot, validUntil: companyValidUntil)
+        )
+    }
+
+    static func resolve(
+        catalog: SharedVocabularyCatalog,
+        preferences: SharedVocabularyPreferences,
+        personalWords: [String],
+        company: CompanyVocabularyProjection?
     ) -> ResolvedVocabularySnapshot {
         var personal: [String: String] = [:]
         for raw in personalWords.prefix(SharedVocabularyLimits.personalTerms).sorted() {
@@ -139,9 +287,96 @@ enum SharedVocabularyResolver {
             let preferred = preferences.overrides[source] ?? term
             shared[key(preferred)] = preferred
         }
-        // A personal word also wins when it collides with an override's output.
-        let candidates = personal.keys.sorted().compactMap { personal[$0] }
+        // Keep the original local-only ordering, including override collisions,
+        // as the exact fallback for an absent, empty or expired company source.
+        let localCandidates = personal.keys.sorted().compactMap { personal[$0] }
             + shared.keys.sorted().filter { personal[$0] == nil }.compactMap { shared[$0] }
+        let baseline = bounded(localCandidates, revision: catalog.revision)
+        guard let company, company.activeTermCount > 0 else { return baseline }
+        let emptyCoverage = CompanyVocabularyCoverage(
+            activeTermCount: company.activeTermCount, unsupportedTermCount: company.unsupportedTermCount,
+            eligibleTermCount: 0, includedTermCount: 0
+        )
+        guard !company.terms.isEmpty else {
+            return withCompany(baseline, baseline: baseline, company: company, coverage: emptyCoverage)
+        }
+
+        struct Candidate {
+            let spelling: String
+            let isOverride: Bool
+            let isCompany: Bool
+        }
+        var companySources = Set<String>()
+        var companyWords: [String: Candidate] = [:]
+        // Resolve an unexpected duplicate normalization key by stable term id,
+        // not by the producer's array order or a dictionary iteration order.
+        let orderedCompany = company.terms.sorted {
+            let first = key($0.spelling), second = key($1.spelling)
+            return first == second ? $0.id < $1.id : first < second
+        }
+        for term in orderedCompany {
+            let source = key(term.spelling)
+            guard companySources.insert(source).inserted,
+                !suppressed.contains(source), personal[source] == nil
+            else { continue }
+            let preferred = preferences.overrides[source] ?? term.spelling
+            guard let spelling = try? validatedTerm(preferred), personal[key(spelling)] == nil else { continue }
+            let output = key(spelling)
+            let candidate = Candidate(spelling: spelling, isOverride: preferences.overrides[source] != nil, isCompany: true)
+            // An existing explicit spelling choice wins an output collision;
+            // equal-ranked company candidates keep their stable source order.
+            if let previous = companyWords[output], previous.isOverride || !candidate.isOverride { continue }
+            companyWords[output] = candidate
+        }
+        guard !companyWords.isEmpty else {
+            return withCompany(baseline, baseline: baseline, company: company, coverage: emptyCoverage)
+        }
+        var localWords: [String: Candidate] = [:]
+        for term in catalog.terms.sorted() {
+            let source = key(term)
+            guard !companySources.contains(source), !suppressed.contains(source), personal[source] == nil else { continue }
+            let preferred = preferences.overrides[source] ?? term
+            let output = key(preferred)
+            guard personal[output] == nil else { continue }
+            localWords[output] = Candidate(spelling: preferred, isOverride: preferences.overrides[source] != nil, isCompany: false)
+        }
+
+        // Personal words, then existing explicit spelling choices, then company
+        // canonicals, then local canonicals. Company wins equal-ranked outputs.
+        var choices = localWords.filter { $0.value.isOverride }
+        for (output, candidate) in companyWords where candidate.isOverride { choices[output] = candidate }
+        let companyCanonicals = companyWords.filter { !$0.value.isOverride && choices[$0.key] == nil }
+        let localCanonicals = localWords.filter {
+            !$0.value.isOverride && choices[$0.key] == nil && companyWords[$0.key] == nil
+        }
+        let candidates = personal.keys.sorted().compactMap { personal[$0] }
+            + choices.keys.sorted().compactMap { choices[$0]?.spelling }
+            + companyCanonicals.keys.sorted().compactMap { companyCanonicals[$0]?.spelling }
+            + localCanonicals.keys.sorted().compactMap { localCanonicals[$0]?.spelling }
+        let resolved = bounded(candidates, revision: catalog.revision)
+        let companyCandidateKeys = Set(choices.filter { $0.value.isCompany }.keys).union(companyCanonicals.keys)
+        let includedKeys = Set(resolved.words.map(key))
+        let coverage = CompanyVocabularyCoverage(
+            activeTermCount: company.activeTermCount, unsupportedTermCount: company.unsupportedTermCount,
+            eligibleTermCount: companyCandidateKeys.count,
+            includedTermCount: companyCandidateKeys.intersection(includedKeys).count
+        )
+        return withCompany(resolved, baseline: baseline, company: company, coverage: coverage)
+    }
+
+    private static func withCompany(
+        _ resolved: ResolvedVocabularySnapshot, baseline: ResolvedVocabularySnapshot,
+        company: CompanyVocabularyProjection, coverage: CompanyVocabularyCoverage
+    ) -> ResolvedVocabularySnapshot {
+        return .init(
+            revision: resolved.revision, words: resolved.words, omittedCount: resolved.omittedCount,
+            companyValidUntil: company.validUntil, wordsWithoutCompany: baseline.words,
+            omittedWithoutCompany: baseline.omittedCount, companyLease: company.lease,
+            companyCoverage: coverage
+        )
+    }
+
+    private static func bounded(_ candidates: [String], revision: Int) -> ResolvedVocabularySnapshot {
         var words: [String] = []
         var bytes = 0
         for term in candidates {
@@ -152,7 +387,7 @@ enum SharedVocabularyResolver {
             words.append(term)
             bytes += cost
         }
-        return .init(revision: catalog.revision, words: words, omittedCount: candidates.count - words.count)
+        return .init(revision: revision, words: words, omittedCount: candidates.count - words.count)
     }
 }
 

@@ -29,7 +29,6 @@ actor VoiceInkRefineInferenceEngine {
     #if arch(arm64)
         private struct PreparationIdentity: Equatable {
             let modelDirectoryPath: String
-            let systemPrompt: String
         }
 
         private static let activeCacheLimitBytes = 64 * 1_024 * 1_024
@@ -46,10 +45,9 @@ actor VoiceInkRefineInferenceEngine {
         systemPrompt: String
     ) async throws {
         #if arch(arm64)
-            let requestedIdentity = PreparationIdentity(
-                modelDirectoryPath: modelDirectory.path,
-                systemPrompt: systemPrompt
-            )
+            // Preparation warms model weights, not a reusable prompt session.
+            // Each enhancement creates its own session with the current prompt.
+            let requestedIdentity = PreparationIdentity(modelDirectoryPath: modelDirectory.path)
 
             if isWarmed, preparationIdentity == requestedIdentity {
                 return
@@ -122,13 +120,9 @@ actor VoiceInkRefineInferenceEngine {
             do {
                 for try await event in session.streamDetails(to: transcript) {
                     try Task.checkCancellation()
-                    switch event {
-                    case .chunk(let text):
+                    // Reasoning and tool events are separate from the answer text.
+                    if let text = event.chunk {
                         output.append(contentsOf: text)
-                    case .info:
-                        break
-                    case .toolCall:
-                        break
                     }
                 }
                 await session.clear()

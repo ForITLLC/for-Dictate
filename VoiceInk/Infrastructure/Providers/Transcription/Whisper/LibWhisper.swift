@@ -29,16 +29,25 @@ actor WhisperContext {
         }
     }
 
-    /// Keep configuration, decoding and result collection in one actor turn. The
-    /// loaded context may also serve prewarming, imports and history retries.
-    func transcribe(samples: [Float], language: String?, prompt: String?) -> String? {
-        self.language = language
-        self.prompt = prompt
-        guard fullTranscribe(samples: samples) else { return nil }
+    /// Keep request settings, inference and result retrieval in one actor operation.
+    func transcribe(samples: [Float], request: TranscriptionRequestContext) throws -> String {
+        try Task.checkCancellation()
+        let previousLanguage = language
+        let previousPrompt = prompt
+        defer {
+            language = previousLanguage
+            prompt = previousPrompt
+        }
+        language = request.language
+        // whisper.cpp keeps only the trailing prompt tokens, so the vocabulary hint is bounded
+        // (SharedVocabularyLimits) and can never crowd out the person's language prompt.
+        prompt = request.whisperPrompt ?? ""
+        guard fullTranscribe(samples: samples) else { throw VoiceInkEngineError.whisperCoreFailed }
+        try Task.checkCancellation()
         return getTranscription()
     }
 
-    private func fullTranscribe(samples: [Float]) -> Bool {
+    func fullTranscribe(samples: [Float]) -> Bool {
         guard let context = context else { return false }
 
         let maxThreads = max(1, min(8, cpuCount() - 2))
@@ -110,7 +119,7 @@ actor WhisperContext {
         return success
     }
 
-    private func getTranscription() -> String {
+    func getTranscription() -> String {
         guard let context = context else { return "" }
         var transcription = ""
         for i in 0..<whisper_full_n_segments(context) {

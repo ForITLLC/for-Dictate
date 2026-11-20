@@ -10,6 +10,13 @@ final class SharedVocabularyService: ObservableObject {
     @Published private(set) var preferences = SharedVocabularyPreferences()
     @Published private(set) var warning: String?
     @Published private(set) var omittedCount = 0
+    @Published private var publishedCompanyCoverage = CompanyVocabularyCoverage.none
+
+    /// Resolver coverage only. A provider can apply an additional hint budget or
+    /// ignore the hints entirely; these counts do not establish engine use.
+    var companyCoverage: CompanyVocabularyCoverage { cache.snapshot.companyCoverage }
+    var companyActiveTermCount: Int { companyCoverage.activeTermCount }
+    var companyUnsupportedTermCount: Int { companyCoverage.unsupportedTermCount }
 
     private let files: SharedVocabularyFiles
     private let cache: SharedVocabularyCache
@@ -18,6 +25,7 @@ final class SharedVocabularyService: ObservableObject {
     private var configurationID = UUID()
     private var personalWords: [String] = []
     private var preferencesWarning: String?
+    private var companyProjection: CompanyVocabularyProjection?
 
     init(files: SharedVocabularyFiles = .standard, cache: SharedVocabularyCache = .shared) {
         self.files = files
@@ -25,6 +33,7 @@ final class SharedVocabularyService: ObservableObject {
     }
 
     deinit {
+        companyProjection?.lease.invalidate()
         if let saveObserver { NotificationCenter.default.removeObserver(saveObserver) }
     }
 
@@ -128,6 +137,19 @@ final class SharedVocabularyService: ObservableObject {
         try SharedVocabularyFiles.encode(catalog.validated())
     }
 
+    /// Called only by the company client's qualified publication seam. This is
+    /// an in-memory recognition projection, never an import into user stores.
+    /// Missing/invalid expiry excludes the company source rather than granting
+    /// an unbounded lifetime. Clearing it immediately restores local-only hints.
+    func setCompanySnapshot(_ snapshot: CompanyDictionarySnapshot?, validUntil: Date?) {
+        // Revoke first, including when the replacement has identical bytes or
+        // changes only account/session binding outside this projection. Every
+        // captured snapshot shares the old lease and now reads its local fallback.
+        companyProjection?.lease.invalidate()
+        companyProjection = CompanyVocabularyProjection(snapshot: snapshot, validUntil: validUntil)
+        publishSnapshot()
+    }
+
     func setSuppressed(_ suppressed: Bool, term: String) throws {
         var next = preferences
         let key = SharedVocabularyResolver.key(term)
@@ -192,9 +214,12 @@ final class SharedVocabularyService: ObservableObject {
 
     private func publishSnapshot() {
         let snapshot = SharedVocabularyResolver.resolve(
-            catalog: catalog, preferences: preferences, personalWords: personalWords
+            catalog: catalog, preferences: preferences, personalWords: personalWords,
+            company: companyProjection
         )
         if cache.snapshot != snapshot { cache.replace(with: snapshot) }
         if omittedCount != snapshot.omittedCount { omittedCount = snapshot.omittedCount }
+        let coverage = snapshot.companyCoverage
+        if publishedCompanyCoverage != coverage { publishedCompanyCoverage = coverage }
     }
 }

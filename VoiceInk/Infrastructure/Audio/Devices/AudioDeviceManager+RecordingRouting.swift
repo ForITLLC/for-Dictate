@@ -5,7 +5,6 @@ import os
 struct RecordingDeviceResolution {
     let deviceID: AudioDeviceID?
     let internalMicrophoneBlockedByClosedLid: Bool
-    let fellBackFromClosedInternalMicrophone: Bool
 }
 
 extension AudioDeviceManager {
@@ -75,9 +74,7 @@ extension AudioDeviceManager {
 
         return RecordingDeviceResolution(
             deviceID: resolvedDeviceID,
-            internalMicrophoneBlockedByClosedLid: internalMicrophoneBlockedByClosedLid,
-            fellBackFromClosedInternalMicrophone: internalMicrophoneBlockedByClosedLid
-                && resolvedDeviceID != preferredAvailableDevice
+            internalMicrophoneBlockedByClosedLid: internalMicrophoneBlockedByClosedLid
         )
     }
 

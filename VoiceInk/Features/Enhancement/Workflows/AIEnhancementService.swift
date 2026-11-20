@@ -28,7 +28,6 @@ class AIEnhancementService: ObservableObject {
 
     private let aiService: AIService
     private let screenCaptureService: ScreenCaptureService
-    private let customVocabularyService: CustomVocabularyService
     private var requestTimeout: TimeInterval {
         EnhancementRequestSettings.timeout
     }
@@ -42,7 +41,6 @@ class AIEnhancementService: ObservableObject {
         self.aiService = aiService
         self.modelContext = modelContext
         self.screenCaptureService = ScreenCaptureService()
-        self.customVocabularyService = CustomVocabularyService.shared
 
         if let savedPromptsData = UserDefaults.standard.data(forKey: "customPrompts"),
             let decodedPrompts = try? JSONDecoder().decode([CustomPrompt].self, from: savedPromptsData)
@@ -112,8 +110,9 @@ class AIEnhancementService: ObservableObject {
     private func getSystemMessage(
         prompt: CustomPrompt,
         configuration: EnhancementRuntimeConfiguration,
-        contextSnapshot: RecordingContextSnapshot?
-    ) async -> String {
+        contextSnapshot: RecordingContextSnapshot?,
+        vocabulary: RecordingVocabulary
+    ) -> String {
         let useSelectedText = configuration.useSelectedTextContext
         let useClipboard = configuration.useClipboardContext
         let useScreenCapture = configuration.useScreenCaptureContext
@@ -151,20 +150,7 @@ class AIEnhancementService: ObservableObject {
                 ""
             }
 
-        let customVocabulary = customVocabularyService.getCustomVocabulary(from: modelContext)
-
-        let customVocabularySection =
-            if !customVocabulary.isEmpty {
-                """
-                # Custom Vocabulary
-                Use these custom vocabulary words, proper nouns, acronyms, product names, and technical terms as the spelling authority. When the text clearly refers to one of these entries, replace similar-sounding or phonetically close transcription mistakes with the exact spelling shown below. Do not force a replacement when the text clearly means something else:
-                <CUSTOM_VOCABULARY>
-                \(customVocabulary)
-                </CUSTOM_VOCABULARY>
-                """
-            } else {
-                ""
-            }
+        let customVocabularySection = vocabulary.enhancementSection
 
         let contextBlocks = [selectedTextContext, clipboardContext, screenCaptureContext]
             .filter { !$0.isEmpty }
@@ -188,7 +174,8 @@ class AIEnhancementService: ObservableObject {
     private func makeRequest(
         text: String,
         configuration: EnhancementRuntimeConfiguration,
-        contextSnapshot: RecordingContextSnapshot?
+        contextSnapshot: RecordingContextSnapshot?,
+        vocabulary: RecordingVocabulary
     ) async throws -> (text: String, systemMessage: String?, userMessage: String?) {
         guard isConfigured(for: configuration) else {
             throw EnhancementError.notConfigured
@@ -204,7 +191,7 @@ class AIEnhancementService: ObservableObject {
 
         if provider == .voiceInkRefine {
             do {
-                let result = try await aiService.enhanceWithVoiceInkRefine(transcript: text)
+                let result = try await aiService.enhanceWithVoiceInkRefine(transcript: text, vocabulary: vocabulary)
                 let filteredResult = AIEnhancementOutputFilter.filter(
                     result.trimmingCharacters(in: .whitespacesAndNewlines)
                 )
@@ -229,10 +216,11 @@ class AIEnhancementService: ObservableObject {
 
         let modelName = configuration.modelName ?? provider.defaultModel
         let formattedText = "\n<TRANSCRIPT>\n\(text)\n</TRANSCRIPT>"
-        let systemMessage = await getSystemMessage(
+        let systemMessage = getSystemMessage(
             prompt: prompt,
             configuration: configuration,
-            contextSnapshot: contextSnapshot
+            contextSnapshot: contextSnapshot,
+            vocabulary: vocabulary
         )
 
         if provider != .openRouter, provider != .ollama, provider != .localCLI {
@@ -246,7 +234,8 @@ class AIEnhancementService: ObservableObject {
                 messages: [.user(formattedText)],
                 systemPrompt: systemMessage,
                 localUserPrompt: formattedText,
-                timeout: requestTimeout
+                timeout: requestTimeout,
+                retryOnTimeout: EnhancementRequestSettings.retryOnTimeout
             )
             if let openRouterCompletion = completion.openRouterCompletion {
                 let routedProvider = openRouterCompletion.provider ?? "unknown"
@@ -312,99 +301,22 @@ class AIEnhancementService: ObservableObject {
         }
     }
 
-    private var retryOnTimeout: Bool {
-        EnhancementRequestSettings.retryOnTimeout
-    }
-
-    private func makeRequestWithRetry(
-        text: String,
-        configuration: EnhancementRuntimeConfiguration,
-        contextSnapshot: RecordingContextSnapshot?,
-        maxAttempts: Int = EnhancementRequestSettings.maximumAttempts,
-        initialDelay: TimeInterval = 1.0
-    ) async throws -> (text: String, systemMessage: String?, userMessage: String?) {
-        var retries = 0
-        var currentDelay = initialDelay
-
-        while retries < maxAttempts {
-            do {
-                return try await makeRequest(
-                    text: text,
-                    configuration: configuration,
-                    contextSnapshot: contextSnapshot
-                )
-            } catch let error as EnhancementError {
-                switch error {
-                case .networkError, .serverError, .rateLimitExceeded:
-                    retries += 1
-                    if retries < maxAttempts {
-                        logger.warning(
-                            "Request failed, retrying in \(currentDelay, privacy: .public)s... (Attempt \(retries, privacy: .public)/\(maxAttempts, privacy: .public))"
-                        )
-                        try await Task.sleep(nanoseconds: UInt64(currentDelay * 1_000_000_000))
-                        currentDelay *= 2
-                    } else {
-                        logger.error("Request failed after \(maxAttempts, privacy: .public) attempts.")
-                        throw error
-                    }
-                case .timeout:
-                    if retryOnTimeout {
-                        retries += 1
-                        if retries < maxAttempts {
-                            logger.warning(
-                                "Request timed out, retrying immediately... (Attempt \(retries, privacy: .public)/\(maxAttempts, privacy: .public))"
-                            )
-                        } else {
-                            logger.error("Request timed out after \(maxAttempts, privacy: .public) attempts.")
-                            throw error
-                        }
-                    } else {
-                        logger.error("Request timed out, failing immediately (retry disabled).")
-                        throw error
-                    }
-                default:
-                    throw error
-                }
-            } catch {
-                let nsError = error as NSError
-                if nsError.domain == NSURLErrorDomain
-                    && [NSURLErrorNotConnectedToInternet, NSURLErrorTimedOut, NSURLErrorNetworkConnectionLost].contains(
-                        nsError.code)
-                {
-                    retries += 1
-                    if retries < maxAttempts {
-                        logger.warning(
-                            "Request failed with network error, retrying in \(currentDelay, privacy: .public)s... (Attempt \(retries, privacy: .public)/\(maxAttempts, privacy: .public))"
-                        )
-                        try await Task.sleep(nanoseconds: UInt64(currentDelay * 1_000_000_000))
-                        currentDelay *= 2
-                    } else {
-                        logger.error("Request failed after \(maxAttempts, privacy: .public) attempts with network error.")
-                        throw EnhancementError.networkError
-                    }
-                } else {
-                    throw error
-                }
-            }
-        }
-
-        throw EnhancementError.enhancementFailed
-    }
-
     func enhance(
         _ text: String,
         configuration: EnhancementRuntimeConfiguration,
-        contextSnapshot: RecordingContextSnapshot? = nil
+        contextSnapshot: RecordingContextSnapshot? = nil,
+        vocabulary: RecordingVocabulary? = nil
     ) async throws -> AIEnhancementResult {
+        let preparedVocabulary = vocabulary ?? CustomVocabularyService.shared.loadSavedVocabulary(from: modelContext)
         let startTime = Date()
         let promptName = configuration.prompt?.title
 
         do {
-            let requestResult = try await makeRequestWithRetry(
+            let requestResult = try await makeRequest(
                 text: text,
                 configuration: configuration,
                 contextSnapshot: contextSnapshot,
-                maxAttempts: EnhancementRequestSettings.maximumAttempts
+                vocabulary: preparedVocabulary
             )
             let endTime = Date()
             let duration = endTime.timeIntervalSince(startTime)

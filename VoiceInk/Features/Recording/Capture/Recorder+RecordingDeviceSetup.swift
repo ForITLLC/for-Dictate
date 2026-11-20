@@ -37,26 +37,33 @@ extension Recorder {
 
     func showRecordingDeviceNotification(
         for deviceID: AudioDeviceID,
-        resolution: RecordingDeviceResolution
+        isDeviceSwitch: Bool = false
     ) {
-        guard let deviceName = deviceManager.availableDevices.first(where: { $0.id == deviceID })?.name else {
+        guard let device = deviceManager.availableDevices.first(where: { $0.id == deviceID }) else {
             return
         }
 
-        if resolution.fellBackFromClosedInternalMicrophone {
+        // Core Audio object IDs can change on reconnect, or be reused for another input.
+        // Compare the stable UID for every route, including closed-lid fallbacks.
+        let lastDeviceUID = UserDefaults.standard.string(forKey: "lastUsedMicrophoneDeviceUID")
+        guard device.uid != lastDeviceUID else { return }
+
+        recordingDeviceNotificationTask?.cancel()
+        // Let the caller finish recording startup before constructing the notification window.
+        recordingDeviceNotificationTask = Task { @MainActor [weak self] in
+            guard let self, !Task.isCancelled,
+                self.deviceManager.isRecordingActive,
+                self.deviceManager.activeRecordingDeviceID == deviceID
+            else { return }
+
+            let title = isDeviceSwitch ? String(localized: "Switched to: %@") : String(localized: "Using: %@")
             NotificationManager.shared.showNotification(
-                title: String(format: String(localized: "Using: %@"), deviceName),
+                title: String(format: title, device.name),
                 type: .info
             )
-            return
+            UserDefaults.standard.set(device.uid, forKey: "lastUsedMicrophoneDeviceUID")
+            self.recordingDeviceNotificationTask = nil
         }
-
-        let lastDeviceID = UserDefaults.standard.string(forKey: "lastUsedMicrophoneDeviceID")
-        guard String(deviceID) != lastDeviceID else { return }
-        NotificationManager.shared.showNotification(
-            title: String(format: String(localized: "Using: %@"), deviceName),
-            type: .info
-        )
     }
 
     private struct DeviceSwitchOutcome {
@@ -123,12 +130,7 @@ extension Recorder {
             )
             return
         }
-        UserDefaults.standard.set(String(outcome.activeDeviceID), forKey: "lastUsedMicrophoneDeviceID")
-        if let name = deviceManager.availableDevices.first(where: { $0.id == outcome.activeDeviceID })?.name {
-            NotificationManager.shared.showNotification(
-                title: String(format: String(localized: "Switched to: %@"), name), type: .info
-            )
-        }
+        showRecordingDeviceNotification(for: outcome.activeDeviceID, isDeviceSwitch: true)
     }
 
     private func finishRecordingAfterInputFailure() async -> Bool {

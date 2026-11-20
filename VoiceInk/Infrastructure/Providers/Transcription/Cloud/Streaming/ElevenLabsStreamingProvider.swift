@@ -1,6 +1,5 @@
 import Foundation
 import LLMkit
-import SwiftData
 
 /// ElevenLabs streaming provider wrapping `LLMkit.ElevenLabsStreamingClient`.
 final class ElevenLabsStreamingProvider: StreamingTranscriptionProvider {
@@ -8,12 +7,17 @@ final class ElevenLabsStreamingProvider: StreamingTranscriptionProvider {
     private let client = LLMkit.ElevenLabsStreamingClient()
     private var eventsContinuation: AsyncStream<StreamingTranscriptionEvent>.Continuation?
     private var forwardingTask: Task<Void, Never>?
-    private let modelContext: ModelContext
+    private let customVocabulary: [String]
+    private let finalizationContinuation: AsyncStream<String>.Continuation
+    let finalizationEvents: AsyncStream<String>?
 
     private(set) var transcriptionEvents: AsyncStream<StreamingTranscriptionEvent>
 
-    init(modelContext: ModelContext) {
-        self.modelContext = modelContext
+    init(customVocabulary: [String]) {
+        self.customVocabulary = customVocabulary
+        let finalization = AsyncStream.makeStream(of: String.self)
+        finalizationEvents = finalization.stream
+        finalizationContinuation = finalization.continuation
         var continuation: AsyncStream<StreamingTranscriptionEvent>.Continuation!
         transcriptionEvents = AsyncStream { continuation = $0 }
         eventsContinuation = continuation
@@ -22,9 +26,14 @@ final class ElevenLabsStreamingProvider: StreamingTranscriptionProvider {
     deinit {
         forwardingTask?.cancel()
         eventsContinuation?.finish()
+        finalizationContinuation.finish()
     }
 
     func connect(model: any TranscriptionModel, language: String?) async throws {
+        guard let streamingModel = ElevenLabsProvider.ScribeModel(rawValue: model.name)?.streamingID else {
+            throw CloudTranscriptionError.unsupportedModel(model.name)
+        }
+
         guard let apiKey = APIKeyManager.shared.getAPIKey(forProvider: "ElevenLabs"), !apiKey.isEmpty else {
             throw StreamingTranscriptionError.missingAPIKey
         }
@@ -36,9 +45,9 @@ final class ElevenLabsStreamingProvider: StreamingTranscriptionProvider {
         do {
             try await client.connect(
                 apiKey: apiKey,
-                model: "scribe_v2_realtime",
+                model: streamingModel,
                 language: language,
-                customVocabulary: getCustomDictionaryTerms()
+                customVocabulary: customVocabulary
             )
         } catch {
             // Clean up forwarding task on connection failure
@@ -58,7 +67,9 @@ final class ElevenLabsStreamingProvider: StreamingTranscriptionProvider {
 
     func commit() async throws {
         do {
-            try await client.commit()
+            let text = try await client.finalize()
+            finalizationContinuation.yield(text)
+            finalizationContinuation.finish()
         } catch {
             throw mapError(error)
         }
@@ -69,6 +80,7 @@ final class ElevenLabsStreamingProvider: StreamingTranscriptionProvider {
         forwardingTask = nil
         await client.disconnect()
         eventsContinuation?.finish()
+        finalizationContinuation.finish()
     }
 
     // MARK: - Private
@@ -91,26 +103,8 @@ final class ElevenLabsStreamingProvider: StreamingTranscriptionProvider {
         }
     }
 
-    private func getCustomDictionaryTerms() -> [String] {
-        let descriptor = FetchDescriptor<VocabularyWord>(sortBy: [SortDescriptor(\.word)])
-        guard let vocabularyWords = try? modelContext.fetch(descriptor) else {
-            return []
-        }
-        var seen = Set<String>()
-        var unique: [String] = []
-        for word in vocabularyWords {
-            let trimmed = word.word.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !trimmed.isEmpty else { continue }
-            let key = trimmed.lowercased()
-            if !seen.contains(key) {
-                seen.insert(key)
-                unique.append(trimmed)
-            }
-        }
-        return unique
-    }
-
     private func mapError(_ error: Error) -> Error {
+        if let streamingError = error as? ElevenLabsStreamingError { return streamingError }
         guard let llmError = error as? LLMKitError else { return error }
         switch llmError {
         case .missingAPIKey:

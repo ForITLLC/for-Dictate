@@ -49,8 +49,10 @@ class RecorderUIManager: ObservableObject, RecorderPanelPresenting {
     @Published var isRecorderPanelVisible = false {
         didSet {
             guard oldValue != isRecorderPanelVisible else { return }
+            recorderPresentationID = UUID()
 
             if isRecorderPanelVisible {
+                recorderScreenSelection.reset()
                 showRecorderPanel()
             } else {
                 hideRecorderPanel()
@@ -63,6 +65,8 @@ class RecorderUIManager: ObservableObject, RecorderPanelPresenting {
     private var panelInvalidationTask: Task<Void, Never>?
     private var didSetupNotifications = false
     private var lifecycleCancellable: AnyCancellable?
+    private var recorderPresentationID = UUID()
+    private var recorderScreenSelection = RecorderScreenSelection()
 
     private weak var engine: VoiceInkEngine?
     private var recorder: Recorder?
@@ -86,6 +90,7 @@ class RecorderUIManager: ObservableObject, RecorderPanelPresenting {
 
     private func showRecorderPanel() {
         guard let engine = engine, let recorder = recorder else { return }
+        let screen = recorderScreenSelection.resolve()
 
         let shown: Bool
 
@@ -113,7 +118,7 @@ class RecorderUIManager: ObservableObject, RecorderPanelPresenting {
                     }
                 )
             }
-            shown = notchWindowManager?.show() ?? false
+            shown = notchWindowManager?.show(on: screen) ?? false
         case .mini:
             if miniWindowManager == nil {
                 miniWindowManager = MiniWindowManager(
@@ -137,7 +142,7 @@ class RecorderUIManager: ObservableObject, RecorderPanelPresenting {
                     }
                 )
             }
-            shown = miniWindowManager?.show() ?? false
+            shown = miniWindowManager?.show(on: screen) ?? false
         }
 
         if shown {
@@ -151,6 +156,7 @@ class RecorderUIManager: ObservableObject, RecorderPanelPresenting {
     }
 
     private func hideRecorderPanel() {
+        recorderScreenSelection.reset()
         // `dismissRecorderPanel()` calls this directly and then clears the flag, which calls it
         // again, so this deliberately stays at debug level.
         logger.debug("Hiding recorder panel style=\(self.recorderPanelStyle.rawValue, privacy: .public)")
@@ -166,11 +172,8 @@ class RecorderUIManager: ObservableObject, RecorderPanelPresenting {
 
     /// Recorder panels must not outlive a sleep/wake cycle or a display reconfiguration.
     ///
-    /// `NotchWindowManager.show()` already rebuilds a panel that is not on screen, so the work
-    /// here is only about the panel that is currently *hidden but retained*: dropping it frees
-    /// the window early and keeps `destroyWindow()` on a path that actually runs. When a
-    /// dictation is in progress the panel stays put and is only repositioned, so an active
-    /// session never loses its UI.
+    /// Drop any hidden panels after a display change. During an active session, refresh
+    /// geometry on the retained display, choosing another only if that display disappears.
     ///
     /// `didChangeScreenParameters` fires several times per reconfiguration and displays need a
     /// moment to settle afterwards, so the work is debounced and re-armed on every event
@@ -220,7 +223,11 @@ class RecorderUIManager: ObservableObject, RecorderPanelPresenting {
     // MARK: - Recorder Panel Management
 
     func toggleRecorderPanel(modeId: UUID? = nil) async {
-        guard let engine = engine else { return }
+        guard let engine = engine else {
+            ShortcutDiagnostics.error("recorder-toggle result=rejected reason=engine-unavailable")
+            return
+        }
+        ShortcutDiagnostics.notice("recorder-toggle state=\(engine.recordingState) visible=\(isRecorderPanelVisible) modeID=\(modeId?.uuidString ?? "none") followUpAvailable=\(engine.assistantSession.canSendFollowUp)")
 
         if isRecorderPanelVisible {
             switch engine.recordingState {
@@ -249,8 +256,38 @@ class RecorderUIManager: ObservableObject, RecorderPanelPresenting {
     }
 
     func finishRecordingAndSend() async {
-        guard isRecorderPanelVisible, let engine, engine.recordingState == .recording else { return }
+        guard isRecorderPanelVisible, let engine, engine.recordingState == .recording else {
+            ShortcutDiagnostics.notice("finish-and-send result=ignored visible=\(isRecorderPanelVisible) state=\(engine.map { String(describing: $0.recordingState) } ?? "unavailable")")
+            return
+        }
         await engine.toggleRecord(sendAfterPaste: true)
+    }
+
+    func finishHeldShortcutRecording() {
+        guard isRecorderPanelVisible, let engine,
+            let recordingStartID = engine.activeRecordingStartID
+        else { return }
+        let presentationID = recorderPresentationID
+
+        Task { @MainActor [weak self, weak engine] in
+            guard let self, let engine,
+                self.isRecorderPanelVisible,
+                self.recorderPresentationID == presentationID,
+                engine.activeRecordingStartID == recordingStartID
+            else {
+                ShortcutDiagnostics.notice("held-recording result=dropped reason=recording-or-panel-changed")
+                return
+            }
+
+            switch engine.recordingState {
+            case .recording:
+                await engine.toggleRecord()
+            case .idle, .starting:
+                await self.cancelRecording()
+            case .transcribing, .enhancing, .busy:
+                break
+            }
+        }
     }
 
     var isActivelyRecording: Bool {

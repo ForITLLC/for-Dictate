@@ -96,11 +96,12 @@ struct GeneralBackup: Codable {
     let isExperimentalFeaturesEnabled: Bool?
     let restoreClipboardAfterPaste: Bool?
     let clipboardRestoreDelay: Double?
+    let pasteMethod: String?
+    let smartPunctuationEnabled: Bool?
     let finishAndSendKey: String?
     let isAutoLearnDictionaryEnabled: Bool?
-    let autoLearnReviewSchedule: String?
-    let autoLearnProvider: String?
-    let autoLearnModel: String?
+    let autoLearnMinimumCorrections: Int?
+    let autoLearnAIReviewMode: String?
 }
 
 struct WordBackup: Codable {

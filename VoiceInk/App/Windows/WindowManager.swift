@@ -85,12 +85,14 @@ class WindowManager: NSObject {
         window.styleMask.remove(.fullSizeContentView)
         window.titlebarAppearsTransparent = false
         window.titleVisibility = .visible
-        window.backgroundColor = .clear
+        // The content stops below the title strip, so the window itself has to
+        // back it: a clear, non-opaque window shows the desktop through the strip.
+        window.backgroundColor = .windowBackgroundColor
         window.isReleasedWhenClosed = false
         window.title = "ForIT Dictate"
         window.collectionBehavior = [.fullScreenPrimary]
         window.level = .normal
-        window.isOpaque = false
+        window.isOpaque = true
         window.isMovableByWindowBackground = false
         window.minSize = NSSize(width: AppWindowLayout.width, height: AppWindowLayout.minimumHeight)
         window.maxSize = NSSize(width: AppWindowLayout.width, height: CGFloat.greatestFiniteMagnitude)

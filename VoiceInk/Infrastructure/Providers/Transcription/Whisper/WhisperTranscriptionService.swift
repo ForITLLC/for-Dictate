@@ -4,6 +4,7 @@ import os
 
 class WhisperTranscriptionService: TranscriptionService {
 
+    private var whisperContext: WhisperContext?
     private let logger = Logger(subsystem: "io.forit.dictate", category: "WhisperTranscriptionService")
     private let modelsDirectory: URL
     private weak var modelProvider: (any WhisperModelProvider)?
@@ -22,17 +23,15 @@ class WhisperTranscriptionService: TranscriptionService {
 
         logger.notice("Initiating local transcription for model: \(model.displayName, privacy: .public)")
 
-        try Task.checkCancellation()
-        let data = try readAudioSamples(audioURL)
-        let whisperContext: WhisperContext
-        let ownsContext: Bool
-
         // Check if the required model is already loaded in the model provider
-        if let loadedContext = await loadedWhisperContext(for: model.name) {
+        if let provider = modelProvider,
+            await provider.isModelLoaded,
+            let loadedContext = await provider.whisperContext,
+            await provider.loadedWhisperModel?.name == model.name
+        {
 
             logger.notice("Using already loaded model: \(model.name, privacy: .public)")
             whisperContext = loadedContext
-            ownsContext = false
         } else {
             // Resolve the on-disk URL using the provider's availableModels (covers imports)
             let resolvedURL: URL? = await modelProvider?.availableModels.first(where: { $0.name == model.name })?.url
@@ -44,43 +43,40 @@ class WhisperTranscriptionService: TranscriptionService {
             logger.notice("Loading model: \(model.name, privacy: .public)")
             do {
                 whisperContext = try await WhisperContext.createContext(path: modelURL.path)
-                ownsContext = true
             } catch {
                 logger.error("❌ Failed to load model: \(model.name, privacy: .public) - \(error, privacy: .public)")
                 throw VoiceInkEngineError.modelLoadFailed
             }
         }
 
-        // The shared C context must not yield between configuring this request,
-        // decoding its audio and copying its result.
-        let text = await whisperContext.transcribe(
-            samples: data, language: context.language, prompt: context.whisperPrompt
-        )
-
-        // Ownership belongs to this request; provider state may have changed
-        // while we awaited decoding. Never release a borrowed shared context.
-        if ownsContext {
-            await whisperContext.releaseResources()
-        }
-        try Task.checkCancellation()
-
-        guard let text else {
-            logger.error("❌ Core transcription engine failed (whisper_full).")
-            throw VoiceInkEngineError.whisperCoreFailed
+        guard let whisperContext = whisperContext else {
+            logger.error("❌ Cannot transcribe: Model could not be loaded")
+            throw VoiceInkEngineError.modelLoadFailed
         }
 
+        // Read audio data
+        let data = try readAudioSamples(audioURL)
+
+        // The actor applies settings and reads the result atomically, keeping concurrent
+        // recordings/imports from overwriting each other's language, hints or output.
+        let text: String
+        do {
+            text = try await whisperContext.transcribe(samples: data, request: context)
+        } catch {
+            await releaseUnsharedContext(whisperContext)
+            throw error
+        }
         logger.notice("Whisper transcription completed successfully.")
-
+        await releaseUnsharedContext(whisperContext)
         return text
     }
 
-    @MainActor
-    private func loadedWhisperContext(for modelName: String) -> WhisperContext? {
-        guard let provider = modelProvider,
-            provider.isModelLoaded,
-            provider.loadedWhisperModel?.name == modelName
-        else { return nil }
-        return provider.whisperContext
+    private func releaseUnsharedContext(_ context: WhisperContext) async {
+        guard await modelProvider?.whisperContext !== context else { return }
+        await context.releaseResources()
+        if whisperContext === context {
+            whisperContext = nil
+        }
     }
 
     private func readAudioSamples(_ url: URL) throws -> [Float] {
