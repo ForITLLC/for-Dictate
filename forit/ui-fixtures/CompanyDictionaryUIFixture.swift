@@ -237,6 +237,28 @@ private enum OwnUI {
         try key("a", code: 0, modifiers: .command)
         for character in text { try key(String(character), code: 0) }
     }
+    static func click(_ node: AXNode, in window: NSWindow) throws {
+        guard node.window == window.windowNumber, !node.inDialog,
+              NSApp.keyWindow === window, window.isVisible,
+              let frame = node.frame, !frame.isEmpty, window.frame.contains(frame) else {
+            throw FixtureFailure.actionUnavailable("Own-window click on " + node.label)
+        }
+        let screenPoint = NSRect(x: frame.midX, y: frame.midY, width: 0, height: 0)
+        let point = window.convertFromScreen(screenPoint).origin
+        let timestamp = ProcessInfo.processInfo.systemUptime
+        func event(_ type: NSEvent.EventType, pressure: Float) -> NSEvent? {
+            NSEvent.mouseEvent(with: type, location: point, modifierFlags: [], timestamp: timestamp,
+                               windowNumber: window.windowNumber, context: nil, eventNumber: 0,
+                               clickCount: 1, pressure: pressure)
+        }
+        guard let down = event(.leftMouseDown, pressure: 1),
+              let up = event(.leftMouseUp, pressure: 0) else { throw FixtureFailure.invalidInput }
+        // Queue locally in dispatch order. AppKit control tracking may consume the up
+        // event before the mouse-down handler returns.
+        NSApp.postEvent(up, atStart: true)
+        NSApp.postEvent(down, atStart: true)
+    }
+
     static func signOutRow(in window: NSWindow) async throws -> AXNode {
         func rowAndViewport() -> (AXNode, NSRect, NSRect)? {
             let ownNodes = nodes().filter { $0.window == window.windowNumber && !$0.inDialog }
@@ -293,6 +315,7 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
     private var interactions: [[String: String]] = []
     private var snapshotTask: Task<Void, Never>?
     private var ownedOutput: URL?
+    private var signOutStep: String?
 
     private func prepareSurface(parent: NSWindow, size: CGSize, appearance: NSAppearance,
                                 dark: Bool, phase: String) async throws -> NSWindow {
@@ -494,9 +517,11 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
                     $0.label == "Sign out" && $0.role == "AXButton" && ($0.inDialog || $0.window != window.windowNumber)
                 }
             }
+            signOutStep = "open first confirmation using the visible row"
             let signOut = try await OwnUI.signOutRow(in: window)
-            try OwnUI.press(signOut)
+            try OwnUI.click(signOut, in: window)
             try await OwnUI.wait("first sign-out confirmation") { confirmation() != nil }
+            signOutStep = "dismiss the first confirmation"
             try OwnUI.key("\u{1B}", code: 53)
             var dismissedSince: ContinuousClock.Instant?
             try await OwnUI.wait("sign-out cancellation and focus returned to the dictionary") {
@@ -511,14 +536,16 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
             }
             guard client.isSignedIn else { throw FixtureFailure.assertion("Sign-out Cancel changed the session") }
             interactions.append(["name": "shared sign-out confirmation Cancel preserves session", "status": "observed"])
+            signOutStep = "reopen confirmation using the visible row"
             let signOutAgain = try await OwnUI.signOutRow(in: window)
-            try OwnUI.press(signOutAgain)
+            try OwnUI.click(signOutAgain, in: window)
             try await OwnUI.wait("second sign-out confirmation") { confirmation() != nil }
             guard let confirm = confirmation() else { throw FixtureFailure.actionUnavailable("Shared sign-out confirmation action") }
             let captured = cache.snapshot
             guard captured.companyCoverage.includedTermCount > 0 else {
                 throw FixtureFailure.assertion("Sign-out fixture had no company contribution to revoke")
             }
+            signOutStep = "activate the confirmation button"
             try OwnUI.press(confirm)
             try await OwnUI.wait("sign-out completion") { !client.isSignedIn && !client.isBusy }
             guard !(await store.hasCredential), captured.companyCoverage == .none else {
@@ -572,6 +599,7 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
                                    "hierarchy": OwnUI.nodes().map(\.record),
                                    "browserOpenerCalls": openedBrowserRequests,
                                    "browserNetworkRequests": NoNetworkProtocol.count]
+        if let signOutStep { value["signOutStep"] = signOutStep }
         if let connection {
             value["state"] = [
                 "isSignInPresented": connection.isSignInPresented,

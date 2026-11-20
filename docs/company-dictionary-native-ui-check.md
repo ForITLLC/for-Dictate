@@ -142,11 +142,12 @@ Fourteen fixture IDs run at 900×600 content points in light and dark. `full` an
 | cancel | Common's Cancel stops browser waiting while leaving the sheet available |
 | signout | Shared confirmation Cancel preserves the session; confirm clears synthetic credential and captured hint lease |
 
-All fixture control actions target only the process's own NSAccessibility objects;
-keyboard events go only to one of its registered windows. No system-wide AX,
-global input or permission grant is used. If a real control/hierarchy cannot be
-identified, the cell fails with its retained hierarchy instead of invoking a
-view-model method and pretending the control worked. Already-created provider
+The fixture locates controls using only the process's own NSAccessibility
+objects. Keyboard events go only to its registered windows. For Sign out, the
+fixture scrolls the real row into the form's visible region and queues a local
+AppKit click at the row's measured position in that window. No system-wide AX,
+global input or permission grant is used. If a real control or its effect cannot
+be observed, the cell fails with its retained UI state. Already-created provider
 payload erasure, full Tab order and real VoiceOver operation remain unexercised.
 
 Captures use the actual published `ForITStandaloneMacHarness.runIfRequested`
