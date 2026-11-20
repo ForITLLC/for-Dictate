@@ -266,16 +266,39 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
         target.appearance = appearance
         target.setContentSize(size)
         target.makeKeyAndOrderFront(nil)
+        var lastResize = ContinuousClock.now
+        var resizeRequests = 1
+        var matchingSince: ContinuousClock.Instant?
         try await OwnUI.wait(phase, details: {
             let actualSize = target.contentView?.frame.size
             let actualTheme = target.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua])?.rawValue ?? "none"
             return "window \(target.windowNumber), parent \(parent.windowNumber), "
                 + "sheet \(target.sheetParent != nil), visible \(target.isVisible), key \(target.isKeyWindow), "
-                + "content \(String(describing: actualSize)), requested \(size), "
+                + "content \(String(describing: actualSize)), requested \(size), resize requests \(resizeRequests), "
                 + "appearance \(actualTheme), requested \(appearance.name.rawValue)"
         }) {
-            target.contentView?.frame.size == size &&
-                target.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == (dark ? .darkAqua : .aqua)
+            let now = ContinuousClock.now
+            let actualSize = target.contentView?.frame.size
+            if actualSize != size {
+                matchingSince = nil
+                // SwiftUI can resize the attached sheet after the browser state changes.
+                // Reapply only while the bounded wait is active and the size differs.
+                if lastResize.duration(to: now) >= .milliseconds(100) {
+                    target.setContentSize(size)
+                    lastResize = now
+                    resizeRequests += 1
+                }
+                return false
+            }
+            guard target.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == (dark ? .darkAqua : .aqua) else {
+                matchingSince = nil
+                return false
+            }
+            if let matchingSince {
+                return matchingSince.duration(to: now) >= .milliseconds(100)
+            }
+            matchingSince = now
+            return false
         }
         return target
     }
