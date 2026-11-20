@@ -144,8 +144,9 @@ Fourteen fixture IDs run at 900×600 content points in light and dark. `full` an
 
 The fixture locates controls using only the process's own NSAccessibility
 objects. Keyboard events go only to its registered windows. For Sign out, the
-fixture scrolls the real row into the form's visible region and queues a local
-AppKit click at the row's measured position in that window. No system-wide AX,
+fixture scrolls the real row into the form's visible region. It queues local
+AppKit clicks at the measured row and confirmation button positions in their
+verified fixture windows. No system-wide AX,
 global input or permission grant is used. If a real control or its effect cannot
 be observed, the cell fails with its retained UI state. Already-created provider
 payload erasure, full Tab order and real VoiceOver operation remain unexercised.

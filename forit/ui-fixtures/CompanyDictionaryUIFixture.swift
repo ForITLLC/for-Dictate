@@ -243,6 +243,34 @@ private enum OwnUI {
               let frame = node.frame, !frame.isEmpty, window.frame.contains(frame) else {
             throw FixtureFailure.actionUnavailable("Own-window click on " + node.label)
         }
+        try queueClick(frame: frame, in: window)
+    }
+
+    static func clickSignOutConfirmation(_ node: AXNode, of parent: NSWindow) throws {
+        guard node.role == "AXButton", node.label == "Sign out",
+              node.inDialog || node.window != parent.windowNumber,
+              let frame = node.frame, !frame.isEmpty else {
+            throw FixtureFailure.actionUnavailable("Measured Sign out confirmation button")
+        }
+        let candidates = NSApp.windows.filter { $0.isVisible && $0.frame.contains(frame) }
+        let transient = candidates.filter { $0 !== parent }
+        let target: NSWindow
+        if let reported = object(node.element, "accessibilityWindow") as? NSWindow,
+           transient.contains(where: { $0 === reported }) {
+            target = reported
+        } else if let recorded = transient.first(where: { $0.windowNumber == node.window }) {
+            target = recorded
+        } else if transient.count == 1, let only = transient.first {
+            target = only
+        } else if transient.isEmpty, node.inDialog, candidates.contains(where: { $0 === parent }) {
+            target = parent
+        } else {
+            throw FixtureFailure.actionUnavailable("Unambiguous fixture window for Sign out confirmation")
+        }
+        try queueClick(frame: frame, in: target)
+    }
+
+    private static func queueClick(frame: NSRect, in window: NSWindow) throws {
         let screenPoint = NSRect(x: frame.midX, y: frame.midY, width: 0, height: 0)
         let point = window.convertFromScreen(screenPoint).origin
         let timestamp = ProcessInfo.processInfo.systemUptime
@@ -545,8 +573,8 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
             guard captured.companyCoverage.includedTermCount > 0 else {
                 throw FixtureFailure.assertion("Sign-out fixture had no company contribution to revoke")
             }
-            signOutStep = "activate the confirmation button"
-            try OwnUI.press(confirm)
+            signOutStep = "click the confirmation button inside its fixture window"
+            try OwnUI.clickSignOutConfirmation(confirm, of: window)
             try await OwnUI.wait("sign-out completion") { !client.isSignedIn && !client.isBusy }
             guard !(await store.hasCredential), captured.companyCoverage == .none else {
                 throw FixtureFailure.assertion("Shared sign-out did not remove synthetic credential/company hints")
