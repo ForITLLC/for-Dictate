@@ -234,10 +234,14 @@ private enum OwnUI {
         try key("a", code: 0, modifiers: .command)
         for character in text { try key(String(character), code: 0) }
     }
-    static func wait(_ condition: @MainActor () -> Bool) async throws {
+    static func wait(_ transition: String, details: (() -> String)? = nil,
+                     _ condition: @MainActor () -> Bool) async throws {
         let deadline = ContinuousClock.now.advanced(by: .seconds(3))
         while !condition() {
-            guard ContinuousClock.now < deadline else { throw FixtureFailure.assertion("UI transition timed out") }
+            guard ContinuousClock.now < deadline else {
+                let detail = details.map { ": " + $0() } ?? ""
+                throw FixtureFailure.assertion("UI transition timed out while waiting for " + transition + detail)
+            }
             try await Task.sleep(for: .milliseconds(25))
         }
     }
@@ -254,7 +258,7 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
     private var ownedOutput: URL?
 
     private func prepareSurface(parent: NSWindow, size: CGSize, appearance: NSAppearance,
-                                dark: Bool) async throws -> NSWindow {
+                                dark: Bool, phase: String) async throws -> NSWindow {
         let target = parent.sheets.last(where: \.isVisible) ?? parent
         guard target.level == .normal, NSApp.windows.contains(where: { $0 === target }) else {
             throw FixtureFailure.assertion("Actual own window/sheet is not a supported ordinary surface")
@@ -262,7 +266,14 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
         target.appearance = appearance
         target.setContentSize(size)
         target.makeKeyAndOrderFront(nil)
-        try await OwnUI.wait {
+        try await OwnUI.wait(phase, details: {
+            let actualSize = target.contentView?.frame.size
+            let actualTheme = target.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua])?.rawValue ?? "none"
+            return "window \(target.windowNumber), parent \(parent.windowNumber), "
+                + "sheet \(target.sheetParent != nil), visible \(target.isVisible), key \(target.isKeyWindow), "
+                + "content \(String(describing: actualSize)), requested \(size), "
+                + "appearance \(actualTheme), requested \(appearance.name.rawValue)"
+        }) {
             target.contentView?.frame.size == size &&
                 target.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == (dark ? .darkAqua : .aqua)
         }
@@ -357,7 +368,7 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
         self.connection = connection
         if fixture == "loading" {
             snapshotTask = Task { await client.restore() }
-            try await OwnUI.wait { client.isBusy }
+            try await OwnUI.wait("synthetic loading state") { client.isBusy }
         } else { await client.restore() }
         let surface = FixtureHost(connection: connection, vocabulary: vocabulary)
         let hosting = NSHostingView(rootView: surface)
@@ -370,11 +381,12 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         try await Task.sleep(for: .milliseconds(250))
-        _ = try await prepareSurface(parent: window, size: requestedSize, appearance: appearance, dark: look == "dark")
+        _ = try await prepareSurface(parent: window, size: requestedSize, appearance: appearance,
+                                     dark: look == "dark", phase: "initial dictionary window geometry and appearance")
 
         if fixture == "search" {
             try OwnUI.search("Delta call")
-            try await OwnUI.wait {
+            try await OwnUI.wait("keyboard search results") {
                 let nodes = OwnUI.nodes()
                 return nodes.contains { $0.identifier == "dictate.companyDictionary.term.20000000-0000-0000-0000-000000000002" }
                     && !nodes.contains { $0.identifier == "dictate.companyDictionary.term.20000000-0000-0000-0000-000000000001" }
@@ -383,26 +395,35 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
         }
         if ["signin", "browser-wait", "keyboard-close", "close", "cancel"].contains(fixture) {
             try OwnUI.press(identifier: "dictate.companyDictionary.connect")
-            try await OwnUI.wait { connection.isSignInPresented && OwnUI.nodes().contains { $0.identifier == "dictate.companyDictionary.closeSignIn" } }
-            _ = try await prepareSurface(parent: window, size: requestedSize, appearance: appearance, dark: look == "dark")
+            try await OwnUI.wait("sign-in sheet Close control") {
+                connection.isSignInPresented && OwnUI.nodes().contains {
+                    $0.identifier == "dictate.companyDictionary.closeSignIn"
+                }
+            }
+            _ = try await prepareSurface(parent: window, size: requestedSize, appearance: appearance,
+                                         dark: look == "dark", phase: "opened sign-in sheet geometry and appearance")
             if ["browser-wait", "cancel"].contains(fixture) {
                 try OwnUI.press(identifier: "signin.microsoft")
-                try await OwnUI.wait { browser.isWaitingForBrowser }
+                try await OwnUI.wait("synthetic browser wait") { browser.isWaitingForBrowser }
             }
             if fixture == "keyboard-close" {
                 try OwnUI.key("\u{1B}", code: 53)
-                try await OwnUI.wait { !connection.isSignInPresented && !connection.isSigningIn }
+                try await OwnUI.wait("sign-in sheet dismissal after Escape") {
+                    !connection.isSignInPresented && !connection.isSigningIn
+                }
                 interactions.append(["name": "Escape closes sign-in", "status": "observed"])
             } else if fixture == "close" {
                 try OwnUI.press(identifier: "dictate.companyDictionary.closeSignIn")
-                try await OwnUI.wait { !connection.isSignInPresented && !connection.isSigningIn }
+                try await OwnUI.wait("sign-in sheet dismissal after Close") {
+                    !connection.isSignInPresented && !connection.isSigningIn
+                }
                 interactions.append(["name": "Close closes sign-in", "status": "observed"])
             } else if fixture == "cancel" {
                 guard let cancel = OwnUI.nodes().first(where: { $0.label == "Cancel" && $0.role == "AXButton" }) else {
                     throw FixtureFailure.actionUnavailable("Common browser Cancel")
                 }
                 try OwnUI.press(cancel)
-                try await OwnUI.wait { !browser.isWaitingForBrowser && !connection.isSigningIn }
+                try await OwnUI.wait("browser cancellation") { !browser.isWaitingForBrowser && !connection.isSigningIn }
                 guard connection.isSignInPresented else { throw FixtureFailure.assertion("Common Cancel unexpectedly closed the sheet") }
                 interactions.append(["name": "Common Cancel ends browser wait, sheet remains", "status": "observed"])
             }
@@ -412,11 +433,11 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
                 throw FixtureFailure.actionUnavailable("Shared Sign out")
             }
             try OwnUI.press(signout)
-            try await OwnUI.wait { OwnUI.nodes().contains {
+            try await OwnUI.wait("first sign-out confirmation") { OwnUI.nodes().contains {
                 $0.label == "Sign out" && $0.role == "AXButton" && ($0.inDialog || $0.window != window.windowNumber)
             } }
             try OwnUI.key("\u{1B}", code: 53)
-            try await OwnUI.wait { !OwnUI.nodes().contains {
+            try await OwnUI.wait("sign-out cancellation") { !OwnUI.nodes().contains {
                 $0.label == "Sign out" && $0.role == "AXButton" && ($0.inDialog || $0.window != window.windowNumber)
             } }
             guard client.isSignedIn else { throw FixtureFailure.assertion("Sign-out Cancel changed the session") }
@@ -425,7 +446,7 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
                 throw FixtureFailure.actionUnavailable("Shared Sign out after Cancel")
             }
             try OwnUI.press(signoutAgain)
-            try await OwnUI.wait { OwnUI.nodes().contains {
+            try await OwnUI.wait("second sign-out confirmation") { OwnUI.nodes().contains {
                 $0.label == "Sign out" && $0.role == "AXButton" && ($0.inDialog || $0.window != window.windowNumber)
             } }
             guard let confirm = OwnUI.nodes().first(where: {
@@ -436,7 +457,7 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
                 throw FixtureFailure.assertion("Sign-out fixture had no company contribution to revoke")
             }
             try OwnUI.press(confirm)
-            try await OwnUI.wait { !client.isSignedIn && !client.isBusy }
+            try await OwnUI.wait("sign-out completion") { !client.isSignedIn && !client.isBusy }
             guard !(await store.hasCredential), captured.companyCoverage == .none else {
                 throw FixtureFailure.assertion("Shared sign-out did not remove synthetic credential/company hints")
             }
@@ -447,7 +468,8 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
             throw FixtureFailure.assertion("Unexpected URLSession request or session mint")
         }
         let capturedSurface = try await prepareSurface(parent: window, size: requestedSize,
-                                                       appearance: appearance, dark: look == "dark")
+                                                       appearance: appearance, dark: look == "dark",
+                                                       phase: "final capture window geometry and appearance")
         let evidence: [String: Any] = [
             "schema": "forit.dictate.company-ui-fixture.v1", "fixture": fixture,
             "sourceCommit": ProcessInfo.processInfo.environment["FORIT_SOURCE_COMMIT"] ?? "",
@@ -482,9 +504,20 @@ private final class FixtureDelegate: NSObject, NSApplicationDelegate {
     private func writeFailure(_ error: Error) {
         fputs("Company UI fixture failed; inspect retained fixture-failure.json when available.\n", stderr)
         guard let ownedOutput else { return }
-        let value: [String: Any] = ["schema": "forit.dictate.company-ui-fixture-failure.v1",
+        var value: [String: Any] = ["schema": "forit.dictate.company-ui-fixture-failure.v1",
                                    "status": "FAIL", "error": String(describing: error),
-                                   "hierarchy": OwnUI.nodes().map(\.record)]
+                                   "hierarchy": OwnUI.nodes().map(\.record),
+                                   "browserOpenerCalls": openedBrowserRequests,
+                                   "browserNetworkRequests": NoNetworkProtocol.count]
+        if let connection {
+            value["state"] = [
+                "isSignInPresented": connection.isSignInPresented,
+                "isSigningIn": connection.isSigningIn,
+                "isWaitingForBrowser": connection.browser.isWaitingForBrowser,
+                "isSignedIn": connection.client.isSignedIn,
+                "isBusy": connection.client.isBusy,
+            ]
+        }
         if let data = try? JSONSerialization.data(withJSONObject: value, options: [.prettyPrinted, .sortedKeys]) {
             try? data.write(to: ownedOutput.appendingPathComponent("fixture-failure.json"), options: .atomic)
         }
