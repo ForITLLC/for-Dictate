@@ -24,7 +24,7 @@ final class DictateKeyboardViewController: UIInputViewController {
     private var stopRequestedAt: Date?
     private var signals: DarwinSignalObserver?
     private var poll: Timer?
-    private var fallback: DispatchWorkItem?
+    private var fallback: Task<Void, Never>?
 
     private let status = UILabel()
     private let microphone = UIButton(type: .system)
@@ -65,24 +65,32 @@ final class DictateKeyboardViewController: UIInputViewController {
         super.viewDidLoad()
         view.tintColor = Self.tint
         buildLayout()
-        signals = DarwinSignalObserver([.changed]) { [weak self] _ in self?.refresh() }
         render()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         globe.isHidden = !needsInputModeSwitchKey
+        // Dictated text nobody took in time does not wait on disk for the app's next launch.
+        DictationHandoffStore.shared()?.removeStaleResult()
         refresh()
+        // Only the keyboard on screen listens, so one that is gone cannot take the text.
+        signals = DarwinSignalObserver([.changed]) { [weak self] _ in
+            Task { @MainActor in self?.refresh() }
+        }
         // The signal is the fast path; this covers one missed while the keyboard was away.
         poll?.invalidate()
         poll = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
-            guard let self, self.pending != nil else { return }
-            self.refresh()
+            Task { @MainActor in
+                guard let self, self.pending != nil else { return }
+                self.refresh()
+            }
         }
     }
 
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
+        signals = nil
         poll?.invalidate()
         poll = nil
         fallback?.cancel()
@@ -254,12 +262,12 @@ final class DictateKeyboardViewController: UIInputViewController {
         }
         // The app says its microphone is on. Ask it directly, and open it if it does not answer.
         DarwinSignal.post(.start)
-        let work = DispatchWorkItem { [weak self] in
-            guard let self, self.mode == .starting, self.pending?.id == id else { return }
+        fallback?.cancel()
+        fallback = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 800_000_000)
+            guard !Task.isCancelled, let self, self.mode == .starting, self.pending?.id == id else { return }
             self.openApp(for: id)
         }
-        fallback = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8, execute: work)
     }
 
     private func openApp(for id: UUID) {

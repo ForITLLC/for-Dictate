@@ -50,7 +50,9 @@ final class DictationCoordinator: ObservableObject {
     private var readyUntil: Date?
     private var readyTimer: Timer?
     private var limitTimer: Timer?
-    private var starting = false
+    /// The request `begin` is working on before it becomes `current`.
+    private var startingID: UUID?
+    private var installing = false
 
     init(engine: SpeechEngine = AppleSpeechEngine()) {
         self.engine = engine
@@ -69,10 +71,15 @@ final class DictationCoordinator: ObservableObject {
     // MARK: Language
 
     func refreshReadiness() async {
+        // A download in progress reports itself when it ends.
+        guard !installing else { return }
         readiness = await engine.readiness()
     }
 
     func downloadLanguage() async {
+        guard !installing else { return }
+        installing = true
+        defer { installing = false }
         if case .needsDownload(let language) = readiness {
             readiness = .downloading(language: language)
         }
@@ -85,7 +92,10 @@ final class DictationCoordinator: ObservableObject {
     func open(_ url: URL) {
         guard let id = DictationHandoff.requestID(from: url) else { return }
         // The keyboard may have signalled first and this app already started the same request.
-        guard current?.id != id else { return }
+        guard current?.id != id, startingID != id else { return }
+        // Only the request the keyboard left in the app group starts the microphone. A link
+        // from anywhere else names no such request and does nothing.
+        guard store?.request()?.id == id else { return }
         Task { await begin(id: id, fromKeyboard: true) }
     }
 
@@ -127,9 +137,13 @@ final class DictationCoordinator: ObservableObject {
     // MARK: A dictation
 
     private func begin(id: UUID, fromKeyboard: Bool) async {
-        guard !starting, phase == .idle || phase == .ready else { return }
-        starting = true
-        defer { starting = false }
+        guard startingID == nil, phase == .idle || phase == .ready else {
+            // Busy with another dictation: say so now, so the keyboard does not wait out its timeout.
+            if fromKeyboard, id != startingID, id != current?.id { refuseWhileBusy(id) }
+            return
+        }
+        startingID = id
+        defer { startingID = nil }
         notice = nil
         if fromKeyboard { store?.clearRequest() }
 
@@ -142,10 +156,14 @@ final class DictationCoordinator: ObservableObject {
 
         if !readiness.isReady { await refreshReadiness() }
         guard readiness.isReady else {
-            if case .needsDownload = readiness {
+            switch readiness {
+            case .needsDownload:
                 fail(id: id, fromKeyboard: fromKeyboard, "Dictation needs a one-time language download. It has started; try again in a moment.")
-                await downloadLanguage()
-            } else {
+                // On its own, so the next request is answered while the download runs.
+                Task { await downloadLanguage() }
+            case .downloading:
+                fail(id: id, fromKeyboard: fromKeyboard, "The language download is still going. Try again in a moment.")
+            default:
                 fail(id: id, fromKeyboard: fromKeyboard, "Dictation is not ready on this iPhone yet. Open ForIT Dictate to see why.")
             }
             return
@@ -161,7 +179,8 @@ final class DictationCoordinator: ObservableObject {
             try audio.beginCapture(to: url)
             current = Dictation(id: id, fromKeyboard: fromKeyboard, audioURL: url)
         } catch {
-            if !audio.isRunning { endSession() }
+            // A microphone that did come on goes back to ready, with its timer and its off button.
+            if audio.isRunning { settle() } else { endSession() }
             fail(id: id, fromKeyboard: fromKeyboard, "The microphone could not start. Open ForIT Dictate and try again.")
             return
         }
@@ -224,6 +243,15 @@ final class DictationCoordinator: ObservableObject {
             try? store?.write(DictationResult(requestID: id, text: "", failure: message, createdAt: Date()))
         }
         publish()
+    }
+
+    /// Answers a keyboard request that arrived during another dictation, leaving that dictation alone.
+    private func refuseWhileBusy(_ id: UUID) {
+        if store?.request()?.id == id { store?.clearRequest() }
+        try? store?.write(DictationResult(
+            requestID: id, text: "",
+            failure: "ForIT Dictate is busy with another dictation. Try again in a moment.", createdAt: Date()))
+        DarwinSignal.post(.changed)
     }
 
     /// Back to waiting: ready while the microphone is still on, idle when it is not.

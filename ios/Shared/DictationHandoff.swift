@@ -150,14 +150,33 @@ struct DictationHandoffStore {
             return nil
         }
         guard result.requestID == id else { return nil }
-        try? FileManager.default.removeItem(at: resultURL)
-        return result
+        // Taken by moving it: when two keyboards read the same result, one move succeeds and one types.
+        let taken = directory.appendingPathComponent("result-\(UUID().uuidString).\(Self.takenExtension)")
+        do { try FileManager.default.moveItem(at: resultURL, to: taken) } catch { return nil }
+        defer { try? FileManager.default.removeItem(at: taken) }
+        guard let mine: DictationResult = load(taken), mine.requestID == id else { return nil }
+        return mine
     }
 
     /// Removes a result nobody took in time. Dictated text does not stay on disk.
     func removeStaleResult(now: Date = Date()) {
+        removeAbandonedTakes(now: now)
         guard let result: DictationResult = load(resultURL), isStale(result, now: now) else { return }
         try? FileManager.default.removeItem(at: resultURL)
+    }
+
+    private static let takenExtension = "taken"
+
+    /// A taken result lives for an instant. One still here after the result lifetime was left by a
+    /// keyboard that iOS ended in the middle of taking it.
+    private func removeAbandonedTakes(now: Date) {
+        let files = (try? FileManager.default.contentsOfDirectory(
+            at: directory, includingPropertiesForKeys: [.contentModificationDateKey])) ?? []
+        for file in files where file.pathExtension == Self.takenExtension {
+            let modified = (try? file.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate
+            if let modified, now.timeIntervalSince(modified) <= DictationHandoff.resultLifetime { continue }
+            try? FileManager.default.removeItem(at: file)
+        }
     }
 
     private func isStale(_ result: DictationResult, now: Date) -> Bool {

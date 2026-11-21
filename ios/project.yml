@@ -138,9 +138,13 @@ targets:
       - Shared/DictationHandoff.swift
       - Shared/InsertionSpacing.swift
       - App/DictationText.swift
-      - ../VoiceInk/Features/Recording/Processing/TranscriptionOutputFilter.swift
-      - ../VoiceInk/Features/Enhancement/State/FillerWordManager.swift
-      - ../VoiceInk/Infrastructure/TextProcessing/ParagraphFormatter.swift
+      # The same group as in the app target: one file reference, where Xcode expects it.
+      - path: ../VoiceInk/Features/Recording/Processing/TranscriptionOutputFilter.swift
+        group: MacShared
+      - path: ../VoiceInk/Features/Enhancement/State/FillerWordManager.swift
+        group: MacShared
+      - path: ../VoiceInk/Infrastructure/TextProcessing/ParagraphFormatter.swift
+        group: MacShared
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: io.forit.dictate.handoff-tests

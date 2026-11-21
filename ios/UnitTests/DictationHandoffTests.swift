@@ -82,7 +82,19 @@ final class DictationHandoffTests: XCTestCase {
         try store.write(DictationResult(requestID: id, text: "Hello there.", failure: nil, createdAt: now))
         XCTAssertEqual(store.takeResult(for: id, now: now)?.text, "Hello there.")
         XCTAssertNil(store.takeResult(for: id, now: now))
-        XCTAssertFalse(FileManager.default.fileExists(atPath: directory.appendingPathComponent("result.json").path))
+        // Neither the result nor the copy it was taken through is left behind.
+        XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: directory.path), [])
+    }
+
+    func testATakeThatWasCutOffIsRemovedOnceStale() throws {
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let abandoned = directory.appendingPathComponent("result-\(UUID().uuidString).taken")
+        try Data("{}".utf8).write(to: abandoned)
+        try FileManager.default.setAttributes([.modificationDate: now], ofItemAtPath: abandoned.path)
+        store.removeStaleResult(now: now.addingTimeInterval(5))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: abandoned.path))
+        store.removeStaleResult(now: now.addingTimeInterval(DictationHandoff.resultLifetime + 1))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: abandoned.path))
     }
 
     func testAResultForAnotherRequestIsLeft() throws {

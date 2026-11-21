@@ -27,7 +27,7 @@ print(json.dumps({"app": "for-Dictate", "platform": "ios-compile", "commit": sys
     "nativeExecution": False, "buildNumberAllocated": False, "signingRequested": False,
     "command": ["/bin/bash", "ios/Scripts/check-native.sh", "--execute"],
     "requiredEnvironment": ["FORIT_SOURCE_COMMIT", "FORIT_GATE_RUN"],
-    "phases": ["toolchain", "generate", "resolve", "logic-tests", "compile", "source-check"],
+    "phases": ["toolchain", "generate", "resolve", "pin", "logic-tests", "compile", "products", "source-check"],
     "logicTests": {"scheme": "DictateHandoffTests", "destination": "platform=macOS"},
     "compile": {"scheme": "ForITDictate", "configuration": "Release",
                 "destination": "generic/platform=iOS", "targets": ["ForITDictate", "ForITDictateKeyboard"]},
@@ -119,7 +119,7 @@ run_phase logic-tests 20 "$OUT/logic-tests.log" "$FORIT_XCODEBUILD" test "${PKG_
   CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=
 run_phase compile 45 "$OUT/xcodebuild.log" "$FORIT_XCODEBUILD" build "${PKG_ARGS[@]}" \
   -scheme ForITDictate -configuration Release -destination 'generic/platform=iOS' \
-  CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=
+  CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= PROVISIONING_PROFILE_SPECIFIER=
 PHASE=products
 APP="$DERIVED/Build/Products/Release-iphoneos/ForIT Dictate.app"
 [[ -d $APP && -d "$APP/PlugIns/ForITDictateKeyboard.appex" ]] \

@@ -25,7 +25,7 @@ final class AudioCapture {
 
     private(set) var isRunning = false
 
-    private let engine = AVAudioEngine()
+    private var engine = AVAudioEngine()
     private let lock = NSLock()
     private var file: AVAudioFile?
     private var fileURL: URL?
@@ -43,8 +43,10 @@ final class AudioCapture {
     func start() throws {
         guard !isRunning else { return }
         let session = AVAudioSession.sharedInstance()
-        // Other apps keep playing, and their sound stays on the speaker instead of the earpiece.
-        try session.setCategory(.playAndRecord, mode: .default, options: [.mixWithOthers, .defaultToSpeaker])
+        // Other apps keep playing: on the speaker instead of the earpiece, and on wireless
+        // headphones at full quality while the iPhone's own microphone listens.
+        try session.setCategory(
+            .playAndRecord, mode: .default, options: [.mixWithOthers, .defaultToSpeaker, .allowBluetoothA2DP])
         try session.setActive(true)
         do {
             try startEngine()
@@ -128,14 +130,14 @@ final class AudioCapture {
         let ratio = target.sampleRate / buffer.format.sampleRate
         let capacity = AVAudioFrameCount((Double(buffer.frameLength) * ratio).rounded(.up)) + 64
         guard let converted = AVAudioPCMBuffer(pcmFormat: target, frameCapacity: capacity) else { return }
-        var supplied = false
+        let supplied = Once()
         var conversionError: NSError?
         let status = converter.convert(to: converted, error: &conversionError) { _, inputStatus in
-            if supplied {
+            if supplied.used {
                 inputStatus.pointee = .noDataNow
                 return nil
             }
-            supplied = true
+            supplied.used = true
             inputStatus.pointee = .haveData
             return buffer
         }
@@ -155,7 +157,10 @@ final class AudioCapture {
                 self?.endUnasked()
             },
             center.addObserver(forName: AVAudioSession.mediaServicesWereResetNotification, object: session, queue: .main) { [weak self] _ in
-                self?.endUnasked()
+                guard let self else { return }
+                self.endUnasked()
+                // The audio system restarted and the old engine went with it. The next start gets a new one.
+                self.engine = AVAudioEngine()
             },
             // A headset plugged in or removed: the input format changed and the engine stopped itself.
             center.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: .main) { [weak self] _ in
@@ -176,4 +181,10 @@ final class AudioCapture {
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
         onEnded?()
     }
+}
+
+/// The converter asks for input more than once per buffer; this hands the buffer over the first time only.
+/// Used on the microphone's thread alone, inside one call.
+private final class Once: @unchecked Sendable {
+    var used = false
 }

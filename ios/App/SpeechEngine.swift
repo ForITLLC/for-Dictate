@@ -104,16 +104,30 @@ struct AppleSpeechEngine: SpeechEngine {
             return transcript
         }
 
+        // Ending the analyzer is what ends the result stream, so the limit does that itself:
+        // it does not depend on anything else noticing a cancellation.
+        let limit = max(20, seconds * 4 + 10)
+        let started = Date()
+        let watchdog = Task {
+            try await Task.sleep(nanoseconds: UInt64(limit * 1_000_000_000))
+            results.cancel()
+            await analyzer.cancelAndFinishNow()
+        }
+        defer { watchdog.cancel() }
+
         do {
             guard let lastSample = try await analyzer.analyzeSequence(from: audioFile) else {
                 throw Failure.nothingRecorded
             }
             try await analyzer.finalizeAndFinish(through: lastSample)
-            let text = try await Self.value(of: results, within: max(20, seconds * 4 + 10))
+            let text = try await results.value
+            guard Date().timeIntervalSince(started) < limit else { throw Failure.timedOut }
             return text.trimmingCharacters(in: .whitespacesAndNewlines)
         } catch {
+            watchdog.cancel()
             results.cancel()
             await analyzer.cancelAndFinishNow()
+            if Date().timeIntervalSince(started) >= limit { throw Failure.timedOut }
             throw error
         }
     }
@@ -144,18 +158,5 @@ struct AppleSpeechEngine: SpeechEngine {
         let reserved = await AssetInventory.reservedLocales
         guard !reserved.contains(where: { $0.identifier(.bcp47) == language.identifier }) else { return }
         _ = try? await AssetInventory.reserve(locale: language.locale)
-    }
-
-    private static func value(of task: Task<String, Error>, within seconds: Double) async throws -> String {
-        try await withThrowingTaskGroup(of: String.self) { group in
-            group.addTask { try await task.value }
-            group.addTask {
-                try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
-                throw Failure.timedOut
-            }
-            defer { group.cancelAll() }
-            guard let first = try await group.next() else { throw Failure.timedOut }
-            return first
-        }
     }
 }
