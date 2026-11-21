@@ -53,7 +53,7 @@ from the repository root of `for-Dictate-build`:
 | Route | Command | What it does |
 | --- | --- | --- |
 | `ios-compile` | `ios/Scripts/check-native.sh --execute` | The logic tests, an unsigned device compile, a check that the products are what ships, and the Debug simulator compile the screen check uses. No build number, no signing. |
-| `ios-ui-check` | `ios/Scripts/ui-check.sh --execute` | The app's screens as pictures on the lane's iPhone simulator, through for-iCommon's device matrix. Unsigned. The route pins `common_commit`. |
+| `ios-ui-check` | `ios/Scripts/ui-check.sh --execute` | The app's screens as pictures on the lane's three iPhone simulators (standard, SE, Pro Max), one booted at a time, through for-iCommon's device matrix. Unsigned. The route pins `common_commit`. |
 | `ios` | `ios/Scripts/apple-release.sh ios BUILD [--upload]` | Checks, profiles, a signed archive, the exported IPA verified, and with `--upload` TestFlight. |
 
 `apple-release.sh` refuses a checkout that is not the clean commit in `FORIT_SOURCE_COMMIT`, then runs

@@ -31,7 +31,8 @@ for device, screen, look, status in rows:
 (out / ".dd" / "big").write_text("derived data\n")
 pathlib.Path(os.environ["UI_CHECK_FIXTURE_RECORD"]).write_text(json.dumps({
     "args": sys.argv[1:], "xcodebuild": shutil.which("xcodebuild"),
-    "lane": os.environ.get("MATRIX_LANE"), "run": os.environ.get("MATRIX_RUN")}))
+    "lane": os.environ.get("MATRIX_LANE"), "run": os.environ.get("MATRIX_RUN"),
+    "boot": os.environ.get("MATRIX_BOOT")}))
 PY
 exit "${UI_CHECK_FIXTURE_EXIT:-0}"
 """
@@ -115,6 +116,7 @@ class UICheckContractTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         plan = json.loads(result.stdout)
         self.assertEqual(plan["matrix"]["screens"], ["home"])
+        self.assertEqual(plan["matrix"]["boots"], ["iPhone", "iPhoneSE", "iPhoneProMax"])
         self.assertEqual(plan["forITCommonRevision"], self.common_head)
         self.assertFalse(plan["nativeExecution"])
         self.assertFalse(self.record.exists())
@@ -136,6 +138,8 @@ class UICheckContractTests(unittest.TestCase):
         self.assertEqual(record["xcodebuild"], str(self.home / "bin/xcodebuild"))
         self.assertEqual(record["lane"], "for-Dictate")
         self.assertEqual(record["run"], str(self.run_state))
+        # The SE and the Pro Max are drawn only when the job names them.
+        self.assertEqual(record["boot"], "iPhone iPhoneSE iPhoneProMax")
 
     def test_a_run_with_no_picture_does_not_pass(self):
         why = "not drawn: for-Dictate has no iPhone simulator on the Mini (ci-sim-lanes.conf)"
@@ -146,6 +150,7 @@ class UICheckContractTests(unittest.TestCase):
         self.assertEqual(receipt["cells"], {"taken": 0, "failed": 0, "notDrawn": 1})
         self.assertEqual(receipt["notDrawn"], [why])
         self.assertEqual(receipt["lastPhase"], "evidence")
+        self.assertIn("no screen was drawn. " + why, result.stderr)
 
     def test_a_failed_cell_fails_the_check_and_is_named(self):
         rows = OK + [["iphone", "settings", "dark", "failed: black frame"]]

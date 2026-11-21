@@ -3,7 +3,8 @@
 #
 # for-iCommon's device matrix builds the Debug simulator app once and photographs every
 # screen ios/forit-app.json lists, in light, in dark and at the largest text size, plus the
-# ForIT panel open on the home screen. Three of the screens are the keyboard's own view drawn
+# ForIT panel open on the home screen, on the lane's three phones (the standard one, the SE and
+# the Pro Max), booted one after another. Three of the screens are the keyboard's own view drawn
 # inside the app (ios/App/KeyboardPreviewScene.swift). The keyboard running as an extension
 # in another app is not pictured: that needs a phone.
 #
@@ -40,7 +41,7 @@ print(json.dumps({"app": "for-Dictate", "platform": "ios-ui-check", "commit": sy
     "requiredEnvironment": ["FORIT_SOURCE_COMMIT", "FORIT_GATE_RUN", "FORIT_COMMON_ROOT"],
     "phases": ["preflight", "matrix", "evidence", "source-check"],
     "matrix": {"script": "Scripts/device-matrix/device-matrix.sh", "appDir": "ios", "shards": ["iphone"],
-               "lane": "for-Dictate", "screens": screens, "looks": ["light", "dark", "ax5"],
+               "lane": "for-Dictate", "boots": ["iPhone", "iPhoneSE", "iPhoneProMax"], "screens": screens, "looks": ["light", "dark", "ax5"],
                "profileMenu": "home"},
     "forITCommonRevision": sys.argv[2],
     "receipt": "build/forit-ios-ui-check/receipt.json",
@@ -125,11 +126,14 @@ esac
 [[ -x $FORIT_XCODEBUILD ]] || fail 'installed slot-aware xcodebuild wrapper is unavailable'
 
 # The matrix calls plain `xcodebuild`: this makes that the slot-aware wrapper. It draws only on
-# simulators ci-sim-lanes.conf gives this lane, and a kind the lane has none of is a row that
-# says so, not a failure, which is why a run with no picture at all does not pass (finish).
+# simulators that are this lane's, and a kind the lane has none of is a row that says so, not a
+# failure, which is why a run with no picture at all does not pass (finish). On the build Mac a
+# job boots only the kinds MATRIX_BOOT names, one after another and never two at once; left
+# unset it is the iPhone, the iPad and Vision Pro, and the SE and the Pro Max are not drawn.
 PHASE=matrix
 MATRIX_EXIT=0
 PATH="$(dirname "$FORIT_XCODEBUILD"):$PATH" MATRIX_LANE=for-Dictate MATRIX_RUN="$FORIT_GATE_RUN" \
+  MATRIX_BOOT='iPhone iPhoneSE iPhoneProMax' \
   /bin/bash "$FORIT_COMMON_ROOT/Scripts/device-matrix/device-matrix.sh" "$REPO_ROOT/ios" "$MATRIX" iphone \
   > "$OUT/matrix.log" 2>&1 || MATRIX_EXIT=$?
 tail -40 "$OUT/matrix.log"
@@ -137,7 +141,8 @@ tail -40 "$OUT/matrix.log"
 PHASE=evidence
 [[ -s $MATRIX/MATRIX.tsv ]] || fail 'the device matrix wrote no MATRIX.tsv'
 TAKEN=$(awk -F'\t' '$4 == "ok"' "$MATRIX/MATRIX.tsv" | wc -l | tr -d ' ')
-(( TAKEN > 0 )) || fail 'no screen was drawn: see the "not drawn" rows in MATRIX.tsv (does for-Dictate have an iPhone simulator?)'
+# Why, in the matrix's own words: each kind's rows carry one reason.
+(( TAKEN > 0 )) || fail "no screen was drawn. $(awk -F'\t' '$4 ~ /^not drawn/ { print $4 }' "$MATRIX/MATRIX.tsv" | sort -u | head -3 | paste -sd'|' -)"
 PHASE=source-check
 git status --porcelain --untracked-files=all > "$OUT/source-after.log"
 [[ ! -s $OUT/source-after.log ]] || fail 'source changed during the check'
