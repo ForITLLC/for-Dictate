@@ -103,3 +103,7 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# iPhone app: xcodegen writes these from ios/project.yml
+ios/ForITDictate.xcodeproj/
+ios/Generated/

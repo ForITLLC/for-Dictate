@@ -1,0 +1,21 @@
+{
+  "name": "ForIT Dictate",
+  "bundleId": "io.forit.dictate",
+  "textScreens": [
+    "Views/HomeView.swift",
+    "Views/KeyboardSetupView.swift",
+    "Views/DictateSettingsView.swift"
+  ],
+  "hosts": {},
+  "offline": {
+    "mode": "on-device",
+    "store": "none",
+    "why": "Dictation is recorded and transcribed on the device by the operating system's speech. The app calls no ForIT service and keeps no history: a recording is deleted once it is text, and the text waits in the app group only until the keyboard types it."
+  },
+  "screens": {
+    "scheme": "ForITDictate",
+    "list": [
+      { "name": "home", "args": [] }
+    ]
+  }
+}

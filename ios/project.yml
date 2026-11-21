@@ -1,0 +1,148 @@
+name: ForITDictate
+options:
+  bundleIdPrefix: io.forit
+  deploymentTarget:
+    # SpeechAnalyzer and SpeechTranscriber, the on-device speech this app calls,
+    # start at iOS 26. The logic tests run on the build Mac and touch neither.
+    iOS: "26.0"
+    macOS: "15.0"
+  createIntermediateGroups: true
+packages:
+  # The same shared package and pin as the Mac app (VoiceInk.xcodeproj).
+  ForITCommon:
+    url: https://github.com/ForITLLC/for-iCommon.git
+    exactVersion: 0.31.9
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: UUSSWWML2A
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+targets:
+  ForITDictate:
+    type: application
+    platform: iOS
+    sources:
+      - App
+      - Views
+      - Shared
+      - path: Brand/Assets.xcassets
+      # Text clean-up shared with the Mac app by path: one copy, two apps.
+      - path: ../VoiceInk/Features/Recording/Processing/TranscriptionOutputFilter.swift
+        group: MacShared
+      - path: ../VoiceInk/Features/Enhancement/State/FillerWordManager.swift
+        group: MacShared
+      - path: ../VoiceInk/Infrastructure/TextProcessing/ParagraphFormatter.swift
+        group: MacShared
+    info:
+      path: Generated/ForITDictate-Info.plist
+      properties:
+        CFBundleDisplayName: ForIT Dictate
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleURLTypes:
+          - CFBundleURLName: io.forit.dictate
+            CFBundleURLSchemes: [io.forit.dictate]
+        ITSAppUsesNonExemptEncryption: false
+        LSRequiresIPhoneOS: true
+        NSMicrophoneUsageDescription: ForIT Dictate listens while you dictate and turns what you say into text on this device.
+        # Keeps the microphone ready between dictations, so the keyboard can start
+        # the next one without opening this app again.
+        UIBackgroundModes: [audio]
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+    entitlements:
+      path: Generated/ForITDictate.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.io.forit.dictate
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.forit.dictate
+        PRODUCT_NAME: ForIT Dictate
+        PRODUCT_MODULE_NAME: ForITDictate
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    dependencies:
+      - package: ForITCommon
+        product: ForITCommon
+      - target: ForITDictateKeyboard
+        embed: true
+  ForITDictateKeyboard:
+    type: app-extension
+    platform: iOS
+    sources:
+      - Keyboard
+      - Shared
+    info:
+      path: Generated/ForITDictateKeyboard-Info.plist
+      properties:
+        CFBundleDisplayName: ForIT Dictate
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.keyboard-service
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).DictateKeyboardViewController
+          NSExtensionAttributes:
+            IsASCIICapable: true
+            PrefersRightToLeft: false
+            PrimaryLanguage: en-US
+            # Full Access: the keyboard meets the app in the shared app group and
+            # opens the app for the microphone. It sends nothing anywhere.
+            RequestsOpenAccess: true
+    entitlements:
+      path: Generated/ForITDictateKeyboard.entitlements
+      properties:
+        com.apple.security.application-groups:
+          - group.io.forit.dictate
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.forit.dictate.keyboard
+        PRODUCT_NAME: ForITDictateKeyboard
+        PRODUCT_MODULE_NAME: ForITDictateKeyboard
+        TARGETED_DEVICE_FAMILY: "1,2"
+        APPLICATION_EXTENSION_API_ONLY: YES
+        SKIP_INSTALL: YES
+    dependencies:
+      - package: ForITCommon
+        product: ForITCommon
+  # Logic only: the keyboard-to-app hand-off and the text clean-up, on the build Mac.
+  DictateHandoffTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - UnitTests
+      - Shared/DictationHandoff.swift
+      - Shared/InsertionSpacing.swift
+      - App/DictationText.swift
+      - ../VoiceInk/Features/Recording/Processing/TranscriptionOutputFilter.swift
+      - ../VoiceInk/Features/Enhancement/State/FillerWordManager.swift
+      - ../VoiceInk/Infrastructure/TextProcessing/ParagraphFormatter.swift
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.forit.dictate.handoff-tests
+        PRODUCT_NAME: DictateHandoffTests
+        PRODUCT_MODULE_NAME: DictateHandoffTests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  ForITDictate:
+    build:
+      targets:
+        ForITDictate: all
+  DictateHandoffTests:
+    build:
+      targets:
+        DictateHandoffTests: all
+    test:
+      config: Debug
+      targets: [DictateHandoffTests]
