@@ -62,6 +62,9 @@ from the repository root of `for-Dictate-build`:
 
 - `gate` is for-iCommon's conformance gate on the commit and on the pull request that carries it. What this cut
   does not do yet is declared as `waivers` in `forit-app.json`, each with its reason, and shows as WAIVED.
+  The gate looks for that pull request in the repository the job cloned, which is `for-Dictate-build`, while this
+  lane's pull requests are in `for-Dictate`. Until the gate can be pointed at the other repository, an upload needs
+  a pull request for the same branch in `for-Dictate-build` whose body carries the ticked checklist.
 - `verify` unpacks the IPA and checks, for both bundles, the bundle id, the build number, the version, the device
   family, the embedded profile (the one just made), a distribution signature and the app group; for the app also
   the microphone reason, export compliance and the four iPad orientations; for the keyboard that it is a keyboard
