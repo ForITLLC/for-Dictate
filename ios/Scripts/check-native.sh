@@ -18,8 +18,9 @@ REPO_ROOT=$(cd "$(dirname "$0")/../.." && pwd -P)
 cd "$REPO_ROOT"
 COMMIT=$(git rev-parse HEAD)
 [[ $COMMIT =~ ^[0-9a-f]{40}$ ]] || exit 64
-# ForITCommon 0.31.9, the pin the Mac app resolves (VoiceInk.xcodeproj Package.resolved).
-COMMON_REVISION=352f567e839b8faf61b6df5840c5275b016addce
+# ForITCommon 0.33.0, the iPhone app's pin (ios/project.yml). The Mac app is still on 0.31.9
+# (VoiceInk.xcodeproj Package.resolved); the two are separate Xcode projects.
+COMMON_REVISION=8263a8da050265bb1736bdd601efd253fda03030
 if [[ $MODE == plan ]]; then
   python3 -I -B - "$COMMIT" "$COMMON_REVISION" <<'PY'
 import json, sys

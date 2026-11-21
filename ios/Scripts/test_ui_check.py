@@ -1,8 +1,7 @@
 """The screen check's contract, on throwaway Git repositories.
 
 Only the real script is copied. The device matrix is replaced with a recorder that writes the
-rows it is told to, and the lane's simulator helper with one that only notes its calls, so
-nothing is built, booted or photographed.
+rows it is told to, so nothing is built, booted or photographed.
 """
 import json
 import os
@@ -15,60 +14,31 @@ import zipfile
 
 
 SCRIPT = Path(__file__).with_name("ui-check.sh")
-# As the real matrix does on the build Mac: it draws the kind MATRIX_BOOT names and says of the
-# other phones that they are for a job of their own.
+# ForITCommon 0.33.0, the iPhone app's pin.
+PIN = "8263a8da050265bb1736bdd601efd253fda03030"
 MATRIX = r"""#!/bin/bash
 set -euo pipefail
 mkdir -p "$2"
 python3 - "$@" <<'PY'
 import json, os, pathlib, shutil, sys
 out = pathlib.Path(sys.argv[2])
-kind = os.environ.get("MATRIX_BOOT", "")
-mine = {"iPhone": "iphone", "iPhoneSE": "iphone-se", "iPhoneProMax": "iphone-max"}.get(kind)
-rows = []
-for device, screen, look, status in json.loads(os.environ["UI_CHECK_FIXTURE_ROWS"]):
-    if device != mine:
-        status = f"not drawn: the Mini boots the {kind} one after another in a job; MATRIX_BOOT=x in a job of its own draws it"
-    rows.append([device, screen, look, status])
+rows = json.loads(os.environ["UI_CHECK_FIXTURE_ROWS"])
+(out / "MATRIX.tsv").write_text("".join("\t".join(r) + "\n" for r in rows))
+for device, screen, look, status in rows:
     if status == "ok":
         (out / f"{device}-{screen}-{look}.png").write_bytes(b"png")
-(out / "MATRIX.tsv").write_text("".join("\t".join(r) + "\n" for r in rows))
 (out / "sheet-iphone.jpg").write_bytes(b"jpg")
 (out / "PACKAGES").write_text("no packages\n")
 (out / ".dd").mkdir()
 (out / ".dd" / "big").write_text("derived data\n")
-with open(os.environ["UI_CHECK_FIXTURE_RECORD"], "a") as record:
-    record.write(json.dumps({
-        "args": sys.argv[1:], "xcodebuild": shutil.which("xcodebuild"), "boot": kind,
-        "lane": os.environ.get("MATRIX_LANE"), "run": os.environ.get("MATRIX_RUN"),
-        "helper": os.environ.get("MATRIX_LANE_HELPER"), "derived": os.environ.get("MATRIX_DERIVED_DATA"),
-        "up": pathlib.Path(os.environ["MATRIX_RUN"], "up").read_text().split()}) + "\n")
+pathlib.Path(os.environ["UI_CHECK_FIXTURE_RECORD"]).write_text(json.dumps({
+    "args": sys.argv[1:], "xcodebuild": shutil.which("xcodebuild"),
+    "lane": os.environ.get("MATRIX_LANE"), "run": os.environ.get("MATRIX_RUN"),
+    "boot": os.environ.get("MATRIX_BOOT")}))
 PY
 exit "${UI_CHECK_FIXTURE_EXIT:-0}"
 """
-# ci-sim-lane.sh as far as the script asks: boot prints the slot's queue and then the UDID.
-HELPER = r"""#!/bin/bash
-printf '%s\n' "$*" >> "$UI_CHECK_FIXTURE_HELPER_LOG"
-[[ $1 == --lane && $2 == for-Dictate ]] || exit 3
-case $3 in
-  boot)
-    case " ${UI_CHECK_FIXTURE_NO_BOOT:-} " in *" $4 "*) echo "the gate gave up" >&2; exit 75 ;; esac
-    echo "boot-slot ok waited=0s"
-    case $4 in
-      iPhone) echo 11111111-1111-1111-1111-111111111111 ;;
-      iPhoneSE) echo 22222222-2222-2222-2222-222222222222 ;;
-      iPhoneProMax) echo 33333333-3333-3333-3333-333333333333 ;;
-      *) exit 4 ;;
-    esac ;;
-  shutdown) exit "${UI_CHECK_FIXTURE_SHUTDOWN_EXIT:-0}" ;;
-  *) exit 2 ;;
-esac
-"""
-UDIDS = ["11111111-1111-1111-1111-111111111111", "22222222-2222-2222-2222-222222222222",
-         "33333333-3333-3333-3333-333333333333"]
-KINDS = ["iPhone", "iPhoneSE", "iPhoneProMax"]
-OK = [["iphone", "home", "light", "ok"], ["iphone", "keyboard", "ax5", "ok"],
-      ["iphone-se", "home", "light", "ok"], ["iphone-max", "home", "dark", "ok"]]
+OK = [["iphone", "home", "light", "ok"], ["iphone", "keyboard", "ax5", "ok"]]
 
 
 class UICheckContractTests(unittest.TestCase):
@@ -82,13 +52,9 @@ class UICheckContractTests(unittest.TestCase):
         self.fakes = self.root / "fakes"
         for folder in (self.home / "bin", self.fakes):
             folder.mkdir(parents=True)
-        # The build Mac, as far as the script asks: its name, its slot-aware xcodebuild and the
-        # lane's simulator helper.
+        # The build Mac, as far as the script asks: its name and its slot-aware xcodebuild.
         self.executable(self.fakes / "uname", "#!/bin/bash\necho Darwin\n")
         self.executable(self.home / "bin/xcodebuild", "#!/bin/bash\nexit 0\n")
-        self.helper = self.root / "ci-sim/ci-sim-lane.sh"
-        self.executable(self.helper, HELPER)
-        self.helper_log = self.root / "helper calls.log"
         self.env = {
             "PATH": str(self.fakes) + os.pathsep + os.environ.get("PATH", os.defpath),
             "HOME": str(self.home), "LANG": "C", "LC_ALL": "C",
@@ -103,8 +69,10 @@ class UICheckContractTests(unittest.TestCase):
         self.script.parent.mkdir(parents=True)
         self.script.write_bytes(SCRIPT.read_bytes())
         (self.repo / ".gitignore").write_text("build/\n")
-        (self.repo / "forit-app.json").write_text(
-            json.dumps({"controlGuard": {"commonRevision": self.common_head}}))
+        # The fixture's Common is a new commit, so the copied script is pinned to that one.
+        text = self.script.read_text()
+        self.assertEqual(text.count("COMMON_REVISION=" + PIN + "\n"), 1)
+        self.script.write_text(text.replace("COMMON_REVISION=" + PIN, "COMMON_REVISION=" + self.common_head))
         (self.repo / "ios/forit-app.json").write_text(
             json.dumps({"screens": {"scheme": "ForITDictate", "list": [{"name": "home", "args": []}]}}))
         self.head = self.commit(self.repo)
@@ -112,7 +80,7 @@ class UICheckContractTests(unittest.TestCase):
         self.run_state.mkdir()
         (self.run_state / "lane").write_text("for-Dictate\n")
         (self.run_state / "up").write_text("")
-        self.record = self.root / "matrix record.jsonl"
+        self.record = self.root / "matrix record.json"
         self.out = self.repo / "build/forit-ios-ui-check"
 
     @staticmethod
@@ -134,9 +102,8 @@ class UICheckContractTests(unittest.TestCase):
 
     def invoke(self, *args, rows=OK, matrix_exit=0, **changes):
         env = dict(self.env, FORIT_SOURCE_COMMIT=self.head, FORIT_GATE_RUN=str(self.run_state),
-                   FORIT_COMMON_ROOT=str(self.common), MATRIX_LANE_HELPER=str(self.helper),
-                   UI_CHECK_FIXTURE_ROWS=json.dumps(rows), UI_CHECK_FIXTURE_RECORD=str(self.record),
-                   UI_CHECK_FIXTURE_HELPER_LOG=str(self.helper_log), UI_CHECK_FIXTURE_EXIT=str(matrix_exit))
+                   FORIT_COMMON_ROOT=str(self.common), UI_CHECK_FIXTURE_ROWS=json.dumps(rows),
+                   UI_CHECK_FIXTURE_RECORD=str(self.record), UI_CHECK_FIXTURE_EXIT=str(matrix_exit))
         for name, value in changes.items():
             if value is None:
                 env.pop(name, None)
@@ -148,57 +115,46 @@ class UICheckContractTests(unittest.TestCase):
     def receipt(self):
         return json.loads((self.out / "receipt.json").read_text())
 
-    def matrix_runs(self):
-        return [json.loads(line) for line in self.record.read_text().splitlines()]
-
-    def helper_calls(self):
-        return self.helper_log.read_text().splitlines() if self.helper_log.exists() else []
-
     def test_plan_names_the_screens_and_runs_nothing(self):
         result = self.invoke()
         self.assertEqual(result.returncode, 0, result.stderr)
         plan = json.loads(result.stdout)
         self.assertEqual(plan["matrix"]["screens"], ["home"])
-        self.assertEqual(plan["matrix"]["boots"], KINDS)
+        self.assertEqual(plan["matrix"]["boots"], ["iPhone", "iPhoneSE", "iPhoneProMax"])
         self.assertEqual(plan["forITCommonRevision"], self.common_head)
         self.assertFalse(plan["nativeExecution"])
         self.assertFalse(self.record.exists())
-        self.assertEqual(self.helper_calls(), [])
         self.assertFalse((self.repo / "build").exists())
 
-    def test_each_phone_is_booted_drawn_and_shut_down_in_turn(self):
+    def test_every_cell_taken_passes_with_the_pictures_as_evidence(self):
         result = self.invoke("--execute")
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         receipt = self.receipt()
         self.assertTrue(receipt["passed"])
-        self.assertTrue(receipt["complete"])
-        # Each run's table also names the other two phones; a cell is counted once.
-        self.assertEqual(receipt["cells"], {"taken": 4, "failed": 0, "notDrawn": 0})
-        self.assertEqual(receipt["notBooted"], {})
+        self.assertEqual(receipt["cells"], {"taken": 2, "failed": 0, "notDrawn": 0})
         self.assertEqual(receipt["commit"], self.head)
         self.assertFalse(receipt["signed"])
         with zipfile.ZipFile(self.out / "evidence.zip") as bundle:
-            names = bundle.namelist()
-            merged = bundle.read("MATRIX.tsv").decode()
-        self.assertEqual(sorted(names), sorted(
-            ["MATRIX.tsv", "boot.log", "iphone-home-light.png", "iphone-keyboard-ax5.png",
-             "iphone-se-home-light.png", "iphone-max-home-dark.png"]
-            + [f"{kind}-{name}" for kind in KINDS for name in ("MATRIX.tsv", "PACKAGES", "sheet-iphone.jpg")]))
-        self.assertEqual(merged.count("\tok\n"), 4)
-        self.assertEqual(self.helper_calls(), [
-            f"--lane for-Dictate {verb} {kind}" for kind in KINDS for verb in ("boot", "shutdown")])
-        runs = self.matrix_runs()
-        self.assertEqual([run["boot"] for run in runs], KINDS)
-        for index, run in enumerate(runs):
-            self.assertEqual(run["args"], [str(self.repo / "ios"), str(self.out / "matrix" / KINDS[index]), "iphone"])
-            self.assertEqual(run["xcodebuild"], str(self.home / "bin/xcodebuild"))
-            self.assertEqual(run["lane"], "for-Dictate")
-            self.assertEqual(run["run"], str(self.run_state))
-            self.assertEqual(run["helper"], str(self.helper))
-            # One build's products serve all three runs.
-            self.assertEqual(run["derived"], str(self.out / "derived-data"))
-            # The phone is the launcher run's own before the matrix starts, so the matrix does not boot it.
-            self.assertEqual(run["up"], UDIDS[:index + 1])
+            self.assertEqual(sorted(bundle.namelist()), [
+                "MATRIX.tsv", "PACKAGES", "iphone-home-light.png", "iphone-keyboard-ax5.png", "sheet-iphone.jpg"])
+        record = json.loads(self.record.read_text())
+        self.assertEqual(record["args"], [str(self.repo / "ios"), str(self.out / "matrix"), "iphone"])
+        self.assertEqual(record["xcodebuild"], str(self.home / "bin/xcodebuild"))
+        self.assertEqual(record["lane"], "for-Dictate")
+        self.assertEqual(record["run"], str(self.run_state))
+        # The SE and the Pro Max are drawn only when the job names them.
+        self.assertEqual(record["boot"], "iPhone iPhoneSE iPhoneProMax")
+
+    def test_a_run_with_no_picture_does_not_pass(self):
+        why = "not drawn: for-Dictate has no iPhone simulator on the Mini (ci-sim-lanes.conf)"
+        result = self.invoke("--execute", rows=[["iphone", "home", "light", why]])
+        self.assertEqual(result.returncode, 64, result.stdout + result.stderr)
+        receipt = self.receipt()
+        self.assertFalse(receipt["passed"])
+        self.assertEqual(receipt["cells"], {"taken": 0, "failed": 0, "notDrawn": 1})
+        self.assertEqual(receipt["notDrawn"], [why])
+        self.assertEqual(receipt["lastPhase"], "evidence")
+        self.assertIn("no screen was drawn. " + why, result.stderr)
 
     def test_the_gates_shims_stay_ahead_of_the_build_wrapper(self):
         gate = self.root / "gate shims"
@@ -206,42 +162,13 @@ class UICheckContractTests(unittest.TestCase):
         self.executable(gate / "xcodebuild", "#!/bin/bash\nexit 0\n")
         result = self.invoke("--execute", FORIT_SIM_GATE=str(gate / "forit-sim-gate"))
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertEqual({run["xcodebuild"] for run in self.matrix_runs()}, {str(gate / "xcodebuild")})
+        self.assertEqual(json.loads(self.record.read_text())["xcodebuild"], str(gate / "xcodebuild"))
 
-    def test_a_phone_that_does_not_boot_is_named_and_the_others_are_drawn(self):
-        result = self.invoke("--execute", UI_CHECK_FIXTURE_NO_BOOT="iPhoneSE")
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        receipt = self.receipt()
-        self.assertTrue(receipt["passed"])
-        self.assertFalse(receipt["complete"])
-        self.assertEqual(receipt["notBooted"], {"iPhoneSE": "ci-sim-lane.sh boot exit 75"})
-        self.assertEqual(receipt["cells"], {"taken": 3, "failed": 0, "notDrawn": 1})
-        self.assertEqual([run["boot"] for run in self.matrix_runs()], ["iPhone", "iPhoneProMax"])
-        # A boot that was refused is still shut down, in case it came up late.
-        self.assertEqual(self.helper_calls().count("--lane for-Dictate shutdown iPhoneSE"), 1)
-        with zipfile.ZipFile(self.out / "evidence.zip") as bundle:
-            self.assertIn("the gate gave up", bundle.read("boot.log").decode())
-
-    def test_a_run_with_no_picture_does_not_pass(self):
-        result = self.invoke("--execute", UI_CHECK_FIXTURE_NO_BOOT=" ".join(KINDS))
-        self.assertEqual(result.returncode, 64, result.stdout + result.stderr)
-        receipt = self.receipt()
-        self.assertFalse(receipt["passed"])
-        self.assertEqual(receipt["cells"], {"taken": 0, "failed": 0, "notDrawn": 0})
-        self.assertEqual(sorted(receipt["notBooted"]), sorted(KINDS))
-        self.assertEqual(receipt["lastPhase"], "evidence")
-        self.assertIn("no screen was drawn. iPhone ci-sim-lane.sh boot exit 75", result.stderr)
-        self.assertFalse(self.record.exists())
-
-    def test_a_matrix_that_draws_nothing_says_why(self):
-        why = "not drawn: the app quit at launch"
-        result = self.invoke("--execute", rows=[["iphone", "home", "light", why]])
-        self.assertEqual(result.returncode, 64, result.stdout + result.stderr)
-        receipt = self.receipt()
-        self.assertFalse(receipt["passed"])
-        self.assertEqual(receipt["cells"], {"taken": 0, "failed": 0, "notDrawn": 1})
-        self.assertEqual(receipt["notDrawn"], [why])
-        self.assertIn("no screen was drawn. " + why, result.stderr)
+    def test_the_two_checks_and_the_project_name_one_common(self):
+        native = SCRIPT.with_name("check-native.sh").read_text()
+        self.assertEqual(native.count("COMMON_REVISION=" + PIN + "\n"), 1)
+        project = (SCRIPT.parents[1] / "project.yml").read_text()
+        self.assertIn("url: https://github.com/ForITLLC/for-iCommon.git\n    exactVersion: 0.33.0\n", project)
 
     def test_a_failed_cell_fails_the_check_and_is_named(self):
         rows = OK + [["iphone", "settings", "dark", "failed: black frame"]]
@@ -252,19 +179,8 @@ class UICheckContractTests(unittest.TestCase):
         self.assertEqual(receipt["matrixExit"], "1")
         self.assertEqual(receipt["failedCells"], [
             {"device": "iphone", "screen": "settings", "look": "dark", "why": "failed: black frame"}])
-        # The other phones are still drawn, and every one is shut down.
-        self.assertEqual(len(self.matrix_runs()), 3)
-        self.assertEqual(sum("shutdown" in call for call in self.helper_calls()), 3)
 
-    def test_a_phone_that_stays_up_stops_the_next_boot(self):
-        result = self.invoke("--execute", UI_CHECK_FIXTURE_SHUTDOWN_EXIT="1")
-        self.assertEqual(result.returncode, 64, result.stdout + result.stderr)
-        self.assertIn("would not shut down", result.stderr)
-        self.assertEqual([run["boot"] for run in self.matrix_runs()], ["iPhone"])
-        self.assertEqual(sum(call.endswith("boot iPhoneSE") for call in self.helper_calls()), 0)
-        self.assertFalse(self.receipt()["passed"])
-
-    def test_refused_before_any_boot(self):
+    def test_refused_before_the_matrix(self):
         other = self.root / "other common"
         self.executable(other / "Scripts/device-matrix/device-matrix.sh", MATRIX + "# another revision\n")
         self.commit(other)
@@ -274,7 +190,6 @@ class UICheckContractTests(unittest.TestCase):
             "no Common": {"FORIT_COMMON_ROOT": None},
             "another Common revision": {"FORIT_COMMON_ROOT": str(other)},
             "another xcodebuild": {"FORIT_XCODEBUILD": "/usr/bin/xcodebuild"},
-            "no lane helper": {"MATRIX_LANE_HELPER": str(self.root / "missing/ci-sim-lane.sh")},
             "GitHub Actions": {"GITHUB_ACTIONS": "true"},
         }
         for name, changes in cases.items():
@@ -283,7 +198,6 @@ class UICheckContractTests(unittest.TestCase):
                 result = self.invoke("--execute", **changes)
                 self.assertEqual(result.returncode, 64, result.stdout + result.stderr)
                 self.assertFalse(self.record.exists(), "a refused request reached the matrix")
-                self.assertEqual(self.helper_calls(), [], "a refused request reached the simulators")
                 self.assertFalse(self.receipt()["passed"])
 
     def test_untracked_source_and_a_prior_output_are_refused(self):
@@ -298,7 +212,6 @@ class UICheckContractTests(unittest.TestCase):
         self.assertEqual(result.returncode, 64, result.stdout + result.stderr)
         self.assertEqual((self.out / "receipt.json").read_bytes(), before)
         self.assertFalse(self.record.exists())
-        self.assertEqual(self.helper_calls(), [])
 
 
 if __name__ == "__main__":
