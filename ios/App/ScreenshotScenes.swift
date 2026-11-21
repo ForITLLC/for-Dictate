@@ -27,6 +27,11 @@ enum ScreenshotScene: String {
         .flatMap(ScreenshotScene.init(rawValue:))
 
     static let sampleText = "The quarterly numbers are ready for review. I will send the summary before lunch."
+
+    /// The line of typed text above the keyboard scenes. One short line: at the largest text
+    /// size the keyboard leaves room for a single line on the smallest phone, and a longer
+    /// stand-in ended in "…" there, which read as a cut-off in the contact sheet.
+    static let typedText = "On my way."
 }
 
 /// Says the language is ready and hears nothing.

@@ -17,7 +17,7 @@ struct KeyboardPreviewScene: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Text(ScreenshotScene.sampleText)
+            Text(ScreenshotScene.typedText)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .padding()
             HostedKeyboard(state: state)
