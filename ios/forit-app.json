@@ -1,0 +1,81 @@
+{
+  "name": "ForIT Dictate",
+  "bundleId": "io.forit.dictate",
+  "textScreens": [],
+  "textScreensWhy": "The app keeps no text the person wrote: the keyboard types a dictation into whichever app is open, and the trial text on the home screen is shown once, read only, and not kept.",
+  "signIn": {
+    "none": "The first cut calls no ForIT service: speech is the operating system's, on the device. Sign-in arrives with the company dictionary (task A8482CC9)."
+  },
+  "hosts": {},
+  "offline": {
+    "mode": "on-device",
+    "store": "none",
+    "why": "Dictation is recorded and transcribed on the device by the operating system's speech. The app calls no ForIT service and keeps no history: a recording is deleted once it is text, and the text waits in the app group only until the keyboard types it."
+  },
+  "waivers": {
+    "FB-1": "Feedback needs a signed-in sender and this cut has no sign-in; it is wired in the build that adds sign-in (task A8482CC9).",
+    "OF-1": "The app has no server data to load, cache or sync, so none of the three modes describes it; revisit when the company dictionary gives it server data.",
+    "PL-2..5": "The Mac build of ForIT Dictate is the app in this repository's VoiceInk.xcodeproj, shipped outside the App Store with the same bundle id; Apple Vision is not built until the iPhone keyboard is proven on Ben's phones (task A8482CC9)."
+  },
+  "screens": {
+    "scheme": "ForITDictate",
+    "list": [
+      {
+        "name": "home",
+        "args": [
+          "-screenshot-scene",
+          "home"
+        ]
+      },
+      {
+        "name": "detail",
+        "args": [
+          "-screenshot-scene",
+          "keyboard-setup"
+        ]
+      },
+      {
+        "name": "settings",
+        "args": [
+          "-screenshot-scene",
+          "settings"
+        ]
+      },
+      {
+        "name": "listening",
+        "args": [
+          "-screenshot-scene",
+          "listening"
+        ]
+      },
+      {
+        "name": "result",
+        "args": [
+          "-screenshot-scene",
+          "result"
+        ]
+      },
+      {
+        "name": "keyboard",
+        "args": [
+          "-screenshot-scene",
+          "keyboard"
+        ]
+      },
+      {
+        "name": "keyboard-listening",
+        "args": [
+          "-screenshot-scene",
+          "keyboard-listening"
+        ]
+      },
+      {
+        "name": "keyboard-access",
+        "args": [
+          "-screenshot-scene",
+          "keyboard-access"
+        ]
+      }
+    ]
+  }
+}
