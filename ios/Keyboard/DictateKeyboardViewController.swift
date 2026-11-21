@@ -32,7 +32,35 @@ final class DictateKeyboardViewController: UIInputViewController {
     }
 
     var preview: Preview?
+
+    /// The height this view asks for at a width, in its preview state. The app's picture of the
+    /// keyboard is measured before the view is on screen, so the state and the width are set here.
+    func previewHeight(forWidth width: CGFloat) -> CGFloat {
+        loadViewIfNeeded()
+        applyPreview()
+        status.preferredMaxLayoutWidth = max(0, width - 2 * Self.sideInset)
+        return view.systemLayoutSizeFitting(
+            CGSize(width: width, height: UIView.layoutFittingCompressedSize.height),
+            withHorizontalFittingPriority: .required, verticalFittingPriority: .fittingSizeLevel).height
+    }
+
+    /// Draws the preview state, if there is one. A picture listens for nothing, asks the app
+    /// for nothing and takes no taps.
+    @discardableResult
+    private func applyPreview() -> Bool {
+        guard let preview else { return false }
+        view.isUserInteractionEnabled = false
+        switch preview {
+        case .idle: show(.idle)
+        case .listening: show(.recording)
+        case .fullAccessNeeded: show(.idle, message: Self.fullAccessMessage)
+        }
+        return true
+    }
     #endif
+
+    /// Space between the keys and the keyboard's left and right edges.
+    private static let sideInset: CGFloat = 6
 
     private var mode = Mode.idle
     private var message: String?
@@ -86,16 +114,7 @@ final class DictateKeyboardViewController: UIInputViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         #if DEBUG
-        if let preview {
-            // A picture: it listens for nothing, asks the app for nothing and takes no taps.
-            view.isUserInteractionEnabled = false
-            switch preview {
-            case .idle: show(.idle)
-            case .listening: show(.recording)
-            case .fullAccessNeeded: show(.idle, message: Self.fullAccessMessage)
-            }
-            return
-        }
+        if applyPreview() { return }
         #endif
         globe.isHidden = !needsInputModeSwitchKey
         // Dictated text nobody took in time does not wait on disk for the app's next launch.
@@ -115,6 +134,15 @@ final class DictateKeyboardViewController: UIInputViewController {
         }
     }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // A label is as tall as its text wrapped to a width, so it is told the width it has.
+        let width = status.bounds.width
+        if width > 0, abs(status.preferredMaxLayoutWidth - width) > 0.5 {
+            status.preferredMaxLayoutWidth = width
+        }
+    }
+
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         signals = nil
@@ -128,10 +156,9 @@ final class DictateKeyboardViewController: UIInputViewController {
         status.adjustsFontForContentSizeCategory = true
         status.textColor = .secondaryLabel
         status.textAlignment = .center
-        // Every line shows at every text size: the keyboard grows (the height below gives way)
-        // before the Full Access instruction is cut short.
+        // Every line shows at every text size: the keyboard grows before the Full Access
+        // instruction is cut short (see the height below).
         status.numberOfLines = 0
-        status.setContentCompressionResistancePriority(UILayoutPriority(999), for: .vertical)
         status.accessibilityIdentifier = "dictate.keyboard.status"
 
         microphone.layer.cornerRadius = 36
@@ -165,20 +192,28 @@ final class DictateKeyboardViewController: UIInputViewController {
             narrow.widthAnchor.constraint(equalToConstant: 56).isActive = true
         }
 
+        // What the keyboard shows outranks its usual height, so large text makes it taller
+        // and squeezes nothing.
+        for content: UIView in [status, cancel, globe, space, delete, enter] {
+            content.setContentCompressionResistancePriority(UILayoutPriority(999), for: .vertical)
+        }
+
         let root = UIStackView(arrangedSubviews: [status, microphoneRow, cancel, keys])
         root.axis = .vertical
         root.spacing = 8
         root.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(root)
 
-        // 250 points, and more when the text size needs it: the status line outranks this.
+        // 250 points, and more when the text size needs it: the content above outranks this.
         let height = view.heightAnchor.constraint(equalToConstant: 250)
         height.priority = UILayoutPriority(998)
         NSLayoutConstraint.activate([
             height,
             root.topAnchor.constraint(equalTo: view.topAnchor, constant: 8),
-            root.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 6),
-            root.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -6),
+            root.leadingAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: Self.sideInset),
+            root.trailingAnchor.constraint(
+                equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -Self.sideInset),
             root.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -6),
             microphone.centerXAnchor.constraint(equalTo: microphoneRow.centerXAnchor),
             microphone.topAnchor.constraint(equalTo: microphoneRow.topAnchor),

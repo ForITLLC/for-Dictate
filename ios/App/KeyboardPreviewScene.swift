@@ -41,10 +41,7 @@ private struct HostedKeyboard: UIViewControllerRepresentable {
     func sizeThatFits(_ proposal: ProposedViewSize, uiViewController controller: DictateKeyboardViewController,
                       context: Context) -> CGSize? {
         guard let width = proposal.width, width.isFinite, width > 0 else { return nil }
-        let fitted = controller.view.systemLayoutSizeFitting(
-            CGSize(width: width, height: UIView.layoutFittingCompressedSize.height),
-            withHorizontalFittingPriority: .required, verticalFittingPriority: .fittingSizeLevel)
-        return CGSize(width: width, height: fitted.height)
+        return CGSize(width: width, height: controller.previewHeight(forWidth: width))
     }
 }
 #endif
