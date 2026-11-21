@@ -128,7 +128,10 @@ final class DictateKeyboardViewController: UIInputViewController {
         status.adjustsFontForContentSizeCategory = true
         status.textColor = .secondaryLabel
         status.textAlignment = .center
-        status.numberOfLines = 2
+        // Every line shows at every text size: the keyboard grows (the height below gives way)
+        // before the Full Access instruction is cut short.
+        status.numberOfLines = 0
+        status.setContentCompressionResistancePriority(UILayoutPriority(999), for: .vertical)
         status.accessibilityIdentifier = "dictate.keyboard.status"
 
         microphone.layer.cornerRadius = 36
@@ -140,6 +143,7 @@ final class DictateKeyboardViewController: UIInputViewController {
         microphone.addSubview(spinner)
 
         cancel.setTitle("Cancel", for: .normal)
+        scaleTitle(of: cancel)
         cancel.accessibilityIdentifier = "dictate.keyboard.cancel"
         cancel.addTarget(self, action: #selector(cancelTapped), for: .touchUpInside)
 
@@ -167,8 +171,9 @@ final class DictateKeyboardViewController: UIInputViewController {
         root.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(root)
 
+        // 250 points, and more when the text size needs it: the status line outranks this.
         let height = view.heightAnchor.constraint(equalToConstant: 250)
-        height.priority = UILayoutPriority(999)
+        height.priority = UILayoutPriority(998)
         NSLayoutConstraint.activate([
             height,
             root.topAnchor.constraint(equalTo: view.topAnchor, constant: 8),
@@ -183,18 +188,27 @@ final class DictateKeyboardViewController: UIInputViewController {
             spinner.centerXAnchor.constraint(equalTo: microphone.centerXAnchor),
             spinner.centerYAnchor.constraint(equalTo: microphone.centerYAnchor),
             status.heightAnchor.constraint(greaterThanOrEqualToConstant: 34),
-            cancel.heightAnchor.constraint(equalToConstant: 30),
+            cancel.heightAnchor.constraint(greaterThanOrEqualToConstant: ForITBrand.minimumTarget),
         ])
     }
 
     private func key(title: String? = nil, symbol: String? = nil, label: String, action: Selector) -> UIButton {
         let button = UIButton(type: .system)
-        if let title { button.setTitle(title, for: .normal) }
+        if let title {
+            button.setTitle(title, for: .normal)
+            scaleTitle(of: button)
+        }
         if let symbol { button.setImage(UIImage(systemName: symbol), for: .normal) }
         button.accessibilityLabel = label
         button.addTarget(self, action: action, for: .touchUpInside)
         style(button)
         return button
+    }
+
+    /// A key's word follows the person's text size, as its symbol-only neighbours already do.
+    private func scaleTitle(of button: UIButton) {
+        button.titleLabel?.font = .preferredFont(forTextStyle: .callout)
+        button.titleLabel?.adjustsFontForContentSizeCategory = true
     }
 
     private func style(_ button: UIButton) {
