@@ -1,12 +1,12 @@
 #!/bin/bash
-# iPhone app: its screens as pictures, unsigned, on the lane's own iPhone simulator.
+# iPhone app: its screens as pictures, unsigned, on the lane's own iPhone simulators.
 #
-# for-iCommon's device matrix builds the Debug simulator app once and photographs every
-# screen ios/forit-app.json lists, in light, in dark and at the largest text size, plus the
-# ForIT panel open on the home screen, on the lane's three phones (the standard one, the SE and
-# the Pro Max), booted one after another. Three of the screens are the keyboard's own view drawn
-# inside the app (ios/App/KeyboardPreviewScene.swift). The keyboard running as an extension
-# in another app is not pictured: that needs a phone.
+# for-iCommon's device matrix builds the Debug simulator app and photographs every screen
+# ios/forit-app.json lists, in light, in dark and at the largest text size, plus the ForIT panel
+# open on the home screen, on the lane's three phones (the standard one, the SE and the Pro Max),
+# one up at a time. Three of the screens are the keyboard's own view drawn inside the app
+# (ios/App/KeyboardPreviewScene.swift). The keyboard running as an extension in another app is
+# not pictured: that needs a phone.
 #
 # The shared Apple launcher owns the build slot, the Common run, the Common checkout
 # (FORIT_COMMON_ROOT, the route's common_commit), the timeout and the artifact copy. This
@@ -31,8 +31,10 @@ COMMIT=$(git rev-parse HEAD)
 COMMON_REVISION=$(/usr/bin/env python3 -I -B -c \
   'import json; print(json.load(open("forit-app.json"))["controlGuard"]["commonRevision"])')
 [[ $COMMON_REVISION =~ ^[0-9a-f]{40}$ ]] || exit 64
+# The lane's simulator kinds on the build Mac (ci-for-Dictate-<kind>), in the order they are drawn.
+KINDS=(iPhone iPhoneSE iPhoneProMax)
 if [[ $MODE == plan ]]; then
-  python3 -I -B - "$COMMIT" "$COMMON_REVISION" <<'PY'
+  python3 -I -B - "$COMMIT" "$COMMON_REVISION" "${KINDS[@]}" <<'PY'
 import json, sys
 screens = [s["name"] for s in json.load(open("ios/forit-app.json"))["screens"]["list"]]
 print(json.dumps({"app": "for-Dictate", "platform": "ios-ui-check", "commit": sys.argv[1],
@@ -41,8 +43,9 @@ print(json.dumps({"app": "for-Dictate", "platform": "ios-ui-check", "commit": sy
     "requiredEnvironment": ["FORIT_SOURCE_COMMIT", "FORIT_GATE_RUN", "FORIT_COMMON_ROOT"],
     "phases": ["preflight", "matrix", "evidence", "source-check"],
     "matrix": {"script": "Scripts/device-matrix/device-matrix.sh", "appDir": "ios", "shards": ["iphone"],
-               "lane": "for-Dictate", "boots": ["iPhone", "iPhoneSE", "iPhoneProMax"], "screens": screens, "looks": ["light", "dark", "ax5"],
-               "profileMenu": "home"},
+               "lane": "for-Dictate", "boots": sys.argv[3:],
+               "bootedBy": "ci-sim-lane.sh --lane for-Dictate boot <kind>, one up at a time",
+               "screens": screens, "looks": ["light", "dark", "ax5"], "profileMenu": "home"},
     "forITCommonRevision": sys.argv[2],
     "receipt": "build/forit-ios-ui-check/receipt.json",
     "evidence": "build/forit-ios-ui-check/evidence.zip",
@@ -62,37 +65,77 @@ mkdir -p "$OUT"
 STARTED=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 PHASE=preflight
 MATRIX_EXIT=not-run
+LANE_HELPER=${MATRIX_LANE_HELPER:-/Users/Shared/ci-sim/ci-sim-lane.sh}
+UP=
 finish() {
   local result=$?
   trap - EXIT
-  /usr/bin/python3 -I -B - "$OUT" "$COMMIT" "$result" "$PHASE" "$STARTED" "$MATRIX_EXIT" "$COMMON_REVISION" <<'PY' || { (( result != 0 )) || result=1; }
+  # A phone this check booted is this check's to shut down, whatever ended it.
+  [[ -z $UP ]] || "$LANE_HELPER" --lane for-Dictate shutdown "$UP" >> "$OUT/boot.log" 2>&1 || true
+  /usr/bin/python3 -I -B - "$OUT" "$COMMIT" "$result" "$PHASE" "$STARTED" "$MATRIX_EXIT" "$COMMON_REVISION" \
+    "${KINDS[@]}" <<'PY' || { (( result != 0 )) || result=1; }
 import csv, datetime, json, os, sys, zipfile
 out, commit, result, phase, started, matrix_exit, common = sys.argv[1:8]
+kinds = sys.argv[8:]
 matrix = os.path.join(out, "matrix")
-rows = []
-tsv = os.path.join(matrix, "MATRIX.tsv")
-if os.path.isfile(tsv):
+# Each phone has a matrix run of its own, whose table says "not drawn" for the other two. A cell
+# counts once, by the best any run said of it: taken, then failed, then why it was not drawn.
+def rank(status):
+    if status == "ok":
+        return 0
+    if status.startswith("failed"):
+        return 1
+    return 3 if "one after another in a job" in status else 2
+cells = {}
+for kind in kinds:
+    tsv = os.path.join(matrix, kind, "MATRIX.tsv")
+    if not os.path.isfile(tsv):
+        continue
     with open(tsv, newline="") as handle:
-        rows = [r for r in csv.reader(handle, delimiter="\t") if len(r) >= 4]
+        for row in csv.reader(handle, delimiter="\t"):
+            if len(row) >= 4 and (tuple(row[:3]) not in cells or rank(row[3]) < rank(cells[tuple(row[:3])])):
+                cells[tuple(row[:3])] = row[3]
+rows = [list(key) + [status] for key, status in cells.items()]
 taken = [r for r in rows if r[3] == "ok"]
 failed = [r for r in rows if r[3].startswith("failed")]
 gaps = [r for r in rows if r[3].startswith("not drawn")]
-# The pictures, the sheet and what the matrix said. Its derived data and helpers are left out.
+not_booted = {}
+path = os.path.join(out, "not-booted.tsv")
+if os.path.isfile(path):
+    with open(path, newline="") as handle:
+        not_booted = {r[0]: r[1] for r in csv.reader(handle, delimiter="\t") if len(r) >= 2}
+# The pictures, the sheets and what each matrix run said. Derived data and helpers are left out.
 names = []
-if os.path.isdir(matrix):
-    names = sorted(n for n in os.listdir(matrix)
-                   if not n.startswith(".") and os.path.isfile(os.path.join(matrix, n))
-                   and (n == "PACKAGES" or n.rsplit(".", 1)[-1] in ("png", "jpg", "tsv", "log")))
-    with zipfile.ZipFile(os.path.join(out, "evidence.zip"), "w", zipfile.ZIP_DEFLATED) as bundle:
-        for name in names:
-            bundle.write(os.path.join(matrix, name), name)
+with zipfile.ZipFile(os.path.join(out, "evidence.zip"), "w", zipfile.ZIP_DEFLATED) as bundle:
+    for name in ("boot.log", "not-booted.tsv"):
+        if os.path.isfile(os.path.join(out, name)):
+            bundle.write(os.path.join(out, name), name)
+            names.append(name)
+    for kind in kinds:
+        folder = os.path.join(matrix, kind)
+        if not os.path.isdir(folder):
+            continue
+        for name in sorted(os.listdir(folder)):
+            if name.startswith(".") or not os.path.isfile(os.path.join(folder, name)):
+                continue
+            if name != "PACKAGES" and name.rsplit(".", 1)[-1] not in ("png", "jpg", "tsv", "log"):
+                continue
+            # A picture's name already says its phone; the rest is one file per run.
+            stored = name if name.endswith(".png") else kind + "-" + name
+            bundle.write(os.path.join(folder, name), stored)
+            names.append(stored)
+    if rows:
+        bundle.writestr("MATRIX.tsv", "".join("\t".join(r) + "\n" for r in rows))
+        names.append("MATRIX.tsv")
 passed = result == "0" and phase == "complete" and bool(taken) and not failed
 json.dump({"app": "for-Dictate", "platform": "ios-ui-check", "commit": commit,
-           "passed": passed, "exitCode": int(result), "lastPhase": phase,
+           "passed": passed, "complete": passed and not gaps and not not_booted,
+           "exitCode": int(result), "lastPhase": phase,
            "matrixExit": matrix_exit, "forITCommonRevision": common,
            "cells": {"taken": len(taken), "failed": len(failed), "notDrawn": len(gaps)},
            "failedCells": [{"device": r[0], "screen": r[1], "look": r[2], "why": r[3]} for r in failed],
            "notDrawn": sorted({r[3] for r in gaps}),
+           "notBooted": not_booted,
            "pictures": [n for n in names if n.endswith(".png")],
            "sheets": [n for n in names if n.endswith(".jpg")],
            "notPictured": "the keyboard running as an extension in another app, Full Access, and the hop to the app",
@@ -124,25 +167,57 @@ case $FORIT_XCODEBUILD in
   *) fail 'use the installed slot-aware xcodebuild wrapper' ;;
 esac
 [[ -x $FORIT_XCODEBUILD ]] || fail 'installed slot-aware xcodebuild wrapper is unavailable'
+[[ -x $LANE_HELPER ]] || fail "the lane's simulator helper (ci-sim-lane.sh) is unavailable"
 
-# The matrix calls plain `xcodebuild`: this makes that the slot-aware wrapper. It draws only on
-# simulators that are this lane's, and a kind the lane has none of is a row that says so, not a
-# failure, which is why a run with no picture at all does not pass (finish). On the build Mac a
-# job boots only the kinds MATRIX_BOOT names, one after another and never two at once; left
-# unset it is the iPhone, the iPad and Vision Pro, and the SE and the Pro Max are not drawn.
+# The matrix calls plain `xcodebuild`, `xcrun` and `simctl`. In a launcher job the simulator
+# gate's shims come first on PATH and stay first (FORIT_SIM_GATE is one of them); the slot-aware
+# xcodebuild comes right after, which is where the gate's own xcodebuild shim hands on to.
+MATRIX_PATH="$(dirname "$FORIT_XCODEBUILD"):$PATH"
+[[ ${FORIT_SIM_GATE:-} != /* ]] || MATRIX_PATH="$(dirname "$FORIT_SIM_GATE"):$MATRIX_PATH"
+
+# One phone at a time, each booted here and not by the matrix. The matrix's own boot gives
+# `simctl boot` 150 s, and in a launcher job that call first waits in the simulator gate for a
+# calm Mac: on 2026-11-21 six boots in two jobs were ended in that wait and no picture was taken
+# (jobs apple-for-Dictate-93f5f6eea695-295825a837da and -d97fd242469b-9d1187fad8b5). The lane
+# helper's boot knows the gate and waits it out. The booted phone is added to the launcher's
+# run, so the matrix draws on it as the run's own; a phone that does not boot is named in the
+# receipt and the next one is tried. A run with no picture at all does not pass (finish).
 PHASE=matrix
 MATRIX_EXIT=0
-PATH="$(dirname "$FORIT_XCODEBUILD"):$PATH" MATRIX_LANE=for-Dictate MATRIX_RUN="$FORIT_GATE_RUN" \
-  MATRIX_BOOT='iPhone iPhoneSE iPhoneProMax' \
-  /bin/bash "$FORIT_COMMON_ROOT/Scripts/device-matrix/device-matrix.sh" "$REPO_ROOT/ios" "$MATRIX" iphone \
-  > "$OUT/matrix.log" 2>&1 || MATRIX_EXIT=$?
-tail -40 "$OUT/matrix.log"
-(( MATRIX_EXIT == 0 )) || { printf 'error: ui-check: the device matrix exited %s (see matrix.log)\n' "$MATRIX_EXIT" >&2; exit "$MATRIX_EXIT"; }
+for KIND in "${KINDS[@]}"; do
+  printf '== %s %s\n' "$KIND" "$(date -u +%H:%M:%SZ)" | tee -a "$OUT/boot.log"
+  BOOT_EXIT=0
+  UP=$KIND
+  BOOTED=$("$LANE_HELPER" --lane for-Dictate boot "$KIND" 2>> "$OUT/boot.log") || BOOT_EXIT=$?
+  printf '%s\n' "$BOOTED" >> "$OUT/boot.log"
+  UDID=$(tail -1 <<< "$BOOTED")
+  if (( BOOT_EXIT != 0 )) || [[ ! $UDID =~ ^[0-9A-F-]{36}$ ]]; then
+    printf '%s\tci-sim-lane.sh boot exit %s\n' "$KIND" "$BOOT_EXIT" | tee -a "$OUT/not-booted.tsv"
+    "$LANE_HELPER" --lane for-Dictate shutdown "$KIND" >> "$OUT/boot.log" 2>&1 || true
+    UP=
+    continue
+  fi
+  printf '%s\n' "$UDID" >> "$FORIT_GATE_RUN/up"
+  KIND_EXIT=0
+  PATH=$MATRIX_PATH MATRIX_LANE=for-Dictate MATRIX_RUN="$FORIT_GATE_RUN" MATRIX_BOOT=$KIND \
+    MATRIX_LANE_HELPER="$LANE_HELPER" MATRIX_DERIVED_DATA="$OUT/derived-data" \
+    /bin/bash "$FORIT_COMMON_ROOT/Scripts/device-matrix/device-matrix.sh" "$REPO_ROOT/ios" "$MATRIX/$KIND" iphone \
+    > "$OUT/matrix-$KIND.log" 2>&1 || KIND_EXIT=$?
+  { grep -v 'one after another in a job' "$OUT/matrix-$KIND.log" || true; } | tail -40
+  (( KIND_EXIT == 0 )) || MATRIX_EXIT=$KIND_EXIT
+  "$LANE_HELPER" --lane for-Dictate shutdown "$KIND" >> "$OUT/boot.log" 2>&1 \
+    || fail "$KIND would not shut down, so no other phone is booted (one simulator up at a time)"
+  UP=
+done
+(( MATRIX_EXIT == 0 )) || { printf 'error: ui-check: the device matrix exited %s (see matrix-<kind>.log)\n' "$MATRIX_EXIT" >&2; exit "$MATRIX_EXIT"; }
 PHASE=evidence
-[[ -s $MATRIX/MATRIX.tsv ]] || fail 'the device matrix wrote no MATRIX.tsv'
-TAKEN=$(awk -F'\t' '$4 == "ok"' "$MATRIX/MATRIX.tsv" | wc -l | tr -d ' ')
-# Why, in the matrix's own words: each kind's rows carry one reason.
-(( TAKEN > 0 )) || fail "no screen was drawn. $(awk -F'\t' '$4 ~ /^not drawn/ { print $4 }' "$MATRIX/MATRIX.tsv" | sort -u | head -3 | paste -sd'|' -)"
+tables() { cat "$MATRIX"/*/MATRIX.tsv 2> /dev/null || true; }
+TAKEN=$(tables | awk -F'\t' '$4 == "ok"' | wc -l | tr -d ' ')
+# Why, in the helper's and the matrix's own words.
+WHY=$({ [[ ! -f $OUT/not-booted.tsv ]] || tr '\t' ' ' < "$OUT/not-booted.tsv"
+  tables | awk -F'\t' '$4 ~ /^not drawn/ && $4 !~ /one after another in a job/ { print $4 }'
+  } | sort -u | head -4 | paste -sd'|' -)
+(( TAKEN > 0 )) || fail "no screen was drawn. $WHY"
 PHASE=source-check
 git status --porcelain --untracked-files=all > "$OUT/source-after.log"
 [[ ! -s $OUT/source-after.log ]] || fail 'source changed during the check'
