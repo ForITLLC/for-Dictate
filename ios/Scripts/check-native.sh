@@ -125,6 +125,32 @@ APP="$DERIVED/Build/Products/Release-iphoneos/ForIT Dictate.app"
 [[ -d $APP && -d "$APP/PlugIns/ForITDictateKeyboard.appex" ]] \
   || fail 'the app or its embedded keyboard extension is missing from the build products'
 grep -q 'BUILD SUCCEEDED' "$OUT/xcodebuild.log" || fail 'the compile log does not report success'
+# iOS finds the keyboard by the class name in the extension's Info.plist, and a name that is not
+# in the binary is a keyboard that comes up blank. The app that ships carries neither a copy of
+# the keyboard's view nor the Debug screenshot scenes (ios/project.yml, App/ScreenshotScenes.swift).
+/usr/bin/python3 -I -B - "$APP" > "$OUT/products.log" 2>&1 <<'PY' \
+  || fail 'the built products are not what ships (see products.log)'
+import pathlib, plistlib, sys
+app = pathlib.Path(sys.argv[1])
+def bundle(path):
+    info = plistlib.loads((path / "Info.plist").read_bytes())
+    return info, (path / info["CFBundleExecutable"]).read_bytes()
+def runtime_name(module, name):
+    return f"_TtC{len(module)}{module}{len(name)}{name}".encode()
+info, keyboard = bundle(app / "PlugIns" / "ForITDictateKeyboard.appex")
+principal = info["NSExtension"]["NSExtensionPrincipalClass"]
+module, _, name = principal.partition(".")
+_, binary = bundle(app)
+checks = {
+    "the keyboard has the class its Info.plist names (" + principal + ")":
+        bool(module and name) and runtime_name(module, name) in keyboard,
+    "the app has no copy of the keyboard's view": runtime_name("ForITDictate", name) not in binary,
+    "the app has no screenshot scenes": b"screenshot-scene" not in binary,
+}
+for label, ok in checks.items():
+    print("ok  " if ok else "FAIL", label)
+sys.exit(0 if all(checks.values()) else 1)
+PY
 PHASE=source-check
 git status --porcelain --untracked-files=all > "$OUT/source-after.log"
 [[ ! -s $OUT/source-after.log ]] || fail 'source changed during the check'

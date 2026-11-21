@@ -347,3 +347,24 @@ final class DictationCoordinator: ObservableObject {
         try? FileManager.default.removeItem(at: audioDirectory)
     }
 }
+
+#if DEBUG
+extension DictationCoordinator {
+    /// A coordinator standing in one of the states the device matrix photographs
+    /// (ScreenshotScene). The microphone stays off and nothing is recorded or kept.
+    static func sample(_ scene: ScreenshotScene) -> DictationCoordinator {
+        let coordinator = DictationCoordinator(engine: SampleSpeechEngine())
+        switch scene {
+        case .listening:
+            coordinator.phase = .recording
+            coordinator.recordingForKeyboard = true
+        case .result:
+            coordinator.phase = .ready
+            coordinator.trialText = ScreenshotScene.sampleText
+        case .home, .keyboardSetup, .settings, .keyboard, .keyboardListening, .keyboardAccess:
+            break
+        }
+        return coordinator
+    }
+}
+#endif

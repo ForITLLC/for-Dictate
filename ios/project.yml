@@ -29,6 +29,9 @@ targets:
       - App
       - Views
       - Shared
+      # The keyboard's view, for a Debug build only: the device matrix photographs it inside
+      # the app (App/KeyboardPreviewScene.swift). Release leaves the file out, below.
+      - path: Keyboard/DictateKeyboardViewController.swift
       - path: Brand/Assets.xcassets
       # Text clean-up shared with the Mac app by path: one copy, two apps.
       - path: ../VoiceInk/Features/Recording/Processing/TranscriptionOutputFilter.swift
@@ -81,6 +84,8 @@ targets:
           CODE_SIGN_STYLE: Manual
           CODE_SIGN_IDENTITY: "Apple Distribution"
           PROVISIONING_PROFILE_SPECIFIER: "ForIT Dictate App Store"
+          # The app that ships has no copy of the keyboard's view: that lives in the extension.
+          EXCLUDED_SOURCE_FILE_NAMES: DictateKeyboardViewController.swift
     dependencies:
       - package: ForITCommon
         product: ForITCommon

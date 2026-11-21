@@ -47,12 +47,13 @@ On the Mini only, never in the repository:
 
 ## Running it
 
-for-dev owns the fleet's `apps.json` entry and runs the job; this lane does not edit that registry. Two routes, both
+for-dev owns the fleet's `apps.json` entry and runs the job; this lane does not edit that registry. Three routes, all
 from the repository root of `for-Dictate-build`:
 
 | Route | Command | What it does |
 | --- | --- | --- |
 | `ios-compile` | `ios/Scripts/check-native.sh --execute` | The logic tests and an unsigned device compile. No build number, no signing. |
+| `ios-ui-check` | `ios/Scripts/ui-check.sh --execute` | The app's screens as pictures on the lane's iPhone simulator, through for-iCommon's device matrix. Unsigned. The route pins `common_commit`. |
 | `ios` | `ios/Scripts/apple-release.sh ios BUILD [--upload]` | Checks, profiles, a signed archive, the exported IPA verified, and with `--upload` TestFlight. |
 
 `apple-release.sh` refuses a checkout that is not the clean commit in `FORIT_SOURCE_COMMIT`, then runs

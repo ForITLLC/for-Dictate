@@ -19,6 +19,21 @@ final class DictateKeyboardViewController: UIInputViewController {
     /// Longest wait for the text once the app says it is transcribing.
     private static let transcriptionLimit: TimeInterval = 180
 
+    private static let fullAccessMessage =
+        "Turn on Allow Full Access for ForIT Dictate in Settings, under General, Keyboard, Keyboards."
+
+    #if DEBUG
+    /// A state to draw with no dictation behind it, for the pictures the device matrix takes of
+    /// this view inside the app (ios/App/KeyboardPreviewScene.swift). The keyboard never sets it.
+    enum Preview {
+        case idle
+        case listening
+        case fullAccessNeeded
+    }
+
+    var preview: Preview?
+    #endif
+
     private var mode = Mode.idle
     private var message: String?
     private var stopRequestedAt: Date?
@@ -70,6 +85,18 @@ final class DictateKeyboardViewController: UIInputViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        #if DEBUG
+        if let preview {
+            // A picture: it listens for nothing, asks the app for nothing and takes no taps.
+            view.isUserInteractionEnabled = false
+            switch preview {
+            case .idle: show(.idle)
+            case .listening: show(.recording)
+            case .fullAccessNeeded: show(.idle, message: Self.fullAccessMessage)
+            }
+            return
+        }
+        #endif
         globe.isHidden = !needsInputModeSwitchKey
         // Dictated text nobody took in time does not wait on disk for the app's next launch.
         DictationHandoffStore.shared()?.removeStaleResult()
@@ -222,7 +249,7 @@ final class DictateKeyboardViewController: UIInputViewController {
 
     @objc private func microphoneTapped() {
         guard hasFullAccess, let store = DictationHandoffStore.shared() else {
-            show(.idle, message: "Turn on Allow Full Access for ForIT Dictate in Settings, under General, Keyboard, Keyboards.")
+            show(.idle, message: Self.fullAccessMessage)
             return
         }
         switch mode {

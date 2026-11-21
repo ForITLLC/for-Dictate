@@ -7,9 +7,15 @@ import UIKit
 struct HomeView: View {
     @EnvironmentObject private var coordinator: DictationCoordinator
     @Environment(\.openURL) private var openURL
+    @State private var path: [Route] = HomeView.firstPath
+    @State private var settingsShown = HomeView.settingsFirst
+
+    private enum Route: Hashable {
+        case keyboardSetup
+    }
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             List {
                 statusSection
                 if !coordinator.trialText.isEmpty {
@@ -17,17 +23,36 @@ struct HomeView: View {
                 }
                 languageSection
                 Section("Keyboard") {
-                    NavigationLink {
-                        KeyboardSetupView()
-                    } label: {
+                    NavigationLink(value: Route.keyboardSetup) {
                         Label("Set up the keyboard", systemImage: "keyboard")
                     }
                 }
             }
             .forITGroupedList()
             .navigationTitle("ForIT Dictate")
-            .forITProfileMenu(account: nil, settings: { DictateSettingsView() })
+            .forITProfileMenu(account: nil, isSettingsPresented: $settingsShown, settings: { DictateSettingsView() })
+            .navigationDestination(for: Route.self) { route in
+                switch route {
+                case .keyboardSetup: KeyboardSetupView()
+                }
+            }
         }
+    }
+
+    // Where the device matrix's scenes start (ScreenshotScene, Debug only): on the set-up
+    // steps, or with Settings open. The app itself always starts on this screen with both shut.
+    private static var firstPath: [Route] {
+        #if DEBUG
+        if ScreenshotScene.current == .keyboardSetup { return [.keyboardSetup] }
+        #endif
+        return []
+    }
+
+    private static var settingsFirst: Bool {
+        #if DEBUG
+        if ScreenshotScene.current == .settings { return true }
+        #endif
+        return false
     }
 
     // MARK: Status
