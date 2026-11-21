@@ -107,3 +107,6 @@ Temporary Items
 # iPhone app: xcodegen writes these from ios/project.yml
 ios/ForITDictate.xcodeproj/
 ios/Generated/
+
+# Python bytecode from the script tests
+__pycache__/
