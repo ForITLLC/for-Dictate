@@ -27,10 +27,13 @@ print(json.dumps({"app": "for-Dictate", "platform": "ios-compile", "commit": sys
     "nativeExecution": False, "buildNumberAllocated": False, "signingRequested": False,
     "command": ["/bin/bash", "ios/Scripts/check-native.sh", "--execute"],
     "requiredEnvironment": ["FORIT_SOURCE_COMMIT", "FORIT_GATE_RUN"],
-    "phases": ["toolchain", "generate", "resolve", "pin", "logic-tests", "compile", "products", "source-check"],
+    "phases": ["toolchain", "generate", "resolve", "pin", "logic-tests", "compile", "products",
+               "compile-debug", "source-check"],
     "logicTests": {"scheme": "DictateHandoffTests", "destination": "platform=macOS"},
     "compile": {"scheme": "ForITDictate", "configuration": "Release",
                 "destination": "generic/platform=iOS", "targets": ["ForITDictate", "ForITDictateKeyboard"]},
+    "compileDebug": {"scheme": "ForITDictate", "configuration": "Debug",
+                     "destination": "generic/platform=iOS Simulator", "boots": "nothing"},
     "forITCommonRevision": sys.argv[2],
     "receipt": "build/forit-ios-check/receipt.json", "logs": "build/forit-ios-check/*.log",
     "outerOwner": "published Apple launcher; existing slot/Common process group and cleanup"}, indent=2))
@@ -151,6 +154,12 @@ for label, ok in checks.items():
     print("ok  " if ok else "FAIL", label)
 sys.exit(0 if all(checks.values()) else 1)
 PY
+# The Debug build the screen check photographs (ios/Scripts/ui-check.sh): the screenshot scenes
+# and the keyboard's view inside the app are compiled only here. It boots no simulator.
+run_phase compile-debug 45 "$OUT/xcodebuild-debug.log" "$FORIT_XCODEBUILD" build "${PKG_ARGS[@]}" \
+  -scheme ForITDictate -configuration Debug -destination 'generic/platform=iOS Simulator' \
+  CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=
+grep -q 'BUILD SUCCEEDED' "$OUT/xcodebuild-debug.log" || fail 'the Debug simulator compile log does not report success'
 PHASE=source-check
 git status --porcelain --untracked-files=all > "$OUT/source-after.log"
 [[ ! -s $OUT/source-after.log ]] || fail 'source changed during the check'
